@@ -10,6 +10,8 @@ public class AlpetaClient
 {
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
+    private readonly SemaphoreSlim _loginLock = new(1, 1);
+
 
     // Session UUID بعد Login
     private string? _uuid;
@@ -32,42 +34,41 @@ public class AlpetaClient
         if (!string.IsNullOrWhiteSpace(_uuid))
             return;
 
-        var loginUrl = $"{BaseUrl}/login";
-
-        var payload = new
+        await _loginLock.WaitAsync(ct);
+        try
         {
-            userId = UserId,
-            password = Password,   // مهم: string "0000"
-            userType = UserType
-        };
+            // double-check بعد ما أخذنا lock
+            if (!string.IsNullOrWhiteSpace(_uuid))
+                return;
 
-        var content = new StringContent(
-            JsonSerializer.Serialize(payload),
-            Encoding.UTF8,
-            "application/json"
-        );
+            var loginUrl = $"{BaseUrl}/login";
+            var payload = new { userId = UserId, password = Password, userType = UserType };
 
-        var res = await _http.PostAsync(loginUrl, content, ct);
-        res.EnsureSuccessStatusCode();
+            using var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json"
+            );
 
-        var json = await res.Content.ReadAsStringAsync(ct);
-        using var doc = JsonDocument.Parse(json);
+            using var res = await _http.PostAsync(loginUrl, content, ct);
+            res.EnsureSuccessStatusCode();
 
-        // الصحيح: AccountInfo.Uuid
-        _uuid = doc.RootElement
-            .GetProperty("AccountInfo")
-            .GetProperty("Uuid")
-            .GetString();
+            var json = await res.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(json);
 
-        if (string.IsNullOrWhiteSpace(_uuid))
-            throw new Exception("Login succeeded but AccountInfo.Uuid is empty.");
+            _uuid = doc.RootElement.GetProperty("AccountInfo").GetProperty("Uuid").GetString();
+            if (string.IsNullOrWhiteSpace(_uuid))
+                throw new Exception("Login succeeded but AccountInfo.Uuid is empty.");
 
-        // نرسل الـ UUID في الهيدر
-        _http.DefaultRequestHeaders.Remove("Uuid");
-        _http.DefaultRequestHeaders.Remove("UUID");
-
-        _http.DefaultRequestHeaders.Add("Uuid", _uuid);
-        _http.DefaultRequestHeaders.Add("UUID", _uuid);
+            _http.DefaultRequestHeaders.Remove("Uuid");
+            _http.DefaultRequestHeaders.Remove("UUID");
+            _http.DefaultRequestHeaders.Add("Uuid", _uuid);
+            _http.DefaultRequestHeaders.Add("UUID", _uuid);
+        }
+        finally
+        {
+            _loginLock.Release();
+        }
     }
 
     public async Task<bool> PingAsync(CancellationToken ct = default)
@@ -308,4 +309,5 @@ public class AlpetaClient
 
         return null;
     }
+
 }

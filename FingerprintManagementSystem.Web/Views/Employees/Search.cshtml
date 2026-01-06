@@ -1,119 +1,1880 @@
-﻿@model FingerprintManagementSystem.Web.ViewModels.EmployeeDevicesViewModel
-
+﻿@model FingerprintManagementSystem.Web.ViewModels.EmployeeDevicesViewModel?
 @{
-    ViewData["Title"] = "بحث عن موظف وعرض أجهزته";
+    ViewData["Title"] = "إدارة أجهزة الموظف";
+    var notFound = ViewBag.NotFound as string;
 }
 
-<div class="container mt-4" dir="rtl">
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <h3 class="text-center mb-4">بحث عن موظف وعرض أجهزته</h3>
+        :root {
+            --maroon: #692f39;
+            --maroon-light: #8b3d4d;
+            --maroon-dark: #52242d;
+            --blue: #3e596e;
+            --blue-light: #4d6c85;
+            --copper: #8c7d68;
+            --copper-light: #a8987f;
+            --emerald: #10b981;
+            --emerald-light: #34d399;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --purple: #a855f7;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
 
-    @if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
-    {
-        <div class="alert alert-info text-center">@msg</div>
-    }
+        body {
+            font-family: 'Tajawal', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-    @if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
-    {
-        <div class="alert alert-danger text-center">@Model.ErrorMessage</div>
-    }
+        /* Animated Background Particles */
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
 
-    <form asp-action="Search" method="post" class="mb-4">
-        @Html.AntiForgeryToken()
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--maroon), var(--blue));
+            opacity: 0.03;
+            animation: float-particle 20s infinite ease-in-out;
+        }
 
-        <div class="d-flex justify-content-center gap-2">
-            <input type="number"
-                   name="employeeId"
-                   class="form-control"
-                   style="max-width: 320px;"
-                   placeholder="الرقم الوظيفي"
-                   value="@(Model?.Employee?.EmployeeId ?? 0)" />
+            .particle:nth-child(1) {
+                width: 300px;
+                height: 300px;
+                top: 10%;
+                left: 10%;
+                animation-delay: 0s;
+            }
 
-            <button class="btn btn-primary px-5" type="submit">بحث</button>
+            .particle:nth-child(2) {
+                width: 200px;
+                height: 200px;
+                top: 60%;
+                left: 70%;
+                animation-delay: 5s;
+            }
+
+            .particle:nth-child(3) {
+                width: 250px;
+                height: 250px;
+                top: 80%;
+                left: 20%;
+                animation-delay: 10s;
+            }
+
+            .particle:nth-child(4) {
+                width: 180px;
+                height: 180px;
+                top: 30%;
+                left: 80%;
+                animation-delay: 15s;
+            }
+
+        @@keyframes float-particle {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+
+            75% {
+                transform: translate(40px, 10px) scale(1.05);
+            }
+        }
+
+        /* Enhanced Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-dark) 100%);
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(105, 47, 57, 0.15);
+            position: relative;
+            z-index: 100;
+            border-bottom: 3px solid var(--copper);
+        }
+
+            .navbar::before {
+                content: '';
+                position: absolute;
+                bottom: -3px;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background: linear-gradient(90deg, var(--copper), var(--blue), var(--maroon));
+                background-size: 200% 100%;
+                animation: shimmer 3s linear infinite;
+            }
+
+        @@keyframes shimmer {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+        }
+
+        .navbar-logo {
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+            .navbar-logo:hover {
+                transform: rotate(5deg) scale(1.05);
+                box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+            }
+
+            .navbar-logo img {
+                height: 40px;
+                filter: brightness(0) invert(1);
+            }
+
+        .navbar-title {
+            font-size: 1.5em;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+            .navbar-user:hover {
+                background: rgba(255, 255, 255, 0.25);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--blue), var(--copper));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2em;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 50px;
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: slideDown 0.8s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-header h1 {
+            font-size: 3.2em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--maroon), var(--blue), var(--copper));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .page-header p {
+            font-size: 1.25em;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        /* Premium Card */
+        .premium-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+            .premium-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, var(--maroon), var(--blue), var(--copper));
+                background-size: 200% 100%;
+                animation: slideGradient 3s linear infinite;
+            }
+
+        @@keyframes slideGradient {
+            0% {
+                background-position: 0% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .premium-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .premium-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .premium-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-200);
+            position: relative;
+        }
+
+            .section-header::after {
+                content: '';
+                position: absolute;
+                bottom: -2px;
+                left: 0;
+                width: 120px;
+                height: 2px;
+                background: linear-gradient(90deg, var(--maroon), transparent);
+            }
+
+        .section-number {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6em;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 8px 20px rgba(105, 47, 57, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: var(--gray-800);
+            letter-spacing: -0.5px;
+        }
+
+        /* Form Fields */
+        .form-field {
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-700);
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 18px 24px;
+            border: 2px solid var(--gray-200);
+            border-radius: 14px;
+            font-size: 1.08em;
+            font-weight: 500;
+            background: var(--gray-50);
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+            .form-input:focus {
+                outline: none;
+                border-color: var(--maroon);
+                background: white;
+                box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.1);
+                transform: translateY(-2px);
+            }
+
+        /* Alerts */
+        .alert {
+            padding: 24px 28px;
+            border-radius: 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            border: 2px solid;
+            animation: slideInRight 0.5s ease;
+        }
+
+        @@keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 800;
+            font-size: 1.15em;
+            margin-bottom: 6px;
+        }
+
+        .alert-message {
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border-color: var(--emerald);
+        }
+
+            .alert-success .alert-icon {
+                background: var(--emerald);
+                color: white;
+            }
+
+            .alert-success .alert-title {
+                color: #065f46;
+            }
+
+            .alert-success .alert-message {
+                color: #047857;
+            }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-color: var(--amber);
+        }
+
+            .alert-warning .alert-icon {
+                background: var(--amber);
+                color: white;
+            }
+
+            .alert-warning .alert-title {
+                color: #92400e;
+            }
+
+            .alert-warning .alert-message {
+                color: #b45309;
+            }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-color: var(--rose);
+        }
+
+            .alert-danger .alert-icon {
+                background: var(--rose);
+                color: white;
+            }
+
+            .alert-danger .alert-title {
+                color: #991b1b;
+            }
+
+            .alert-danger .alert-message {
+                color: #dc2626;
+            }
+
+        /* Employee Card */
+        .employee-card {
+            background: linear-gradient(135deg, #f9fafb, white);
+            border: 2px solid var(--gray-200);
+            border-radius: 20px;
+            padding: 32px;
+            margin-top: 24px;
+        }
+
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .employee-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .employee-label {
+            color: var(--gray-500);
+            font-size: 0.95em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .employee-value {
+            color: var(--gray-900);
+            font-size: 1.2em;
+            font-weight: 800;
+        }
+
+        .stats-badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+            .stat-badge:hover {
+                transform: translateY(-2px) scale(1.05);
+            }
+
+        .stat-badge-primary {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(105, 47, 57, 0.3);
+        }
+
+        .stat-badge-success {
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        /* IMPROVED Region Cards - Each Region in its own row */
+        .regions-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .region-card {
+            background: white;
+            border: 3px solid var(--gray-200);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            max-width: 100%;
+        }
+
+            .region-card:hover {
+                border-color: var(--maroon);
+                box-shadow: 0 16px 48px rgba(105, 47, 57, 0.15);
+                transform: translateY(-6px);
+            }
+
+        .region-header {
+            background: linear-gradient(135deg, var(--gray-50), white);
+            padding: 32px;
+            border-bottom: 3px solid var(--gray-200);
+            transition: all 0.3s ease;
+        }
+
+            .region-header:hover {
+                background: linear-gradient(135deg, white, #fef2f2);
+            }
+
+            .region-header.active {
+                background: linear-gradient(135deg, #fef2f2, #fee2e2);
+                border-bottom-color: var(--maroon);
+            }
+
+        .region-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .region-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex: 1;
+        }
+
+        .region-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            box-shadow: 0 10px 30px rgba(105, 47, 57, 0.3);
+            flex-shrink: 0;
+        }
+
+        .region-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .region-info h4 {
+                font-size: 1.7em;
+                font-weight: 900;
+                color: var(--gray-900);
+                margin-bottom: 12px;
+                letter-spacing: -0.5px;
+            }
+
+        .region-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            padding: 8px 16px;
+            background: var(--gray-100);
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 700;
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .meta-badge.success {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+        .btn-icon-toggle {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            border: 3px solid var(--gray-300);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.4em;
+            color: var(--gray-600);
+            flex-shrink: 0;
+        }
+
+            .btn-icon-toggle:hover {
+                border-color: var(--maroon);
+                color: var(--maroon);
+                transform: scale(1.1);
+            }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .region-header.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapse {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            .collapse.show {
+                max-height: 6000px;
+            }
+
+        /* Region Options */
+        .region-options {
+            padding: 36px;
+            background: linear-gradient(135deg, #fafbfc, white);
+            border-bottom: 3px solid var(--gray-200);
+        }
+
+        .options-title {
+            font-size: 1.3em;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .instruction-box {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 3px solid #3b82f6;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .instruction-box-icon {
+            font-size: 2em;
+            flex-shrink: 0;
+        }
+
+        .instruction-box-content {
+            flex: 1;
+        }
+
+        .instruction-box-title {
+            font-weight: 900;
+            font-size: 1.1em;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .instruction-box-text {
+            color: #1e3a8a;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .radio-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .radio-option {
+            position: relative;
+        }
+
+            .radio-option input[type="radio"] {
+                position: absolute;
+                opacity: 0;
+            }
+
+            .radio-option label {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                padding: 24px 16px;
+                background: white;
+                border: 3px solid var(--gray-200);
+                border-radius: 18px;
+                font-weight: 800;
+                font-size: 1em;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                min-height: 120px;
+            }
+
+                .radio-option label span:first-child {
+                    font-size: 2.5em;
+                }
+
+            .radio-option input[type="radio"]:checked + label {
+                background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+                border-color: var(--maroon);
+                color: white;
+                box-shadow: 0 10px 30px rgba(105, 47, 57, 0.4);
+                transform: translateY(-6px) scale(1.05);
+            }
+
+            .radio-option label:hover {
+                border-color: var(--maroon);
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            }
+
+        /* Date Fields */
+        .dates-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            margin-top: 0;
+        }
+
+            .dates-row.show {
+                opacity: 1;
+                max-height: 300px;
+                margin-top: 24px;
+            }
+
+        .date-field {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .date-label {
+            font-size: 1.05em;
+            font-weight: 800;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .date-label span:first-child {
+                font-size: 1.4em;
+            }
+
+        .date-input {
+            padding: 18px 22px;
+            border: 3px solid var(--gray-200);
+            border-radius: 16px;
+            font-size: 1.08em;
+            font-weight: 700;
+            background: white;
+            transition: all 0.3s ease;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--gray-800);
+        }
+
+            .date-input:focus {
+                outline: none;
+                border-color: var(--maroon);
+                box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.15);
+                transform: translateY(-2px);
+            }
+
+        .warning-note {
+            margin-top: 20px;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 3px solid var(--amber);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 1em;
+            font-weight: 700;
+            color: #92400e;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+            .warning-note.show {
+                opacity: 1;
+                max-height: 150px;
+            }
+
+            .warning-note span:first-child {
+                font-size: 1.6em;
+            }
+
+        .submit-region-btn {
+            margin-top: 24px;
+            width: 100%;
+            padding: 18px 32px;
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 900;
+            font-size: 1.15em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+        }
+
+            .submit-region-btn:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 14px 36px rgba(16, 185, 129, 0.5);
+            }
+
+            .submit-region-btn span:first-child {
+                font-size: 1.4em;
+            }
+
+        /* Devices Section */
+        .devices-section {
+            padding: 36px;
+            background: linear-gradient(135deg, #fafbfc, white);
+        }
+
+        .devices-section-title {
+            font-size: 1.2em;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .select-all-box {
+            background: white;
+            border: 3px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .select-all-box:hover {
+                border-color: var(--maroon);
+                background: var(--gray-50);
+                box-shadow: 0 6px 20px rgba(105, 47, 57, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .select-all-box input[type="checkbox"] {
+                width: 30px;
+                height: 30px;
+                cursor: pointer;
+                appearance: none;
+                border: 3px solid var(--gray-300);
+                border-radius: 10px;
+                background: white;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+                .select-all-box input[type="checkbox"]:checked {
+                    background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+                    border-color: var(--maroon);
+                }
+
+                    .select-all-box input[type="checkbox"]:checked::after {
+                        content: '✓';
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        color: white;
+                        font-weight: 900;
+                        font-size: 18px;
+                    }
+
+        .select-all-label {
+            font-weight: 800;
+            font-size: 1.15em;
+            color: var(--gray-900);
+        }
+
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .device-card {
+            background: white;
+            border: 3px solid var(--gray-200);
+            border-radius: 18px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .device-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 5px;
+                height: 100%;
+                background: linear-gradient(135deg, var(--maroon), var(--copper));
+                transform: scaleY(0);
+                transition: transform 0.3s ease;
+            }
+
+            .device-card:hover {
+                border-color: var(--copper);
+                transform: translateX(-6px);
+                box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+            }
+
+                .device-card:hover::before {
+                    transform: scaleY(1);
+                }
+
+            .device-card.selected {
+                background: linear-gradient(135deg, #ecfdf5, white);
+                border-color: var(--emerald);
+                box-shadow: 0 10px 36px rgba(16, 185, 129, 0.25);
+            }
+
+                .device-card.selected::before {
+                    transform: scaleY(1);
+                    background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+                }
+
+        .device-checkbox input[type="checkbox"] {
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            appearance: none;
+            border: 3px solid var(--gray-300);
+            border-radius: 9px;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+            .device-checkbox input[type="checkbox"]:checked {
+                background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+                border-color: var(--emerald);
+            }
+
+                .device-checkbox input[type="checkbox"]:checked::after {
+                    content: '✓';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    color: white;
+                    font-weight: 900;
+                    font-size: 16px;
+                }
+
+        .device-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            transition: all 0.3s ease;
+        }
+
+        .device-card.selected .device-icon {
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35);
+            transform: scale(1.15);
+        }
+
+        .device-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .device-name {
+            font-size: 1.1em;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+        }
+
+        .device-meta {
+            color: var(--gray-500);
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        /* Bulk Actions Bar */
+        .bulk-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            padding: 24px 44px;
+            border-radius: 60px;
+            box-shadow: 0 24px 64px rgba(105, 47, 57, 0.45);
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            z-index: 1000;
+            border: 4px solid rgba(255, 255, 255, 0.25);
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+            .bulk-bar.show {
+                transform: translateX(-50%) translateY(0);
+            }
+
+        .bulk-info {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            color: white;
+        }
+
+        .pulse-indicator {
+            width: 14px;
+            height: 14px;
+            background: var(--emerald);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8);
+            }
+
+            70% {
+                box-shadow: 0 0 0 18px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .bulk-count {
+            font-size: 2.2em;
+            font-weight: 900;
+        }
+
+        .bulk-label {
+            font-size: 1.1em;
+            opacity: 0.95;
+            font-weight: 700;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 14px;
+        }
+
+        .btn-bulk {
+            padding: 16px 36px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1em;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-bulk-success {
+            background: white;
+            color: var(--maroon);
+        }
+
+            .btn-bulk-success:hover {
+                background: var(--emerald);
+                color: white;
+                transform: translateY(-4px);
+                box-shadow: 0 14px 32px rgba(16, 185, 129, 0.5);
+            }
+
+        .btn-bulk-danger {
+            background: rgba(255, 255, 255, 0.22);
+            color: white;
+            border: 3px solid rgba(255, 255, 255, 0.35);
+        }
+
+            .btn-bulk-danger:hover {
+                background: var(--rose);
+                border-color: var(--rose);
+                transform: translateY(-4px);
+                box-shadow: 0 14px 32px rgba(244, 63, 94, 0.5);
+            }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            gap: 18px;
+            justify-content: flex-end;
+            padding-top: 36px;
+            margin-top: 36px;
+            border-top: 3px solid var(--gray-200);
+        }
+
+        .btn {
+            padding: 18px 40px;
+            border-radius: 16px;
+            font-size: 1.15em;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 3px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            color: white;
+            box-shadow: 0 10px 28px rgba(105, 47, 57, 0.35);
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 14px 40px rgba(105, 47, 57, 0.45);
+            }
+
+        /* Responsive */
+        @@media (max-width: 1400px) {
+            .regions-container {
+                grid-template-columns: 1fr;
+            }
+
+            .radio-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .navbar {
+                padding: 16px 24px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .main-content {
+                padding: 30px 20px;
+            }
+
+            .page-header h1 {
+                font-size: 2.2em;
+            }
+
+            .premium-card {
+                padding: 28px 24px;
+            }
+
+            .devices-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dates-row {
+                grid-template-columns: 1fr;
+            }
+
+            .radio-options {
+                grid-template-columns: 1fr;
+            }
+
+            .bulk-bar {
+                flex-direction: column;
+                gap: 18px;
+                padding: 22px 28px;
+                border-radius: 28px;
+                width: calc(100% - 40px);
+            }
+
+            .bulk-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-bulk {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Particles -->
+    <div class="bg-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            <div class="navbar-logo">
+                <img src="https://www.pahw.gov.kw/images/PAHW-Logo.png" alt="PAHW" />
+            </div>
+            <span class="navbar-title">نظام إدارة البصمات الذكي</span>
         </div>
-    </form>
+        <div class="navbar-user">
+            <span style="font-weight: 700;">مسؤول النظام</span>
+            <div class="user-avatar">م</div>
+        </div>
+    </div>
 
-    @if (Model?.Employee is not null && Model.Employee.EmployeeId > 0)
-    {
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-md-4"><b>الرقم الوظيفي:</b> @Model.Employee.EmployeeId</div>
-                    <div class="col-md-4"><b>الاسم:</b> @Model.Employee.FullNameAr</div>
-                    <div class="col-md-4"><b>المسمى:</b> @Model.Employee.JobTitle</div>
-                    <div class="col-md-6"><b>القسم:</b> @Model.Employee.Department</div>
-                    <div class="col-md-6"><b>عدد الأجهزة:</b> @(Model.Devices?.Count ?? 0)</div>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>🔐 إدارة أجهزة الموظف</h1>
+            <p>نظام متطور لإدارة أجهزة البصمة بكفاءة وسهولة</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="premium-card">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <h3 class="section-title">البحث عن الموظف</h3>
+            </div>
+
+            <form method="post" action="/employees/search">
+                <div class="form-field">
+                    <label class="form-label">
+                        <i>🔍</i>
+                        الرقم الوظيفي للموظف
+                    </label>
+                    <input type="number" name="employeeId" class="form-input"
+                           placeholder="أدخل الرقم الوظيفي للبحث..."
+                           value="@(Model?.Employee?.EmployeeId > 0 ? Model.Employee.EmployeeId : "")"
+                           required />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(notFound))
+                {
+                    <div class="alert alert-warning">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <div class="alert-title">تنبيه</div>
+                            <div class="alert-message">@notFound</div>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+                {
+                    <div class="alert alert-danger">
+                        <div class="alert-icon">❌</div>
+                        <div class="alert-content">
+                            <div class="alert-title">خطأ في النظام</div>
+                            <div class="alert-message">@Model.ErrorMessage</div>
+                        </div>
+                    </div>
+                }
+
+                @if (TempData["Msg"] != null)
+                {
+                    <div class="alert alert-success">
+                        <div class="alert-icon">✅</div>
+                        <div class="alert-content">
+                            <div class="alert-title">عملية ناجحة</div>
+                            <div class="alert-message">@TempData["Msg"]</div>
+                        </div>
+                    </div>
+                }
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span>🔍</span>
+                        <span>بحث</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        @if (Model?.Employee != null)
+        {
+            <!-- Employee Info -->
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="section-number">2</div>
+                    <h3 class="section-title">معلومات الموظف</h3>
+                </div>
+
+                <div class="employee-card">
+                    <div class="employee-grid">
+                        <div class="employee-item">
+                            <span class="employee-label">👤 الاسم الكامل</span>
+                            <span class="employee-value">@Model.Employee.FullNameAr</span>
+                        </div>
+                        <div class="employee-item">
+                            <span class="employee-label">🏢 الإدارة / القسم</span>
+                            <span class="employee-value">@Model.Employee.Department</span>
+                        </div>
+                        <div class="employee-item">
+                            <span class="employee-label">📊 إحصائيات الأجهزة</span>
+                            <div class="stats-badges">
+                                <span class="stat-badge stat-badge-primary">
+                                    <span>🖥️</span>
+                                    <span>@Model.Devices.Count إجمالي</span>
+                                </span>
+                                <span class="stat-badge stat-badge-success">
+                                    <span>✅</span>
+                                    <span>@Model.Devices.Count(x => x.IsAssigned) مرتبطة</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div>الأجهزة</div>
-                <small class="text-muted">مرتّبة: المرتبطة أولاً</small>
-            </div>
+            <!-- Devices Section -->
+            @if (Model.RegionGroups != null && Model.RegionGroups.Any())
+            {
+                <div class="premium-card">
+                    <div class="section-header">
+                        <div class="section-number">3</div>
+                        <h3 class="section-title">إدارة أجهزة البصمة</h3>
+                    </div>
 
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th style="width:110px;">مرتبط؟</th>
-                            <th style="width:120px;">إجراء</th>
-                            <th style="width:120px;">TerminalId</th>
-                            <th>اسم الجهاز</th>
-                            <th>الموقع</th>
-                            <th style="width:200px;">المنطقة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var d in Model.Devices)
+                    <div class="regions-container" >
+                        @for (int i = 0; i < Model.RegionGroups.Count; i++)
                         {
-                            <tr>
-                                <td>
-                                    @if (d.IsAssigned)
-                                    {
-                                        <span class="badge bg-success">نعم</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">لا</span>
-                                    }
-                                </td>
+                            var g = Model.RegionGroups[i];
+                            var collapseId = $"collapse_{i}";
+                            var regionKey = "reg_" + i;
 
-                                <td>
-                                    @if (d.IsAssigned)
-                                    {
-                                        <form asp-action="Unassign" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                            <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                إلغاء ربط
-                                            </button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <form asp-action="Assign" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                            <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                            <button type="submit" class="btn btn-outline-success btn-sm">
-                                                ربط
-                                            </button>
-                                        </form>
-                                    }
-                                </td>
+                            <div class="region-card" onclick="toggleRegionCollapse('@collapseId')">
+                                <div class="region-header">
+                                    <div class="region-top">
+                                        <div class="region-left">
+                                            <div class="region-icon-wrapper">
+                                                📍
+                                            </div>
+                                            <div class="region-info">
+                                                <h4>@g.RegionName</h4>
+                                                <div class="region-meta">
+                                                    <span class="meta-badge">
+                                                        <span>🖥️</span>
+                                                        <span>@g.TotalDevices أجهزة</span>
+                                                    </span>
+                                                    @if (g.AssignedDevices > 0)
+                                                    {
+                                                        <span class="meta-badge success">
+                                                            <span>✅</span>
+                                                            <span>@g.AssignedDevices مرتبطة</span>
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn-icon-toggle" >
+                                            <span class="toggle-icon">⌄</span>
+                                        </button>
+                                    </div>
+                                </div>
 
-                                <td>@d.DeviceId</td>
-                                <td>@d.DeviceName</td>
-                                <td>@d.Location</td>
-                                <td>@(string.IsNullOrWhiteSpace(d.RegionName) ? "-" : d.RegionName)</td>
-                            </tr>
+                                <div id="@collapseId" class="collapse">
+                                    <!-- Region Options -->
+                                    <div class="region-options">
+                                        <div class="options-title">
+                                            ⚙️ اختر العملية المطلوبة
+                                        </div>
+
+                                        <div class="instruction-box">
+                                            <div class="instruction-box-icon">💡</div>
+                                            <div class="instruction-box-content">
+                                                <div class="instruction-box-title">كيفية الاستخدام:</div>
+                                                <div class="instruction-box-text">
+                                                    1️⃣ اختر نوع العملية (نقل، ندب، إزالة)
+                                                    <br>
+                                                    2️⃣ حدد الأجهزة من القائمة أدناه
+                                                    <br>
+                                                    3️⃣ اضغط "تطبيق" لتنفيذ العملية على الأجهزة المحددة
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="radio-options">
+                                            <div class="radio-option">
+                                                <input type="radio" name="operation_@regionKey" id="transfer_@regionKey" value="transfer" checked onchange="toggleDates('@regionKey', 'transfer')">
+                                                <label for="transfer_@regionKey">
+                                                    <span>🔁</span>
+                                                    <span>نقل دائم</span>
+                                                </label>
+                                            </div>
+                                            <div class="radio-option">
+                                                <input type="radio" name="operation_@regionKey" id="delegate_@regionKey" value="delegate" onchange="toggleDates('@regionKey', 'delegate')">
+                                                <label for="delegate_@regionKey">
+                                                    <span>📅</span>
+                                                    <span>انتداب مؤقت</span>
+                                                </label>
+                                            </div>
+                                            <div class="radio-option">
+                                                <input type="radio" name="operation_@regionKey" id="remove_@regionKey" value="remove" onchange="toggleDates('@regionKey', 'remove')">
+                                                <label for="remove_@regionKey">
+                                                    <span>✖️</span>
+                                                    <span>إزالة البصمة</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="dates-row" id="dates_@regionKey">
+                                            <div class="date-field">
+                                                <label class="date-label">
+                                                    <span>📅</span>
+                                                    <span>تاريخ البداية</span>
+                                                </label>
+                                                <input type="date" class="date-input" id="startDate_@regionKey">
+                                            </div>
+                                            <div class="date-field">
+                                                <label class="date-label">
+                                                    <span>📅</span>
+                                                    <span>تاريخ النهاية</span>
+                                                </label>
+                                                <input type="date" class="date-input" id="endDate_@regionKey">
+                                            </div>
+                                        </div>
+
+                                        <div class="warning-note" id="warning_@regionKey">
+                                            <span>⚠️</span>
+                                            <span>سيتم إلغاء الانتداب تلقائياً في التاريخ المحدد</span>
+                                        </div>
+
+                                        @if (g.RegionId.HasValue && g.RegionId.Value > 0)
+                                        {
+                                            <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
+                                                <span>✓</span>
+                                                <span>تطبيق على الأجهزة المحددة</span>
+                                            </button>
+                                        }
+                                    </div>
+
+                                    <div class="devices-section">
+                                        <div class="devices-section-title">
+                                            💻 حدد الأجهزة
+                                        </div>
+
+                                        <div class="select-all-box" onclick="toggleRegionCheckbox('@regionKey')">
+                                            <input type="checkbox" id="check-@regionKey">
+                                            <span class="select-all-label">تحديد جميع أجهزة المنطقة</span>
+                                        </div>
+
+                                        <div class="devices-grid">
+                                            @foreach (var d in g.Devices)
+                                            {
+                                                <div class="device-card @(d.IsAssigned ? "selected" : "")" onclick="toggleDeviceCheckbox('chk-@d.DeviceId')">
+                                                    <div class="device-checkbox" onclick="event.stopPropagation();">
+                                                        <input type="checkbox" class="device-chk"
+                                                               value="@d.DeviceId"
+                                                               id="chk-@d.DeviceId"
+                                                               @(d.IsAssigned ? "checked" : "")
+                                                               onchange="updateDeviceSelection(this)">
+                                                    </div>
+                                                    <div class="device-icon">💻</div>
+                                                    <div class="device-details">
+                                                        <div class="device-name">@d.DeviceName</div>
+                                                        <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         }
-                    </tbody>
-                </table>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-bar" id="bulkBar">
+        <div class="bulk-info">
+            <span class="pulse-indicator"></span>
+            <div>
+                <div class="bulk-count"><span id="selectedCount">0</span></div>
+                <div class="bulk-label">جهاز محدد</div>
             </div>
         </div>
-    }
-</div>
+        <div class="bulk-actions">
+            <button type="button" class="btn-bulk btn-bulk-success" onclick="submitBulk('AssignBulk')">
+                <span>✓</span>
+                <span>ربط بالجملة</span>
+            </button>
+            <button type="button" class="btn-bulk btn-bulk-danger" onclick="submitBulk('UnassignBulk')">
+                <span>✕</span>
+                <span>إلغاء ربط بالجملة</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Forms -->
+    <form id="bulkForm" method="post" style="display:none;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
+        <div id="bulkInputsContainer"></div>
+    </form>
+
+    <form id="regionForm" method="post" style="display:none;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
+        <input type="hidden" id="regionIdInput" name="regionId" value="" />
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function updateBulkBar() {
+            const selectedCount = document.querySelectorAll('.device-chk:checked').length;
+            document.getElementById('selectedCount').textContent = selectedCount;
+            const bar = document.getElementById('bulkBar');
+            if (selectedCount > 0) {
+                bar.classList.add('show');
+            } else {
+                bar.classList.remove('show');
+            }
+        }
+
+        function updateDeviceSelection(checkbox) {
+            const card = checkbox.closest('.device-card');
+            if (checkbox.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+            updateBulkBar();
+        }
+
+        function toggleDeviceCheckbox(checkboxId) {
+            const checkbox = document.getElementById(checkboxId);
+            checkbox.checked = !checkbox.checked;
+            updateDeviceSelection(checkbox);
+        }
+
+        function toggleRegionCheckbox(regionKey) {
+            const checkbox = document.getElementById('check-' + regionKey);
+            checkbox.checked = !checkbox.checked;
+
+            const regionCard = checkbox.closest('.region-card');
+            const deviceCheckboxes = regionCard.querySelectorAll('.device-chk');
+            deviceCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+                updateDeviceSelection(cb);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateBulkBar();
+        });
+
+        function toggleRegionCollapse(collapseId) {
+            const element = document.getElementById(collapseId);
+            const header = element.previousElementSibling;
+
+            if (element.classList.contains('show')) {
+                element.classList.remove('show');
+                header.classList.remove('active');
+            } else {
+                element.classList.add('show');
+                header.classList.add('active');
+            }
+        }
+
+        function toggleDates(regionKey, operation) {
+            const datesRow = document.getElementById('dates_' + regionKey);
+            const warning = document.getElementById('warning_' + regionKey);
+
+            if (operation === 'delegate') {
+                datesRow.classList.add('show');
+                warning.classList.add('show');
+            } else {
+                datesRow.classList.remove('show');
+                warning.classList.remove('show');
+            }
+        }
+
+        function submitRegionWithOptions(regionId, regionKey) {
+            const operation = document.querySelector(`input[name="operation_${regionKey}"]:checked`).value;
+            const startDate = document.getElementById(`startDate_${regionKey}`).value;
+            const endDate = document.getElementById(`endDate_${regionKey}`).value;
+
+            // Get selected devices
+            const regionCard = document.querySelector(`#check-${regionKey}`).closest('.region-card');
+            const selectedDevices = Array.from(regionCard.querySelectorAll('.device-chk:checked'));
+
+            if (selectedDevices.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'يرجى اختيار الأجهزة أولاً',
+                    confirmButtonColor: '#692f39',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            if (operation === 'delegate' && (!startDate || !endDate)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'يرجى تحديد تاريخ البداية والنهاية للانتداب',
+                    confirmButtonColor: '#692f39',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            let actionName = '';
+            let operationText = '';
+            let operationIcon = '';
+
+            if (operation === 'transfer') {
+                actionName = 'AssignBulk';
+                operationText = 'نقل دائم';
+                operationIcon = '🔁';
+            } else if (operation === 'delegate') {
+                actionName = 'DelegateRegion';
+                operationText = `انتداب من ${startDate} إلى ${endDate}`;
+                operationIcon = '📅';
+            } else if (operation === 'remove') {
+                actionName = 'UnassignBulk';
+                operationText = 'إزالة البصمة';
+                operationIcon = '✖️';
+            }
+
+            Swal.fire({
+                title: 'تأكيد العملية',
+                html: `<div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3.5em; margin-bottom: 16px;">${operationIcon}</div>
+                    <p style="font-size: 1.15em; margin-bottom: 10px;">هل أنت متأكد من تنفيذ</p>
+                    <p style="font-size: 1.4em; font-weight: 800; color: #692f39; margin: 10px 0;">${operationText}</p>
+                    <p style="font-size: 1.8em; font-weight: 900; color: #10b981; margin: 10px 0;">${selectedDevices.length} جهاز</p>
+                </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#692f39',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '✓ تنفيذ',
+                cancelButtonText: '✕ إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('bulkForm');
+                    form.action = '/employees/' + actionName;
+
+                    const container = document.getElementById('bulkInputsContainer');
+                    container.innerHTML = '';
+
+                    selectedDevices.forEach(cb => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'terminalIds';
+                        input.value = cb.value;
+                        container.appendChild(input);
+                    });
+
+                    if (operation === 'delegate') {
+                        let startInput = document.createElement('input');
+                        startInput.type = 'hidden';
+                        startInput.name = 'startDate';
+                        startInput.value = startDate;
+                        container.appendChild(startInput);
+
+                        let endInput = document.createElement('input');
+                        endInput.type = 'hidden';
+                        endInput.name = 'endDate';
+                        endInput.value = endDate;
+                        container.appendChild(endInput);
+                    }
+
+                    form.submit();
+                }
+            });
+        }
+
+        function submitBulk(actionName) {
+            const selectedIds = [];
+            document.querySelectorAll('.device-chk:checked').forEach(cb => {
+                selectedIds.push(cb.value);
+            });
+
+            if (selectedIds.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'يرجى اختيار الأجهزة أولاً',
+                    confirmButtonColor: '#692f39',
+                    confirmButtonText: 'حسناً'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'تأكيد العملية',
+                html: `<div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3em; margin-bottom: 16px;">🔐</div>
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">هل أنت متأكد من تنفيذ العملية على</p>
+                    <p style="font-size: 2em; font-weight: 900; color: #692f39;">${selectedIds.length} جهاز؟</p>
+                </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#692f39',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '✓ تنفيذ',
+                cancelButtonText: '✕ إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('bulkForm');
+                    form.action = '/employees/' + actionName;
+
+                    const container = document.getElementById('bulkInputsContainer');
+                    container.innerHTML = '';
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'terminalIds';
+                        input.value = id;
+                        container.appendChild(input);
+                    });
+
+                    form.submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
