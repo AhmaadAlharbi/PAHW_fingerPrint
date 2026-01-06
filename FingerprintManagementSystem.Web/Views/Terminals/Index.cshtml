@@ -1,0 +1,115 @@
+﻿@{
+    ViewData["Title"] = "الأجهزة والمناطق";
+}
+
+<div dir="rtl" style="max-width:1100px;margin:auto;padding:20px;font-family:Segoe UI,Tahoma,Arial">
+    <h2 style="margin-bottom:12px">الأجهزة والمناطق</h2>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <button id="btnAuto" style="padding:10px 14px;cursor:pointer">تشغيل Auto Assign</button>
+
+        <label>فلترة حسب المنطقة:</label>
+        <select id="regionFilter" style="padding:10px;min-width:220px">
+            <option value="">الكل</option>
+        </select>
+
+        <span id="status" style="color:#555"></span>
+    </div>
+
+    <table border="1" cellpadding="10" cellspacing="0" style="width:100%;border-collapse:collapse">
+        <thead>
+            <tr style="background:#f3f4f6">
+                <th>Terminal ID</th>
+                <th>Region</th>
+                <th>Region ID</th>
+            </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</div>
+
+<script>
+    const apiBase = ""; // نفس الدومين
+    let allMaps = [];
+    let regionsById = {};
+
+    const statusEl = document.getElementById("status");
+    const tbody = document.getElementById("tbody");
+    const regionFilter = document.getElementById("regionFilter");
+    const btnAuto = document.getElementById("btnAuto");
+
+    function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+    async function loadRegions() {
+        setStatus("جاري تحميل المناطق...");
+        const res = await fetch(`${apiBase}/api/terminals/regions`);
+        const data = await res.json();
+
+        regionFilter.innerHTML = `<option value="">الكل</option>`;
+        regionsById = {};
+
+        data.regions.forEach(r => {
+            regionsById[r.id] = r.name;
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            opt.textContent = r.name;
+            regionFilter.appendChild(opt);
+        });
+    }
+
+    async function loadMaps() {
+        setStatus("جاري تحميل الأجهزة...");
+        const res = await fetch(`${apiBase}/api/terminals`);
+        const data = await res.json();
+        allMaps = data.maps || [];
+        renderTable();
+        setStatus(`تم التحميل: ${allMaps.length} جهاز`);
+    }
+
+    function renderTable() {
+        const selected = regionFilter.value;
+        const rows = selected
+            ? allMaps.filter(x => String(x.regionId) === String(selected))
+            : allMaps;
+
+        tbody.innerHTML = rows.map(x => `
+            <tr>
+                <td>${x.terminalId}</td>
+                <td>${x.regionName || (regionsById[x.regionId] ?? "")}</td>
+                <td>${x.regionId}</td>
+            </tr>
+        `).join("");
+    }
+
+    regionFilter.addEventListener("change", renderTable);
+
+    btnAuto.addEventListener("click", async () => {
+        try {
+            btnAuto.disabled = true;
+            setStatus("جاري تشغيل Auto Assign...");
+            const res = await fetch(`${apiBase}/api/terminals/auto-assign-regions`, {
+                method: "POST"
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                throw new Error(txt);
+            }
+
+            const result = await res.json();
+            setStatus(`تم: inserted=${result.inserted}, updated=${result.updated}, totalDevices=${result.totalDevices}`);
+            await loadMaps();
+        } catch (e) {
+            setStatus("خطأ: " + e.message);
+        } finally {
+            btnAuto.disabled = false;
+        }
+    });
+
+    // init
+    (async function () {
+        await loadRegions();
+        await loadMaps();
+        setStatus("");
+    })();
+</script>

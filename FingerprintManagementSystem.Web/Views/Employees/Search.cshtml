@@ -1,0 +1,119 @@
+﻿@model FingerprintManagementSystem.Web.ViewModels.EmployeeDevicesViewModel
+
+@{
+    ViewData["Title"] = "بحث عن موظف وعرض أجهزته";
+}
+
+<div class="container mt-4" dir="rtl">
+
+    <h3 class="text-center mb-4">بحث عن موظف وعرض أجهزته</h3>
+
+    @if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+    {
+        <div class="alert alert-info text-center">@msg</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+    {
+        <div class="alert alert-danger text-center">@Model.ErrorMessage</div>
+    }
+
+    <form asp-action="Search" method="post" class="mb-4">
+        @Html.AntiForgeryToken()
+
+        <div class="d-flex justify-content-center gap-2">
+            <input type="number"
+                   name="employeeId"
+                   class="form-control"
+                   style="max-width: 320px;"
+                   placeholder="الرقم الوظيفي"
+                   value="@(Model?.Employee?.EmployeeId ?? 0)" />
+
+            <button class="btn btn-primary px-5" type="submit">بحث</button>
+        </div>
+    </form>
+
+    @if (Model?.Employee is not null && Model.Employee.EmployeeId > 0)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-4"><b>الرقم الوظيفي:</b> @Model.Employee.EmployeeId</div>
+                    <div class="col-md-4"><b>الاسم:</b> @Model.Employee.FullNameAr</div>
+                    <div class="col-md-4"><b>المسمى:</b> @Model.Employee.JobTitle</div>
+                    <div class="col-md-6"><b>القسم:</b> @Model.Employee.Department</div>
+                    <div class="col-md-6"><b>عدد الأجهزة:</b> @(Model.Devices?.Count ?? 0)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>الأجهزة</div>
+                <small class="text-muted">مرتّبة: المرتبطة أولاً</small>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:110px;">مرتبط؟</th>
+                            <th style="width:120px;">إجراء</th>
+                            <th style="width:120px;">TerminalId</th>
+                            <th>اسم الجهاز</th>
+                            <th>الموقع</th>
+                            <th style="width:200px;">المنطقة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.Devices)
+                        {
+                            <tr>
+                                <td>
+                                    @if (d.IsAssigned)
+                                    {
+                                        <span class="badge bg-success">نعم</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">لا</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (d.IsAssigned)
+                                    {
+                                        <form asp-action="Unassign" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                                            <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                إلغاء ربط
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="Assign" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                                            <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                                ربط
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+
+                                <td>@d.DeviceId</td>
+                                <td>@d.DeviceName</td>
+                                <td>@d.Location</td>
+                                <td>@(string.IsNullOrWhiteSpace(d.RegionName) ? "-" : d.RegionName)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

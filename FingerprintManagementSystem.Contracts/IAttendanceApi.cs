@@ -1,0 +1,10 @@
+﻿using FingerprintManagementSystem.Contracts.DTOs;
+
+namespace FingerprintManagementSystem.Contracts;
+
+public interface IAttendanceApi
+{
+    Task<EmployeeDto?> GetEmployeeByIdAsync(int employeeId, CancellationToken ct = default);
+
+    Task<EmployeeDevicesDto?> GetEmployeeWithDevicesAsync(int employeeId, CancellationToken ct = default);
+}
