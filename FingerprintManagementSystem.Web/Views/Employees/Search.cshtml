@@ -72,54 +72,16 @@
             animation: float-particle 20s infinite ease-in-out;
         }
 
-            .particle:nth-child(1) {
-                width: 300px;
-                height: 300px;
-                top: 10%;
-                left: 10%;
-                animation-delay: 0s;
-            }
-
-            .particle:nth-child(2) {
-                width: 200px;
-                height: 200px;
-                top: 60%;
-                left: 70%;
-                animation-delay: 5s;
-            }
-
-            .particle:nth-child(3) {
-                width: 250px;
-                height: 250px;
-                top: 80%;
-                left: 20%;
-                animation-delay: 10s;
-            }
-
-            .particle:nth-child(4) {
-                width: 180px;
-                height: 180px;
-                top: 30%;
-                left: 80%;
-                animation-delay: 15s;
-            }
+        .particle:nth-child(1) { width: 300px; height: 300px; top: 10%; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 200px; height: 200px; top: 60%; left: 70%; animation-delay: 5s; }
+        .particle:nth-child(3) { width: 250px; height: 250px; top: 80%; left: 20%; animation-delay: 10s; }
+        .particle:nth-child(4) { width: 180px; height: 180px; top: 30%; left: 80%; animation-delay: 15s; }
 
         @@keyframes float-particle {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-            }
-
-            25% {
-                transform: translate(30px, -30px) scale(1.1);
-            }
-
-            50% {
-                transform: translate(-20px, 20px) scale(0.9);
-            }
-
-            75% {
-                transform: translate(40px, 10px) scale(1.05);
-            }
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(40px, 10px) scale(1.05); }
         }
 
         /* Enhanced Navbar */
@@ -135,26 +97,21 @@
             border-bottom: 3px solid var(--copper);
         }
 
-            .navbar::before {
-                content: '';
-                position: absolute;
-                bottom: -3px;
-                left: 0;
-                width: 100%;
-                height: 3px;
-                background: linear-gradient(90deg, var(--copper), var(--blue), var(--maroon));
-                background-size: 200% 100%;
-                animation: shimmer 3s linear infinite;
-            }
+        .navbar::before {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--copper), var(--blue), var(--maroon));
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
 
         @@keyframes shimmer {
-            0% {
-                background-position: 100% 0;
-            }
-
-            100% {
-                background-position: -100% 0;
-            }
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
 
         .navbar-brand {
@@ -177,15 +134,15 @@
             transition: all 0.3s ease;
         }
 
-            .navbar-logo:hover {
-                transform: rotate(5deg) scale(1.05);
-                box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
-            }
+        .navbar-logo:hover {
+            transform: rotate(5deg) scale(1.05);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+        }
 
-            .navbar-logo img {
-                height: 40px;
-                filter: brightness(0) invert(1);
-            }
+        .navbar-logo img {
+            height: 40px;
+            filter: brightness(0) invert(1);
+        }
 
         .navbar-title {
             font-size: 1.5em;
@@ -206,11 +163,11 @@
             transition: all 0.3s ease;
         }
 
-            .navbar-user:hover {
-                background: rgba(255, 255, 255, 0.25);
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            }
+        .navbar-user:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
 
         .user-avatar {
             width: 42px;
@@ -243,15 +200,8 @@
         }
 
         @@keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .page-header h1 {
@@ -284,51 +234,31 @@
             animation: fadeInUp 0.6s ease both;
         }
 
-            .premium-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 4px;
-                background: linear-gradient(90deg, var(--maroon), var(--blue), var(--copper));
-                background-size: 200% 100%;
-                animation: slideGradient 3s linear infinite;
-            }
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--maroon), var(--blue), var(--copper));
+            background-size: 200% 100%;
+            animation: slideGradient 3s linear infinite;
+        }
 
         @@keyframes slideGradient {
-            0% {
-                background-position: 0% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
-            }
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
         }
 
         @@keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .premium-card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .premium-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .premium-card:nth-child(3) {
-            animation-delay: 0.3s;
-        }
+        .premium-card:nth-child(1) { animation-delay: 0.1s; }
+        .premium-card:nth-child(2) { animation-delay: 0.2s; }
+        .premium-card:nth-child(3) { animation-delay: 0.3s; }
 
         /* Section Header */
         .section-header {
@@ -341,15 +271,15 @@
             position: relative;
         }
 
-            .section-header::after {
-                content: '';
-                position: absolute;
-                bottom: -2px;
-                left: 0;
-                width: 120px;
-                height: 2px;
-                background: linear-gradient(90deg, var(--maroon), transparent);
-            }
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--maroon), transparent);
+        }
 
         .section-number {
             width: 52px;
@@ -399,13 +329,13 @@
             font-family: 'Tajawal', sans-serif;
         }
 
-            .form-input:focus {
-                outline: none;
-                border-color: var(--maroon);
-                background: white;
-                box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.1);
-                transform: translateY(-2px);
-            }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--maroon);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.1);
+            transform: translateY(-2px);
+        }
 
         /* Alerts */
         .alert {
@@ -420,15 +350,8 @@
         }
 
         @@keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .alert-icon {
@@ -442,74 +365,24 @@
             flex-shrink: 0;
         }
 
-        .alert-content {
-            flex: 1;
-        }
+        .alert-content { flex: 1; }
+        .alert-title { font-weight: 800; font-size: 1.15em; margin-bottom: 6px; }
+        .alert-message { font-weight: 500; line-height: 1.6; }
 
-        .alert-title {
-            font-weight: 800;
-            font-size: 1.15em;
-            margin-bottom: 6px;
-        }
+        .alert-success { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-color: var(--emerald); }
+        .alert-success .alert-icon { background: var(--emerald); color: white; }
+        .alert-success .alert-title { color: #065f46; }
+        .alert-success .alert-message { color: #047857; }
 
-        .alert-message {
-            font-weight: 500;
-            line-height: 1.6;
-        }
+        .alert-warning { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: var(--amber); }
+        .alert-warning .alert-icon { background: var(--amber); color: white; }
+        .alert-warning .alert-title { color: #92400e; }
+        .alert-warning .alert-message { color: #b45309; }
 
-        .alert-success {
-            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-            border-color: var(--emerald);
-        }
-
-            .alert-success .alert-icon {
-                background: var(--emerald);
-                color: white;
-            }
-
-            .alert-success .alert-title {
-                color: #065f46;
-            }
-
-            .alert-success .alert-message {
-                color: #047857;
-            }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #fffbeb, #fef3c7);
-            border-color: var(--amber);
-        }
-
-            .alert-warning .alert-icon {
-                background: var(--amber);
-                color: white;
-            }
-
-            .alert-warning .alert-title {
-                color: #92400e;
-            }
-
-            .alert-warning .alert-message {
-                color: #b45309;
-            }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #fef2f2, #fee2e2);
-            border-color: var(--rose);
-        }
-
-            .alert-danger .alert-icon {
-                background: var(--rose);
-                color: white;
-            }
-
-            .alert-danger .alert-title {
-                color: #991b1b;
-            }
-
-            .alert-danger .alert-message {
-                color: #dc2626;
-            }
+        .alert-danger { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-color: var(--rose); }
+        .alert-danger .alert-icon { background: var(--rose); color: white; }
+        .alert-danger .alert-title { color: #991b1b; }
+        .alert-danger .alert-message { color: #dc2626; }
 
         /* Employee Card */
         .employee-card {
@@ -562,9 +435,7 @@
             transition: all 0.3s ease;
         }
 
-            .stat-badge:hover {
-                transform: translateY(-2px) scale(1.05);
-            }
+        .stat-badge:hover { transform: translateY(-2px) scale(1.05); }
 
         .stat-badge-primary {
             background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
@@ -597,11 +468,11 @@
             max-width: 100%;
         }
 
-            .region-card:hover {
-                border-color: var(--maroon);
-                box-shadow: 0 16px 48px rgba(105, 47, 57, 0.15);
-                transform: translateY(-6px);
-            }
+        .region-card:hover {
+            border-color: var(--maroon);
+            box-shadow: 0 16px 48px rgba(105, 47, 57, 0.15);
+            transform: translateY(-6px);
+        }
 
         .region-header {
             background: linear-gradient(135deg, var(--gray-50), white);
@@ -610,14 +481,14 @@
             transition: all 0.3s ease;
         }
 
-            .region-header:hover {
-                background: linear-gradient(135deg, white, #fef2f2);
-            }
+        .region-header:hover {
+            background: linear-gradient(135deg, white, #fef2f2);
+        }
 
-            .region-header.active {
-                background: linear-gradient(135deg, #fef2f2, #fee2e2);
-                border-bottom-color: var(--maroon);
-            }
+        .region-header.active {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-bottom-color: var(--maroon);
+        }
 
         .region-top {
             display: flex;
@@ -651,13 +522,13 @@
             min-width: 0;
         }
 
-            .region-info h4 {
-                font-size: 1.7em;
-                font-weight: 900;
-                color: var(--gray-900);
-                margin-bottom: 12px;
-                letter-spacing: -0.5px;
-            }
+        .region-info h4 {
+            font-size: 1.7em;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
 
         .region-meta {
             display: flex;
@@ -677,10 +548,10 @@
             gap: 6px;
         }
 
-            .meta-badge.success {
-                background: #d1fae5;
-                color: #065f46;
-            }
+        .meta-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
 
         .btn-icon-toggle {
             width: 52px;
@@ -698,11 +569,11 @@
             flex-shrink: 0;
         }
 
-            .btn-icon-toggle:hover {
-                border-color: var(--maroon);
-                color: var(--maroon);
-                transform: scale(1.1);
-            }
+        .btn-icon-toggle:hover {
+            border-color: var(--maroon);
+            color: var(--maroon);
+            transform: scale(1.1);
+        }
 
         .toggle-icon {
             transition: transform 0.3s ease;
@@ -718,9 +589,9 @@
             transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-            .collapse.show {
-                max-height: 6000px;
-            }
+        .collapse.show {
+            max-height: 6000px;
+        }
 
         /* Region Options */
         .region-options {
@@ -785,45 +656,45 @@
             position: relative;
         }
 
-            .radio-option input[type="radio"] {
-                position: absolute;
-                opacity: 0;
-            }
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
 
-            .radio-option label {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                padding: 24px 16px;
-                background: white;
-                border: 3px solid var(--gray-200);
-                border-radius: 18px;
-                font-weight: 800;
-                font-size: 1em;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                min-height: 120px;
-            }
+        .radio-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 24px 16px;
+            background: white;
+            border: 3px solid var(--gray-200);
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 120px;
+        }
 
-                .radio-option label span:first-child {
-                    font-size: 2.5em;
-                }
+        .radio-option label span:first-child {
+            font-size: 2.5em;
+        }
 
-            .radio-option input[type="radio"]:checked + label {
-                background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
-                border-color: var(--maroon);
-                color: white;
-                box-shadow: 0 10px 30px rgba(105, 47, 57, 0.4);
-                transform: translateY(-6px) scale(1.05);
-            }
+        .radio-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            border-color: var(--maroon);
+            color: white;
+            box-shadow: 0 10px 30px rgba(105, 47, 57, 0.4);
+            transform: translateY(-6px) scale(1.05);
+        }
 
-            .radio-option label:hover {
-                border-color: var(--maroon);
-                transform: translateY(-3px);
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            }
+        .radio-option label:hover {
+            border-color: var(--maroon);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
 
         /* Date Fields */
         .dates-row {
@@ -837,11 +708,11 @@
             margin-top: 0;
         }
 
-            .dates-row.show {
-                opacity: 1;
-                max-height: 300px;
-                margin-top: 24px;
-            }
+        .dates-row.show {
+            opacity: 1;
+            max-height: 300px;
+            margin-top: 24px;
+        }
 
         .date-field {
             display: flex;
@@ -858,9 +729,9 @@
             gap: 10px;
         }
 
-            .date-label span:first-child {
-                font-size: 1.4em;
-            }
+        .date-label span:first-child {
+            font-size: 1.4em;
+        }
 
         .date-input {
             padding: 18px 22px;
@@ -874,12 +745,12 @@
             color: var(--gray-800);
         }
 
-            .date-input:focus {
-                outline: none;
-                border-color: var(--maroon);
-                box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.15);
-                transform: translateY(-2px);
-            }
+        .date-input:focus {
+            outline: none;
+            border-color: var(--maroon);
+            box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.15);
+            transform: translateY(-2px);
+        }
 
         .warning-note {
             margin-top: 20px;
@@ -899,14 +770,14 @@
             transition: all 0.5s ease;
         }
 
-            .warning-note.show {
-                opacity: 1;
-                max-height: 150px;
-            }
+        .warning-note.show {
+            opacity: 1;
+            max-height: 150px;
+        }
 
-            .warning-note span:first-child {
-                font-size: 1.6em;
-            }
+        .warning-note span:first-child {
+            font-size: 1.6em;
+        }
 
         .submit-region-btn {
             margin-top: 24px;
@@ -927,14 +798,14 @@
             justify-content: center;
         }
 
-            .submit-region-btn:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 14px 36px rgba(16, 185, 129, 0.5);
-            }
+        .submit-region-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 36px rgba(16, 185, 129, 0.5);
+        }
 
-            .submit-region-btn span:first-child {
-                font-size: 1.4em;
-            }
+        .submit-region-btn span:first-child {
+            font-size: 1.4em;
+        }
 
         /* Devices Section */
         .devices-section {
@@ -965,40 +836,40 @@
             transition: all 0.3s ease;
         }
 
-            .select-all-box:hover {
-                border-color: var(--maroon);
-                background: var(--gray-50);
-                box-shadow: 0 6px 20px rgba(105, 47, 57, 0.1);
-                transform: translateY(-2px);
-            }
+        .select-all-box:hover {
+            border-color: var(--maroon);
+            background: var(--gray-50);
+            box-shadow: 0 6px 20px rgba(105, 47, 57, 0.1);
+            transform: translateY(-2px);
+        }
 
-            .select-all-box input[type="checkbox"] {
-                width: 30px;
-                height: 30px;
-                cursor: pointer;
-                appearance: none;
-                border: 3px solid var(--gray-300);
-                border-radius: 10px;
-                background: white;
-                transition: all 0.3s ease;
-                position: relative;
-            }
+        .select-all-box input[type="checkbox"] {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            appearance: none;
+            border: 3px solid var(--gray-300);
+            border-radius: 10px;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
 
-                .select-all-box input[type="checkbox"]:checked {
-                    background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
-                    border-color: var(--maroon);
-                }
+        .select-all-box input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            border-color: var(--maroon);
+        }
 
-                    .select-all-box input[type="checkbox"]:checked::after {
-                        content: '✓';
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        color: white;
-                        font-weight: 900;
-                        font-size: 18px;
-                    }
+        .select-all-box input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: 18px;
+        }
 
         .select-all-label {
             font-weight: 800;
@@ -1026,38 +897,38 @@
             overflow: hidden;
         }
 
-            .device-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 5px;
-                height: 100%;
-                background: linear-gradient(135deg, var(--maroon), var(--copper));
-                transform: scaleY(0);
-                transition: transform 0.3s ease;
-            }
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--maroon), var(--copper));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
 
-            .device-card:hover {
-                border-color: var(--copper);
-                transform: translateX(-6px);
-                box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-            }
+        .device-card:hover {
+            border-color: var(--copper);
+            transform: translateX(-6px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+        }
 
-                .device-card:hover::before {
-                    transform: scaleY(1);
-                }
+        .device-card:hover::before {
+            transform: scaleY(1);
+        }
 
-            .device-card.selected {
-                background: linear-gradient(135deg, #ecfdf5, white);
-                border-color: var(--emerald);
-                box-shadow: 0 10px 36px rgba(16, 185, 129, 0.25);
-            }
+        .device-card.selected {
+            background: linear-gradient(135deg, #ecfdf5, white);
+            border-color: var(--emerald);
+            box-shadow: 0 10px 36px rgba(16, 185, 129, 0.25);
+        }
 
-                .device-card.selected::before {
-                    transform: scaleY(1);
-                    background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
-                }
+        .device-card.selected::before {
+            transform: scaleY(1);
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+        }
 
         .device-checkbox input[type="checkbox"] {
             width: 28px;
@@ -1071,21 +942,21 @@
             position: relative;
         }
 
-            .device-checkbox input[type="checkbox"]:checked {
-                background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
-                border-color: var(--emerald);
-            }
+        .device-checkbox input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+            border-color: var(--emerald);
+        }
 
-                .device-checkbox input[type="checkbox"]:checked::after {
-                    content: '✓';
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    color: white;
-                    font-weight: 900;
-                    font-size: 16px;
-                }
+        .device-checkbox input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: 16px;
+        }
 
         .device-icon {
             width: 64px;
@@ -1141,9 +1012,9 @@
             transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-            .bulk-bar.show {
-                transform: translateX(-50%) translateY(0);
-            }
+        .bulk-bar.show {
+            transform: translateX(-50%) translateY(0);
+        }
 
         .bulk-info {
             display: flex;
@@ -1161,17 +1032,9 @@
         }
 
         @@keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8);
-            }
-
-            70% {
-                box-shadow: 0 0 0 18px rgba(16, 185, 129, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
+            70% { box-shadow: 0 0 0 18px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
         .bulk-count {
@@ -1208,12 +1071,12 @@
             color: var(--maroon);
         }
 
-            .btn-bulk-success:hover {
-                background: var(--emerald);
-                color: white;
-                transform: translateY(-4px);
-                box-shadow: 0 14px 32px rgba(16, 185, 129, 0.5);
-            }
+        .btn-bulk-success:hover {
+            background: var(--emerald);
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: 0 14px 32px rgba(16, 185, 129, 0.5);
+        }
 
         .btn-bulk-danger {
             background: rgba(255, 255, 255, 0.22);
@@ -1221,12 +1084,12 @@
             border: 3px solid rgba(255, 255, 255, 0.35);
         }
 
-            .btn-bulk-danger:hover {
-                background: var(--rose);
-                border-color: var(--rose);
-                transform: translateY(-4px);
-                box-shadow: 0 14px 32px rgba(244, 63, 94, 0.5);
-            }
+        .btn-bulk-danger:hover {
+            background: var(--rose);
+            border-color: var(--rose);
+            transform: translateY(-4px);
+            box-shadow: 0 14px 32px rgba(244, 63, 94, 0.5);
+        }
 
         /* Action Buttons */
         .form-actions {
@@ -1257,10 +1120,10 @@
             box-shadow: 0 10px 28px rgba(105, 47, 57, 0.35);
         }
 
-            .btn-primary:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 14px 40px rgba(105, 47, 57, 0.45);
-            }
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 40px rgba(105, 47, 57, 0.45);
+        }
 
         /* Responsive */
         @@media (max-width: 1400px) {
@@ -1470,21 +1333,21 @@
                         <h3 class="section-title">إدارة أجهزة البصمة</h3>
                     </div>
 
-                    <div class="regions-container" >
+                    <div class="regions-container">
                         @for (int i = 0; i < Model.RegionGroups.Count; i++)
                         {
                             var g = Model.RegionGroups[i];
                             var collapseId = $"collapse_{i}";
                             var regionKey = "reg_" + i;
 
-                            <div class="region-card" onclick="toggleRegionCollapse('@collapseId')">
+                            <div class="region-card">
                                 <div class="region-header">
                                     <div class="region-top">
-                                        <div class="region-left">
+                                        <div onclick="toggleRegionCollapse('@collapseId')" class="region-info" class="region-left">
                                             <div class="region-icon-wrapper">
                                                 📍
                                             </div>
-                                            <div class="region-info">
+                                            <div >
                                                 <h4>@g.RegionName</h4>
                                                 <div class="region-meta">
                                                     <span class="meta-badge">
@@ -1501,7 +1364,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn-icon-toggle" >
+                                        <button type="button" class="btn-icon-toggle" onclick="toggleRegionCollapse('@collapseId')">
                                             <span class="toggle-icon">⌄</span>
                                         </button>
                                     </div>
@@ -1588,9 +1451,9 @@
                                             💻 حدد الأجهزة
                                         </div>
 
-                                        <div class="select-all-box" onclick="toggleRegionCheckbox('@regionKey')">
-                                            <input type="checkbox" id="check-@regionKey">
-                                            <span class="select-all-label">تحديد جميع أجهزة المنطقة</span>
+                                        <div class="select-all-box">
+                                            <input type="checkbox" id="check-@regionKey" class="select-all-region">
+                                            <label for="check-@regionKey" class="select-all-label">تحديد جميع أجهزة المنطقة</label>
                                         </div>
 
                                         <div class="devices-grid">
@@ -1602,6 +1465,7 @@
                                                                value="@d.DeviceId"
                                                                id="chk-@d.DeviceId"
                                                                @(d.IsAssigned ? "checked" : "")
+                                                               onclick="event.stopPropagation();"
                                                                onchange="updateDeviceSelection(this)">
                                                     </div>
                                                     <div class="device-icon">💻</div>
@@ -1685,21 +1549,66 @@
             checkbox.checked = !checkbox.checked;
             updateDeviceSelection(checkbox);
         }
-
-        function toggleRegionCheckbox(regionKey) {
+        function handleSelectAll(event, regionKey) {
             const checkbox = document.getElementById('check-' + regionKey);
-            checkbox.checked = !checkbox.checked;
 
+            // إذا ضغط على checkbox مباشرة
+            if (event.target.type === 'checkbox') {
+                event.stopPropagation();
+            } else {
+                // إذا ضغط على أي مكان آخر
+                checkbox.checked = !checkbox.checked;
+            }
+
+            // حدّث كل الأجهزة
             const regionCard = checkbox.closest('.region-card');
             const deviceCheckboxes = regionCard.querySelectorAll('.device-chk');
+
             deviceCheckboxes.forEach(cb => {
                 cb.checked = checkbox.checked;
                 updateDeviceSelection(cb);
             });
         }
+        function toggleRegionCheckbox(regionKey, event) {
+            const checkbox = document.getElementById('check-' + regionKey);
+
+            // إذا ضغط المستخدم على الـ checkbox مباشرة، لا نغير حالته يدوياً 
+            // لأن المتصفح قام بذلك بالفعل، فقط نمنع الحدث من الوصول للحاوية
+            if (event.target.type === 'checkbox') {
+                event.stopPropagation();
+            } else {
+                // إذا ضغط على الـ div (الحاوية)، هنا نغير حالة الـ checkbox يدوياً
+                checkbox.checked = !checkbox.checked;
+            }
+
+            // الآن نحدث جميع الأجهزة التابعة للمنطقة بناءً على حالة الـ checkbox الرئيسية
+            const regionCard = checkbox.closest('.region-card');
+            const deviceCheckboxes = regionCard.querySelectorAll('.device-chk');
+
+            deviceCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+                // تأكد من وجود دالة updateDeviceSelection في كودك
+                if (typeof updateDeviceSelection === "function") {
+                    updateDeviceSelection(cb);
+                }
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             updateBulkBar();
+
+            // Setup select-all checkboxes
+            document.querySelectorAll('.select-all-region').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const regionCard = this.closest('.region-card');
+                    const deviceCheckboxes = regionCard.querySelectorAll('.device-chk');
+
+                    deviceCheckboxes.forEach(cb => {
+                        cb.checked = this.checked;
+                        updateDeviceSelection(cb);
+                    });
+                });
+            });
         });
 
         function toggleRegionCollapse(collapseId) {
