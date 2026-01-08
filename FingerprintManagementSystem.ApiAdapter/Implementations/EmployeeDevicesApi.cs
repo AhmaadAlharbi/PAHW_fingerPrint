@@ -1,40 +1,31 @@
 ﻿using FingerprintManagementSystem.ApiAdapter.Alpeta;
+using FingerprintManagementSystem.ApiAdapter.Persistence;
 using FingerprintManagementSystem.ApiAdapter.Soap;
 using FingerprintManagementSystem.Contracts;
 using FingerprintManagementSystem.Contracts.DTOs;
 
 namespace FingerprintManagementSystem.ApiAdapter.Implementations;
 
-/// <summary>
-/// Simple API that returns:
-/// - Employee summary from SOAP
-/// - All devices from Alpeta
-/// - Devices assigned to employee from Alpeta
-///
-/// NOTE: Region/assignment flags are computed in the Web layer (ViewModel)
-/// to avoid introducing new DTO types.
-/// </summary>
 public class EmployeeDevicesApi : IEmployeeDevicesApi
 {
     private readonly EmployeeSoapClient _soap;
     private readonly AlpetaClient _alpeta;
+    private readonly RegionMappingService _regions;
 
-    public EmployeeDevicesApi(EmployeeSoapClient soap, AlpetaClient alpeta)
+    public EmployeeDevicesApi(EmployeeSoapClient soap, AlpetaClient alpeta, RegionMappingService regions)
     {
         _soap = soap;
         _alpeta = alpeta;
+        _regions = regions;
     }
 
     public async Task<EmployeeDevicesDto?> GetEmployeeWithDevicesAsync(int employeeId, CancellationToken ct = default)
     {
-        if (employeeId <= 0)
-            return null;
+        if (employeeId <= 0) return null;
 
-        // 1) Employee from SOAP
         var raw = await _soap.GetEmployeeByIdRawAsync(employeeId, ct);
         var (name, dept, title) = _soap.ParseEmployeeSummary(raw);
-        if (string.IsNullOrWhiteSpace(name))
-            return null;
+        if (string.IsNullOrWhiteSpace(name)) return null;
 
         var employee = new EmployeeDto
         {
@@ -44,7 +35,6 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
             JobTitle = title
         };
 
-        // 2) Devices from Alpeta
         var allDevices = await _alpeta.GetAllDevicesAsync(ct);
         var assignedDevices = await _alpeta.GetEmployeeDevicesAsync(employeeId, ct);
 
@@ -55,4 +45,77 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
             AssignedDevices = assignedDevices
         };
     }
+
+    // ✅ هذا اللي يعرض المناطق (بدون ما الـ Controller يلمس DB)
+    public async Task<EmployeeDevicesScreenDto?> GetEmployeeDevicesScreenAsync(int employeeId, CancellationToken ct = default)
+    {
+        var baseDto = await GetEmployeeWithDevicesAsync(employeeId, ct);
+        if (baseDto?.Employee is null) return null;
+
+        var all = baseDto.AllDevices ?? new();
+        var assigned = baseDto.AssignedDevices ?? new();
+
+        var assignedSet = new HashSet<string>(
+            assigned.Where(x => !string.IsNullOrWhiteSpace(x.DeviceId)).Select(x => x.DeviceId!.Trim()),
+            StringComparer.OrdinalIgnoreCase);
+
+        var regions = await _regions.GetRegionsAsync(ct);
+        var regionNameById = regions.ToDictionary(
+            x => x.Id,
+            x => string.IsNullOrWhiteSpace(x.Name) ? $"Region {x.Id}" : x.Name
+        );
+
+        var mappings = await _regions.GetAllMappingsAsync(ct); // terminalId -> regionId
+
+        var rows = new List<DeviceRowDto>(all.Count);
+
+        foreach (var d in all)
+        {
+            var id = d.DeviceId?.Trim();
+            if (string.IsNullOrWhiteSpace(id)) continue;
+
+            mappings.TryGetValue(id, out var regId);
+            regionNameById.TryGetValue(regId, out var regName);
+
+            rows.Add(new DeviceRowDto
+            {
+                DeviceId = id,
+                DeviceName = d.DeviceName,
+                IsAssigned = assignedSet.Contains(id),
+                RegionId = regId == 0 ? null : regId,
+                RegionName = string.IsNullOrWhiteSpace(regName) ? "أجهزة غير مصنفة" : regName
+            });
+        }
+
+        var groups = rows
+            .GroupBy(x => new { x.RegionId, RegionName = string.IsNullOrWhiteSpace(x.RegionName) ? "أجهزة غير مصنفة" : x.RegionName })
+            .OrderBy(g => g.Key.RegionName == "أجهزة غير مصنفة" ? 1 : 0)
+            .ThenBy(g => g.Key.RegionName)
+            .Select(g => new RegionGroupDto
+            {
+                RegionId = g.Key.RegionId,
+                RegionName = g.Key.RegionName!,
+                TotalDevices = g.Count(),
+                AssignedDevices = g.Count(x => x.IsAssigned),
+                Devices = g.OrderByDescending(x => x.IsAssigned)
+                           .ThenBy(x => x.DeviceName)
+                           .ThenBy(x => x.DeviceId)
+                           .ToList()
+            })
+            .ToList();
+
+        return new EmployeeDevicesScreenDto
+        {
+            Employee = baseDto.Employee,
+            Devices = rows,
+            RegionGroups = groups
+        };
+    }
+
+    public Task<bool> AssignOneAsync(int employeeId, string terminalId, CancellationToken ct = default)
+       => _alpeta.AssignUserToTerminalAsync(terminalId, employeeId, ct);
+
+    public Task<bool> UnassignOneAsync(int employeeId, string terminalId, CancellationToken ct = default)
+        => _alpeta.UnassignUserFromTerminalAsync(terminalId, employeeId, ct);
+
 }

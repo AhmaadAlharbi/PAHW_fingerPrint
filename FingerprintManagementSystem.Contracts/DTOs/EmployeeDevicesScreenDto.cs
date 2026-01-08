@@ -1,0 +1,28 @@
+﻿namespace FingerprintManagementSystem.Contracts.DTOs;
+
+public sealed class EmployeeDevicesScreenDto
+{
+    public EmployeeDto Employee { get; set; } = default!;
+    public List<DeviceRowDto> Devices { get; set; } = new();
+    public List<RegionGroupDto> RegionGroups { get; set; } = new();
+}
+
+public sealed class DeviceRowDto
+{
+    public string DeviceId { get; set; } = "";
+    public string? DeviceName { get; set; }
+    public string? Location { get; set; }
+    public bool IsAssigned { get; set; }
+
+    public int? RegionId { get; set; }
+    public string? RegionName { get; set; }
+}
+
+public sealed class RegionGroupDto
+{
+    public int? RegionId { get; set; }
+    public string RegionName { get; set; } = "";
+    public int TotalDevices { get; set; }
+    public int AssignedDevices { get; set; }
+    public List<DeviceRowDto> Devices { get; set; } = new();
+}

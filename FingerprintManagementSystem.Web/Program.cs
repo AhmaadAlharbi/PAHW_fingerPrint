@@ -5,76 +5,62 @@ using FingerprintManagementSystem.ApiAdapter.Soap;
 using FingerprintManagementSystem.Contracts;
 using Microsoft.EntityFrameworkCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// ================================
-// SQLite Local DB (Regions Mapping)
-// ================================
-builder.Services.AddDbContext<LocalAppDbContext>(options =>
+// -------------------------
+// ✅ Local SQLite (fix relative path)
+// -------------------------
+var cs = builder.Configuration.GetConnectionString("LocalDb")
+         ?? "Data Source=App_Data/local.db";
+
+if (cs.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
 {
-    // تخزين ملف SQLite داخل مشروع Web (App_Data)
-    var dbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "local.db");
-    Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+    var dbRel = cs.Substring("Data Source=".Length).Trim();
+    if (!Path.IsPathRooted(dbRel))
+    {
+        var dbAbs = Path.Combine(builder.Environment.ContentRootPath, dbRel);
+        cs = $"Data Source={dbAbs}";
+    }
+}
 
-    options.UseSqlite($"Data Source={dbPath}");
-});
-
-// ================================
-// HttpClient لكل Client
-// ================================
-builder.Services.AddHttpClient<AlpetaClient>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["Alpeta:BaseUrl"] ?? "http://192.168.120.56:9004/v1");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddHttpClient<EmployeeSoapClient>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-// ================================
-// Services
-// ================================
-builder.Services.AddScoped<IAttendanceApi, AttendanceWithDevicesApi>();
+builder.Services.AddDbContext<LocalAppDbContext>(opt => opt.UseSqlite(cs));
 builder.Services.AddScoped<RegionMappingService>();
-// Alpeta typed client
-builder.Services.AddHttpClient<AlpetaClient>();
 
-// Employee + Devices facade
+// -------------------------
+// ✅ SOAP client
+// -------------------------
+builder.Services.AddScoped<EmployeeSoapClient>();
+
+// -------------------------
+// ✅ Alpeta client (HttpClient)
+// -------------------------
+builder.Services.AddHttpClient<AlpetaClient>(http =>
+{
+    // إذا تحتاج Timeout من config:
+    // http.Timeout = TimeSpan.FromSeconds(10);
+});
+
+// -------------------------
+// ✅ Facade API
+// -------------------------
 builder.Services.AddScoped<IEmployeeDevicesApi, EmployeeDevicesApi>();
 
 var app = builder.Build();
 
-// ================================
-// إنشاء DB تلقائياً عند التشغيل
-// ================================
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<LocalAppDbContext>();
-//    db.Database.Migrate();
-//}
-
-if (app.Environment.IsDevelopment())
+// ✅ Ensure DB created (اختياري، لكن OK)
+using (var scope = app.Services.CreateScope())
 {
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    var db = scope.ServiceProvider.GetRequiredService<LocalAppDbContext>();
+    db.Database.EnsureCreated();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Employees}/{action=Index}/{id?}");
 
 app.Run();
