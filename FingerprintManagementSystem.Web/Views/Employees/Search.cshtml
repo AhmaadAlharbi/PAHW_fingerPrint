@@ -686,6 +686,7 @@
         .region-info {
             flex: 1;
             min-width: 0;
+            cursor:pointer;
         }
 
             .region-info h4 {
@@ -1207,6 +1208,7 @@
 
         /* Bulk Actions Bar */
         .bulk-bar {
+            display: none !important;
             position: fixed;
             bottom: 30px;
             left: 50%;
@@ -1592,8 +1594,8 @@
                                         <div class="region-left">
                                             <div class="region-icon-wrapper">
                                                 📍
-                                            </div>
-                                            <div class="region-info">
+                                            </div> 
+                                            <div class="region-info" onclick="toggleRegionCollapse('@collapseId')">
                                                 <h4>@g.RegionName</h4>
                                                 <div class="region-meta">
                                                     <span class="meta-badge">
@@ -1756,7 +1758,26 @@
         }
     </div>
 
+    <div class="bulk-bar" id="bulkBar" >
 
+        <div class="bulk-info">
+            <span class="pulse-indicator"></span>
+            <div>
+                <div class="bulk-count"><span id="selectedCount">0</span></div>
+                <div class="bulk-label">جهاز محدد</div>
+            </div>
+        </div>
+        <div class="bulk-actions">
+            <button type="button" class="btn-bulk btn-bulk-success" onclick="submitBulk('AssignBulk')">
+                <span>✓</span>
+                <span>ربط بالجملة</span>
+            </button>
+            <button type="button" class="btn-bulk btn-bulk-danger" onclick="submitBulk('UnassignBulk')">
+                <span>✕</span>
+                <span>إلغاء ربط بالجملة</span>
+            </button>
+        </div>
+    </div>
 
     <!-- Hidden Forms -->
     <form id="bulkForm" method="post" style="display:none;">
