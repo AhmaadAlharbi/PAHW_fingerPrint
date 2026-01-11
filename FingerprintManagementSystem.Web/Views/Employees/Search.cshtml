@@ -1502,12 +1502,21 @@
                 </div>
             </div>
         }
-        <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn-logout">
-                🚪 تسجيل الخروج
-            </button>
-        </form>
+        <style>
+  .btn-logout{background:#dc2626;color:#fff;border:0;padding:8px 14px;border-radius:10px;cursor:pointer}
+  .btn-logout:hover{background:#b91c1c}
+</style>
+
+        @if (Context.Session.GetString("EmpName") != null)
+        {
+            <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger">تسجيل الخروج</button>
+            </form>
+        }
+
+        }
+
 
         <!-- Search Section -->
         <div class="premium-card">

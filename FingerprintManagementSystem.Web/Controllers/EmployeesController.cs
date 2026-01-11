@@ -2,11 +2,29 @@
 using Microsoft.AspNetCore.Mvc;
 
 namespace FingerprintManagementSystem.Web.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 [Route("employees")]
 public class EmployeesController : Controller
 {
     private readonly IEmployeeDevicesApi _api;
+    
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        // تشيك هل المستخدم مسجل دخول
+        var isLoggedIn = !string.IsNullOrWhiteSpace(
+            HttpContext.Session.GetString("EmpName")
+        );
+
+        if (!isLoggedIn)
+        {
+            // إذا مو مسجل دخول → رجّعه لصفحة الدخول
+            context.Result = RedirectToAction("Index", "Home");
+            return; // مهم
+        }
+
+        base.OnActionExecuting(context);
+    }
 
     public EmployeesController(IEmployeeDevicesApi api)
     {

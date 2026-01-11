@@ -12,6 +12,11 @@ namespace FingerprintManagementSystem.Web.Controllers
         public HomeController(ILoginApi login) => _login = login;
         public IActionResult Index()
         {
+            if (HttpContext.Session.GetString("EmpName") != null)
+            {
+                return RedirectToAction("Index", "Employees");
+            }
+
             return View();
         }
         [HttpPost]
@@ -31,21 +36,18 @@ namespace FingerprintManagementSystem.Web.Controllers
             TempData["SuccessMsg"] = $"Welcome {result.EmployeeName}"; // ✅ بنعرضه في Index
 
             // إذا تبي "تسجيل دخول" حقيقي، فعّل Session وخزّن:
-            // HttpContext.Session.SetString("SessionKey", result.SessionKey);
-            // HttpContext.Session.SetString("EmpName", result.EmployeeName);
+            HttpContext.Session.SetString("SessionKey", result.SessionKey);
+            HttpContext.Session.SetString("EmpName", result.EmployeeName);
 
             return RedirectToAction("Index", "Employees");
 
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
-            // حذف كل بيانات الجلسة
             HttpContext.Session.Clear();
-
-            // (اختياري) رسالة
             TempData["SuccessMsg"] = "تم تسجيل الخروج بنجاح";
-
-            // الرجوع لصفحة الدخول
             return RedirectToAction("Index", "Home");
         }
 
