@@ -1502,6 +1502,12 @@
                 </div>
             </div>
         }
+        <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-logout">
+                🚪 تسجيل الخروج
+            </button>
+        </form>
 
         <!-- Search Section -->
         <div class="premium-card">

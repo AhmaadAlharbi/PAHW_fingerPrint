@@ -1,6 +1,8 @@
 ﻿@{
     ViewData["Title"] = "تسجيل الدخول";
     var errorMsg = TempData["ErrorMsg"] as string;
+    
+    var successMsg = TempData["SuccessMsg"] as string;
 }
 
 <!DOCTYPE html>
@@ -657,9 +659,25 @@
                     <div class="alert-message">@errorMsg</div>
                 </div>
             }
+    
 
+            @if (!string.IsNullOrWhiteSpace(errorMsg))
+            {
+                <div style="margin:12px 0;padding:12px;border-radius:12px;background:#ffe4e6;color:#9f1239;">
+                    ⚠️ @errorMsg
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(successMsg))
+            {
+                <div style="margin:12px 0;padding:12px;border-radius:12px;background:#dcfce7;color:#166534;">
+                    ✅ @successMsg
+                </div>
+            }
             <!-- Login Form -->
-            <form method="get" action="/employees">
+          
+            <form method="post" asp-controller="Home" asp-action="Login">
+
                 @Html.AntiForgeryToken()
 
                 <!-- Username Field -->
@@ -670,10 +688,10 @@
                     </label>
                     <div class="input-wrapper">
                         <input type="text"
-                               name="username"
+                               name="empId"
                                class="form-input"
-                               placeholder="أدخل اسم المستخدم"
-                               
+                               placeholder="أدخل الرقم الوظيفي"
+                               required
                                autofocus />
                         <span class="input-icon">👤</span>
                     </div>
@@ -690,7 +708,7 @@
                                name="password"
                                class="form-input"
                                placeholder="أدخل كلمة المرور"
-                                />
+                               required />
                         <span class="input-icon">🔒</span>
                     </div>
                 </div>

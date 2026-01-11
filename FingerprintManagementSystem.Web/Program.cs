@@ -27,6 +27,9 @@ if (cs.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
 
 builder.Services.AddDbContext<LocalAppDbContext>(opt => opt.UseSqlite(cs));
 builder.Services.AddScoped<RegionMappingService>();
+builder.Services.AddHttpClient(); // مهم لأن SoapLoginApi يعتمد على HttpClient
+builder.Services.AddScoped<ILoginApi, SoapLoginApi>();
+builder.Services.AddSession();
 
 // -------------------------
 // ✅ SOAP client
@@ -58,6 +61,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
