@@ -1507,15 +1507,8 @@
   .btn-logout:hover{background:#b91c1c}
 </style>
 
-        @if (Context.Session.GetString("EmpName") != null)
-        {
-            <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-danger">تسجيل الخروج</button>
-            </form>
-        }
-
-        }
+      
+        
 
 
         <!-- Search Section -->
@@ -1590,185 +1583,203 @@
             <!-- Devices Section -->
             @if (Model.RegionGroups != null && Model.RegionGroups.Any())
             {
-                <div class="premium-card">
-                    <div class="section-header">
-                        <div class="section-number">3</div>
-                        <h3 class="section-title">إدارة أجهزة البصمة</h3>
-                    </div>
+               <div class="premium-card">
+    <div class="section-header">
+        <div class="section-number">3</div>
+        <h3 class="section-title">إدارة أجهزة البصمة</h3>
+    </div>
 
-                    <div class="regions-container">
-                        @for (int i = 0; i < Model.RegionGroups.Count; i++)
-                        {
-                            var g = Model.RegionGroups[i];
-                            var collapseId = $"collapse_{i}";
-                            var regionKey = "reg_" + i;
+    <div class="region-filters">
+        <button type="button" class="filter-pill active" data-filter="all" onclick="setRegionFilter('all')">🌍 الكل</button>
+        <button type="button" class="filter-pill" data-filter="assigned" onclick="setRegionFilter('assigned')">✅ الأجهزة المرتبطة</button>
+        <button type="button" class="filter-pill" data-filter="unassigned" onclick="setRegionFilter('unassigned')">➕ الأجهزة غير المرتبطة</button>
+    </div>
 
-                            <div class="region-card">
-                                <div class="region-header">
-                                    <div class="region-top">
-                                        <div class="region-left">
-                                            <div class="region-icon-wrapper">
-                                                📍
-                                            </div> 
-                                            <div class="region-info" onclick="toggleRegionCollapse('@collapseId')">
-                                                <h4>@g.RegionName</h4>
-                                                <div class="region-meta">
-                                                    <span class="meta-badge">
-                                                        <span>🖥️</span>
-                                                        <span>@g.TotalDevices أجهزة</span>
-                                                    </span>
-                                                    @if (g.AssignedDevices > 0)
-                                                    {
-                                                        <span class="meta-badge success">
-                                                            <span>✅</span>
-                                                            <span>@g.AssignedDevices مرتبطة</span>
-                                                        </span>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn-icon-toggle" onclick="toggleRegionCollapse('@collapseId')">
-                                            <span class="toggle-icon">⌄</span>
-                                        </button>
-                                    </div>
-                                </div>
+    <div class="regions-container">
+        @for (int i = 0; i < Model.RegionGroups.Count; i++)
+        {
+            var g = Model.RegionGroups[i];
+            var collapseId = $"collapse_{i}";
+            var regionKey = "reg_" + i;
 
-                                <div id="@collapseId" class="collapse">
-                                    <!-- Region Options -->
-                                    <div class="region-options">
-                                        <div class="options-title">
-                                            ⚙️ اختر العملية المطلوبة
-                                        </div>
+            var hasAssigned = g.AssignedDevices > 0;
+            var hasUnassigned = (g.TotalDevices - g.AssignedDevices) > 0;
 
-                                        <div class="instruction-box">
-                                            <div class="instruction-box-icon">💡</div>
-                                            <div class="instruction-box-content">
-                                                <div class="instruction-box-title">كيفية الاستخدام:</div>
-                                                <div class="instruction-box-text">
-                                                    1️⃣ اختر نوع العملية (نقل، ندب، إزالة)
-                                                    <br>
-                                                    2️⃣ حدد الأجهزة من القائمة أدناه
-                                                    <br>
-                                                    3️⃣ اضغط "تطبيق" لتنفيذ العملية على الأجهزة المحددة
-                                                </div>
-                                            </div>
-                                        </div>
+            <div class="region-card"
+                 data-has-assigned="@(hasAssigned ? "1" : "0")"
+                 data-has-unassigned="@(hasUnassigned ? "1" : "0")">
 
-                                        <div class="radio-options">
-                                            <div class="radio-option">
-                                                <input type="radio" name="operation_@regionKey" id="transfer_@regionKey" value="transfer" checked onchange="toggleDates('@regionKey', 'transfer')">
-                                                <label for="transfer_@regionKey">
-                                                    <span>🔁</span>
-                                                    <span>نقل دائم</span>
-                                                </label>
-                                            </div>
-                                            <div class="radio-option">
-                                                <input type="radio" name="operation_@regionKey" id="delegate_@regionKey" value="delegate" onchange="toggleDates('@regionKey', 'delegate')">
-                                                <label for="delegate_@regionKey">
-                                                    <span>📅</span>
-                                                    <span>انتداب مؤقت</span>
-                                                </label>
-                                            </div>
-                                            <div class="radio-option">
-                                                <input type="radio" name="operation_@regionKey" id="remove_@regionKey" value="remove" onchange="toggleDates('@regionKey', 'remove')">
-                                                <label for="remove_@regionKey">
-                                                    <span>✖️</span>
-                                                    <span>إزالة البصمة</span>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="dates-row" id="dates_@regionKey">
-                                            <div class="date-field">
-                                                <label class="date-label">
-                                                    <span>📅</span>
-                                                    <span>تاريخ البداية</span>
-                                                </label>
-                                                <input type="date" class="date-input" id="startDate_@regionKey">
-                                            </div>
-                                            <div class="date-field">
-                                                <label class="date-label">
-                                                    <span>📅</span>
-                                                    <span>تاريخ النهاية</span>
-                                                </label>
-                                                <input type="date" class="date-input" id="endDate_@regionKey">
-                                            </div>
-                                        </div>
-
-                                        <div class="warning-note" id="warning_@regionKey">
-                                            <span>⚠️</span>
-                                            <span>سيتم إلغاء الانتداب تلقائياً في التاريخ المحدد</span>
-                                        </div>
-
-                                        @if (g.RegionId.HasValue && g.RegionId.Value > 0)
-                                        {
-                                            <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
-                                                <span>✓</span>
-                                                <span>تطبيق على الأجهزة المحددة</span>
-                                            </button>
-                                        }
-                                    </div>
-
-                                    <div class="devices-section">
-                                        <div class="devices-section-title">
-                                            💻 حدد الأجهزة
-                                        </div>
-
-                                        <div class="select-all-box">
-                                            <input type="checkbox" id="check-@regionKey" class="select-all-region">
-                                            <label for="check-@regionKey" class="select-all-label">تحديد جميع أجهزة المنطقة</label>
-                                        </div>
-
-                                        <div class="devices-grid">
-                                            @foreach (var d in g.Devices)
-                                            {
-                                                <div class="device-card @(d.IsAssigned ? "selected" : "")">
-                                                    <div class="device-checkbox" onclick="event.stopPropagation();">
-                                                        <input type="checkbox" class="device-chk"
-                                                               value="@d.DeviceId"
-                                                               id="chk-@d.DeviceId"
-                                                               @(d.IsAssigned ? "checked" : "")
-                                                               onclick="event.stopPropagation();"
-                                                               onchange="updateDeviceSelection(this)">
-                                                    </div>
-                                                    <div class="device-icon">💻</div>
-                                                    <div class="device-details">
-                                                        <div class="device-name">@d.DeviceName</div>
-                                                        <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
-                                                    </div>
-                                                    <div class="device-action" onclick="event.stopPropagation();">
-                                                        @if (d.IsAssigned)
-                                                        {
-                                                            <form method="post" action="/employees/unassign" style="display:inline;">
-                                                                @Html.AntiForgeryToken()
-                                                                <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                                                <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                                                <button type="submit" class="btn-device btn-device-danger">
-                                                                    <span>✖️</span>
-                                                                </button>
-                                                            </form>
-                                                        }
-                                                        else
-                                                        {
-                                                            <form method="post" action="/employees/assign" style="display:inline;">
-                                                                @Html.AntiForgeryToken()
-                                                                <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                                                <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                                                <button type="submit" class="btn-device btn-device-success">
-                                                                    <span>✓</span>
-                                                                </button>
-                                                            </form>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
+                <div class="region-header">
+                    <div class="region-top">
+                        <div class="region-left">
+                            <div class="region-icon-wrapper">
+                                📍
+                            </div>
+                            <div class="region-info" onclick="toggleRegionCollapse('@collapseId')">
+                                <h4>@g.RegionName</h4>
+                                <div class="region-meta">
+                                    <span class="meta-badge">
+                                        <span>🖥️</span>
+                                        <span>@g.TotalDevices أجهزة</span>
+                                    </span>
+                                    @if (g.AssignedDevices > 0)
+                                    {
+                                        <span class="meta-badge success">
+                                            <span>✅</span>
+                                            <span>@g.AssignedDevices مرتبطة</span>
+                                        </span>
+                                    }
                                 </div>
                             </div>
-                        }
+                        </div>
+                        <button type="button" class="btn-icon-toggle" onclick="toggleRegionCollapse('@collapseId')">
+                            <span class="toggle-icon">⌄</span>
+                        </button>
                     </div>
                 </div>
+
+                <div id="@collapseId" class="collapse">
+                    <!-- Region Options -->
+                    <div class="region-options">
+                        <div class="options-title">
+                            ⚙️ اختر العملية المطلوبة
+                        </div>
+
+                        <div class="instruction-box">
+                            <div class="instruction-box-icon">💡</div>
+                            <div class="instruction-box-content">
+                                <div class="instruction-box-title">كيفية الاستخدام:</div>
+                                <div class="instruction-box-text">
+                                    1️⃣ اختر نوع العملية (نقل، ندب، إزالة)
+                                    <br>
+                                    2️⃣ حدد الأجهزة من القائمة أدناه
+                                    <br>
+                                    3️⃣ اضغط "تطبيق" لتنفيذ العملية على الأجهزة المحددة
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="radio-options">
+                            <div class="radio-option">
+                                <input type="radio" name="operation_@regionKey" id="transfer_@regionKey" value="transfer" checked onchange="toggleDates('@regionKey', 'transfer')">
+                                <label for="transfer_@regionKey">
+                                    <span>🔁</span>
+                                    <span>نقل دائم</span>
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="operation_@regionKey" id="delegate_@regionKey" value="delegate" onchange="toggleDates('@regionKey', 'delegate')">
+                                <label for="delegate_@regionKey">
+                                    <span>📅</span>
+                                    <span>انتداب مؤقت</span>
+                                </label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="operation_@regionKey" id="remove_@regionKey" value="remove" onchange="toggleDates('@regionKey', 'remove')">
+                                <label for="remove_@regionKey">
+                                    <span>✖️</span>
+                                    <span>إزالة البصمة</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="dates-row" id="dates_@regionKey">
+                            <div class="date-field">
+                                <label class="date-label">
+                                    <span>📅</span>
+                                    <span>تاريخ البداية</span>
+                                </label>
+                                <input type="date" class="date-input" id="startDate_@regionKey">
+                            </div>
+                            <div class="date-field">
+                                <label class="date-label">
+                                    <span>📅</span>
+                                    <span>تاريخ النهاية</span>
+                                </label>
+                                <input type="date" class="date-input" id="endDate_@regionKey">
+                            </div>
+                        </div>
+
+                        <div class="warning-note" id="warning_@regionKey">
+                            <span>⚠️</span>
+                            <span>سيتم إلغاء الانتداب تلقائياً في التاريخ المحدد</span>
+                        </div>
+
+                        @if (g.RegionId.HasValue && g.RegionId.Value > 0)
+                        {
+                            <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
+                                <span>✓</span>
+                                <span>تطبيق على الأجهزة المحددة</span>
+                            </button>
+                        }
+                    </div>
+
+                    <div class="devices-section">
+                        <div class="devices-section-title">
+                            💻 حدد الأجهزة
+                        </div>
+
+                        <div class="select-all-box">
+                            <input type="checkbox" id="check-@regionKey" class="select-all-region">
+                            <label for="check-@regionKey" class="select-all-label">تحديد جميع أجهزة المنطقة</label>
+                        </div>
+
+                        <div class="devices-grid">
+                            @foreach (var d in g.Devices)
+                            {
+                                <div class="device-card @(d.IsAssigned ? "selected" : "")"
+                                     data-is-assigned="@(d.IsAssigned ? "1" : "0")">
+
+                                    <div class="device-checkbox" onclick="event.stopPropagation();">
+                                        <input type="checkbox" class="device-chk"
+                                               value="@d.DeviceId"
+                                               id="chk-@d.DeviceId"
+                                               @(d.IsAssigned ? "checked" : "")
+                                               onclick="event.stopPropagation();"
+                                               onchange="updateDeviceSelection(this)">
+                                    </div>
+
+                                    <div class="device-icon">💻</div>
+                                    <div class="device-details">
+                                        <div class="device-name">@d.DeviceName</div>
+                                        <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
+                                    </div>
+
+                                    <div class="device-action" onclick="event.stopPropagation();">
+                                        @if (d.IsAssigned)
+                                        {
+                                            <form method="post" action="/employees/unassign" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                                                <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                                                <button type="submit" class="btn-device btn-device-danger">
+                                                    <span>✖️</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" action="/employees/assign" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                                                <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                                                <button type="submit" class="btn-device btn-device-success">
+                                                    <span>✓</span>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        }
+    </div>
+</div>
+
             }
         }
     </div>
@@ -2028,5 +2039,103 @@
             });
         }
     </script>
+    <script>
+    // =========================
+    // Region + Devices Filtering
+    // =========================
+
+    function setRegionFilter(mode) {
+        // mode: 'all' | 'assigned' | 'unassigned'
+        const pills = document.querySelectorAll('.region-filters .filter-pill');
+        pills.forEach(p => p.classList.remove('active'));
+
+        const activePill = document.querySelector(`.region-filters .filter-pill[data-filter="${mode}"]`);
+        if (activePill) activePill.classList.add('active');
+
+        const regionCards = document.querySelectorAll('.regions-container .region-card');
+
+        regionCards.forEach(region => {
+            const hasAssigned = region.getAttribute('data-has-assigned') === '1';
+            const hasUnassigned = region.getAttribute('data-has-unassigned') === '1';
+
+            // Decide region visibility
+            let showRegion = true;
+            if (mode === 'assigned') showRegion = hasAssigned;
+            if (mode === 'unassigned') showRegion = hasUnassigned;
+
+            region.style.display = showRegion ? '' : 'none';
+
+            // Filter devices inside region
+            const devices = region.querySelectorAll('.device-card');
+            devices.forEach(dev => {
+                const isAssigned = dev.getAttribute('data-is-assigned') === '1';
+
+                let showDevice = true;
+                if (mode === 'assigned') showDevice = isAssigned;
+                if (mode === 'unassigned') showDevice = !isAssigned;
+
+                // نخفي الجهاز بدون ما نخرب الستايل الأساسي
+                dev.classList.toggle('is-hidden', !showDevice);
+            });
+
+            // إذا المنطقة ظاهرة لكن كل أجهزتها مخفية (حالة نادرة) نخفي المنطقة أيضاً
+            if (showRegion) {
+                const visibleDevices = region.querySelectorAll('.device-card:not(.is-hidden)');
+                if (visibleDevices.length === 0) {
+                    region.style.display = 'none';
+                }
+            }
+
+            // Reset "select all" checkbox if exists
+            const selectAll = region.querySelector('.select-all-region');
+            if (selectAll) selectAll.checked = false;
+
+            // Update bulk bar if you have it
+            if (typeof updateBulkBar === 'function') updateBulkBar();
+        });
+    }
+
+    // =========================
+    // Select All Per Region (visible only)
+    // =========================
+    document.addEventListener('change', function (e) {
+        if (!e.target.classList.contains('select-all-region')) return;
+
+        const selectAll = e.target;
+        const regionCard = selectAll.closest('.region-card');
+        if (!regionCard) return;
+
+        // فقط الأجهزة الظاهرة (غير المخفية)
+        const deviceCheckboxes = regionCard.querySelectorAll('.device-card:not(.is-hidden) .device-chk');
+
+        deviceCheckboxes.forEach(chk => {
+            chk.checked = selectAll.checked;
+
+            // لو عندك function تسوي تحديث UI
+            if (typeof updateDeviceSelection === 'function') {
+                updateDeviceSelection(chk);
+            } else {
+                // fallback: update selected class
+                const devCard = chk.closest('.device-card');
+                if (devCard) devCard.classList.toggle('selected', chk.checked);
+            }
+        });
+
+        if (typeof updateBulkBar === 'function') updateBulkBar();
+    });
+
+    // =========================
+    // Default filter (اختياري)
+    // =========================
+    // إذا تبيها تفتح على "الأجهزة المرتبطة" تلقائياً:
+     // document.addEventListener('DOMContentLoaded', () => setRegionFilter('assigned'));
+
+</script>
+
+<style>
+    /* hiding helper for device cards */
+    .device-card.is-hidden { display: none !important; }
+</style>
+
 </body>
 </html>

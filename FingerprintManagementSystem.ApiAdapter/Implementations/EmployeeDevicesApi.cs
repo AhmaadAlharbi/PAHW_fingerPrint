@@ -90,6 +90,7 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
         var groups = rows
             .GroupBy(x => new { x.RegionId, RegionName = string.IsNullOrWhiteSpace(x.RegionName) ? "أجهزة غير مصنفة" : x.RegionName })
             .OrderBy(g => g.Key.RegionName == "أجهزة غير مصنفة" ? 1 : 0)
+            .ThenByDescending(g => g.Any(x => x.IsAssigned))   // ✅ المرتبط أولاً
             .ThenBy(g => g.Key.RegionName)
             .Select(g => new RegionGroupDto
             {
@@ -98,11 +99,12 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
                 TotalDevices = g.Count(),
                 AssignedDevices = g.Count(x => x.IsAssigned),
                 Devices = g.OrderByDescending(x => x.IsAssigned)
-                           .ThenBy(x => x.DeviceName)
-                           .ThenBy(x => x.DeviceId)
-                           .ToList()
+                    .ThenBy(x => x.DeviceName)
+                    .ThenBy(x => x.DeviceId)
+                    .ToList()
             })
             .ToList();
+
 
         return new EmployeeDevicesScreenDto
         {
