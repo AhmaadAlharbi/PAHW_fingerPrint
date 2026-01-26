@@ -7,16 +7,21 @@ public sealed class EmployeeDevicesScreenDto
     public List<RegionGroupDto> RegionGroups { get; set; } = new();
 }
 
-public sealed class DeviceRowDto
+public class DeviceRowDto
 {
     public string DeviceId { get; set; } = "";
-    public string? DeviceName { get; set; }
-    public string? Location { get; set; }
+    public string DeviceName { get; set; } = "";
+    public string Location { get; set; } = "";
     public bool IsAssigned { get; set; }
+
+    // ✅ جديد
+    public bool IsDelegated { get; set; }
+    public bool IsEffectivelyAssigned { get; set; }
 
     public int? RegionId { get; set; }
     public string? RegionName { get; set; }
 }
+
 
 public sealed class RegionGroupDto
 {

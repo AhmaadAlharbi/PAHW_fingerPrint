@@ -11,6 +11,8 @@ public class LocalAppDbContext : DbContext
         : base(options)
     {
     }
+    public DbSet<Delegation> Delegations => Set<Delegation>();
+    public DbSet<DelegationTerminal> DelegationTerminals => Set<DelegationTerminal>();
 
     public DbSet<Region> Regions => Set<Region>();
     public DbSet<TerminalRegionMap> TerminalRegionMaps => Set<TerminalRegionMap>();
@@ -57,6 +59,31 @@ public class LocalAppDbContext : DbContext
        new Region { Id = 14, Name = "مواقع أخرى" },
          new Region { Id = 15, Name = "السالمي" }
    );
+        
+        // ===== Delegation =====
+        modelBuilder.Entity<Delegation>()
+            .HasKey(x => x.Id);
+
+        modelBuilder.Entity<Delegation>()
+            .Property(x => x.Status)
+            .HasMaxLength(20)
+            .IsRequired();
+
+        modelBuilder.Entity<Delegation>()
+            .HasMany(x => x.Terminals)
+            .WithOne(x => x.Delegation)
+            .HasForeignKey(x => x.DelegationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+// ===== DelegationTerminal =====
+        modelBuilder.Entity<DelegationTerminal>()
+            .HasKey(x => x.Id);
+
+        modelBuilder.Entity<DelegationTerminal>()
+            .Property(x => x.TerminalId)
+            .HasMaxLength(50)
+            .IsRequired();
+
     }
 
 }

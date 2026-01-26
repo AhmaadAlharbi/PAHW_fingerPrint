@@ -4,6 +4,7 @@ using FingerprintManagementSystem.ApiAdapter.Persistence;
 using FingerprintManagementSystem.ApiAdapter.Soap;
 using FingerprintManagementSystem.Contracts;
 using Microsoft.EntityFrameworkCore;
+using FingerprintManagementSystem.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,7 @@ builder.Services.AddHttpClient<AlpetaClient>(http =>
 // ✅ Facade API
 // -------------------------
 builder.Services.AddScoped<IEmployeeDevicesApi, EmployeeDevicesApi>();
+builder.Services.AddHostedService<DelegationWorker>();
 
 var app = builder.Build();
 
@@ -56,7 +58,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<LocalAppDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 }
 
 app.UseStaticFiles();

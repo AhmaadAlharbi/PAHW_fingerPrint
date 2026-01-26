@@ -3,6 +3,7 @@ using FingerprintManagementSystem.ApiAdapter.Persistence;
 using FingerprintManagementSystem.ApiAdapter.Soap;
 using FingerprintManagementSystem.Contracts;
 using FingerprintManagementSystem.Contracts.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace FingerprintManagementSystem.ApiAdapter.Implementations;
 
@@ -11,13 +12,20 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
     private readonly EmployeeSoapClient _soap;
     private readonly AlpetaClient _alpeta;
     private readonly RegionMappingService _regions;
+    private readonly LocalAppDbContext _db;
 
-    public EmployeeDevicesApi(EmployeeSoapClient soap, AlpetaClient alpeta, RegionMappingService regions)
+    public EmployeeDevicesApi(
+        EmployeeSoapClient soap,
+        AlpetaClient alpeta,
+        RegionMappingService regions,
+        LocalAppDbContext db)
     {
         _soap = soap;
         _alpeta = alpeta;
         _regions = regions;
+        _db = db;
     }
+
 
     public async Task<EmployeeDevicesDto?> GetEmployeeWithDevicesAsync(int employeeId, CancellationToken ct = default)
     {
@@ -49,6 +57,16 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
     // ✅ هذا اللي يعرض المناطق (بدون ما الـ Controller يلمس DB)
     public async Task<EmployeeDevicesScreenDto?> GetEmployeeDevicesScreenAsync(int employeeId, CancellationToken ct = default)
     {
+        var now = DateTime.Now;
+
+        var activeDelegatedTerminalIds = await _db.Delegations
+            .Where(d =>
+                d.EmployeeId == employeeId &&
+                d.Status == "Active" &&
+                d.StartDate <= now &&
+                d.EndDate > now)
+            .SelectMany(d => d.Terminals.Select(t => t.TerminalId))
+            .ToHashSetAsync(ct);
         var baseDto = await GetEmployeeWithDevicesAsync(employeeId, ct);
         if (baseDto?.Employee is null) return null;
 
@@ -71,17 +89,24 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
 
         foreach (var d in all)
         {
+            
             var id = d.DeviceId?.Trim();
             if (string.IsNullOrWhiteSpace(id)) continue;
 
             mappings.TryGetValue(id, out var regId);
             regionNameById.TryGetValue(regId, out var regName);
-
+            var isAssigned = assignedSet.Contains(id);
+            var isDelegatedActive = activeDelegatedTerminalIds.Contains(id);
             rows.Add(new DeviceRowDto
             {
                 DeviceId = id,
                 DeviceName = d.DeviceName,
-                IsAssigned = assignedSet.Contains(id),
+                IsAssigned = isAssigned,
+
+                // ✅ مهم: الجديد
+                IsDelegated = isDelegatedActive,
+                IsEffectivelyAssigned = isAssigned || isDelegatedActive,
+
                 RegionId = regId == 0 ? null : regId,
                 RegionName = string.IsNullOrWhiteSpace(regName) ? "أجهزة غير مصنفة" : regName
             });
@@ -97,11 +122,13 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
                 RegionId = g.Key.RegionId,
                 RegionName = g.Key.RegionName!,
                 TotalDevices = g.Count(),
-                AssignedDevices = g.Count(x => x.IsAssigned),
-                Devices = g.OrderByDescending(x => x.IsAssigned)
+                AssignedDevices = g.Count(x => x.IsEffectivelyAssigned),
+                Devices = g.OrderByDescending(x => x.IsEffectivelyAssigned)
+                    .ThenByDescending(x => x.IsAssigned)  // (اختياري) الدائم قبل الندب
                     .ThenBy(x => x.DeviceName)
                     .ThenBy(x => x.DeviceId)
                     .ToList()
+        
             })
             .ToList();
 

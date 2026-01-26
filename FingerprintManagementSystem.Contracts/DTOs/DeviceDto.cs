@@ -9,5 +9,6 @@ namespace FingerprintManagementSystem.Contracts.DTOs
         public string DeviceId { get; set; } = "";
         public string DeviceName { get; set; } = "";
         public string Location { get; set; } = "";
+        
     }
 }

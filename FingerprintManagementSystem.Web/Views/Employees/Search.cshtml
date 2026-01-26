@@ -5,8 +5,21 @@
     var toastMsg = TempData["ToastMsg"] as string;
     var lastEmployeeId = TempData["LastEmployeeId"]?.ToString();
     var devices = Model?.Devices ?? new List<FingerprintManagementSystem.Contracts.DTOs.DeviceRowDto>();
-    var assigned = devices.Where(x => x.IsAssigned).ToList();
+    var assigned = devices.Where(x => x.IsEffectivelyAssigned).ToList();
 }
+@{
+    // Peek: يقرأ بدون ما يمسح TempData
+    var selectedTerminalsRaw = TempData["SelectedTerminalIds"] as string;
+
+    var selectedTerminals = new HashSet<string>(
+        (selectedTerminalsRaw ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim()),
+        StringComparer.OrdinalIgnoreCase
+    );
+}
+
+
 
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -1574,6 +1587,7 @@
                                     <span>✅</span>
                                     <span>@assigned.Count مرتبطة</span>
                                 </span>
+                                
                             </div>
                         </div>
                     </div>
@@ -1622,13 +1636,27 @@
                                         <span>🖥️</span>
                                         <span>@g.TotalDevices أجهزة</span>
                                     </span>
-                                    @if (g.AssignedDevices > 0)
+                                    @{
+                                        var assignedCount = g.Devices.Count(x => x.IsEffectivelyAssigned);
+                                        var delegatedCount = g.Devices.Count(x => x.IsDelegated);
+                                    }
+
+                                    @if (assignedCount > 0)
                                     {
                                         <span class="meta-badge success">
                                             <span>✅</span>
-                                            <span>@g.AssignedDevices مرتبطة</span>
+                                            <span>@assignedCount مرتبطة</span>
                                         </span>
                                     }
+
+                                    @if (delegatedCount > 0)
+                                    {
+                                        <span class="meta-badge" style="background:#dbeafe; color:#1e40af;">
+                                            <span>🟦</span>
+                                            <span>@delegatedCount ندب</span>
+                                        </span>
+                                    }
+
                                 </div>
                             </div>
                         </div>
@@ -1725,52 +1753,59 @@
                         </div>
 
                         <div class="devices-grid">
+                        
+
                             @foreach (var d in g.Devices)
-                            {
-                                <div class="device-card @(d.IsAssigned ? "selected" : "")"
-                                     data-is-assigned="@(d.IsAssigned ? "1" : "0")">
+{
+    var isSelected = selectedTerminals.Contains((d.DeviceId ?? "").Trim());
 
-                                    <div class="device-checkbox" onclick="event.stopPropagation();">
-                                        <input type="checkbox" class="device-chk"
-                                               value="@d.DeviceId"
-                                               id="chk-@d.DeviceId"
-                                               @(d.IsAssigned ? "checked" : "")
-                                               onclick="event.stopPropagation();"
-                                               onchange="updateDeviceSelection(this)">
-                                    </div>
+    <div class="device-card @((d.IsEffectivelyAssigned || isSelected) ? "selected" : "")"
+         data-is-assigned="@(d.IsEffectivelyAssigned ? "1" : "0")">
 
-                                    <div class="device-icon">💻</div>
-                                    <div class="device-details">
-                                        <div class="device-name">@d.DeviceName</div>
-                                        <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
-                                    </div>
+        <div class="device-checkbox" onclick="event.stopPropagation();">
+            <input type="checkbox"
+                   class="device-chk"
+                   value="@d.DeviceId"
+                   id="chk-@d.DeviceId"
+                   @((d.IsEffectivelyAssigned || isSelected) ? "checked" : "")
+                   onclick="event.stopPropagation();"
+                   onchange="updateDeviceSelection(this)" />
+        </div>
 
-                                    <div class="device-action" onclick="event.stopPropagation();">
-                                        @if (d.IsAssigned)
-                                        {
-                                            <form method="post" action="/employees/unassign" style="display:inline;">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                                <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                                <button type="submit" class="btn-device btn-device-danger">
-                                                    <span>✖️</span>
-                                                </button>
-                                            </form>
-                                        }
-                                        else
-                                        {
-                                            <form method="post" action="/employees/assign" style="display:inline;">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                                <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                                <button type="submit" class="btn-device btn-device-success">
-                                                    <span>✓</span>
-                                                </button>
-                                            </form>
-                                        }
-                                    </div>
-                                </div>
-                            }
+        <div class="device-icon">💻</div>
+
+        <div class="device-details">
+            <div class="device-name">@d.DeviceName</div>
+            <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
+        </div>
+
+        <div class="device-action" onclick="event.stopPropagation();">
+            @if (d.IsAssigned)
+            {
+                <form method="post" action="/employees/unassign" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                    <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                    <button type="submit" class="btn-device btn-device-danger">
+                        <span>✖️</span>
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form method="post" action="/employees/assign" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                    <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                    <button type="submit" class="btn-device btn-device-success">
+                        <span>✓</span>
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+}
+
                         </div>
                     </div>
                 </div>
@@ -2130,6 +2165,11 @@
     // إذا تبيها تفتح على "الأجهزة المرتبطة" تلقائياً:
      // document.addEventListener('DOMContentLoaded', () => setRegionFilter('assigned'));
 
+</script>
+    <script>
+  document.addEventListener('DOMContentLoaded', () => {
+      if (typeof updateBulkBar === 'function') updateBulkBar();
+  });
 </script>
 
 <style>

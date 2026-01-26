@@ -3,11 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FingerprintManagementSystem.Web.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using FingerprintManagementSystem.ApiAdapter.Persistence;
+using FingerprintManagementSystem.ApiAdapter.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
 
 [Route("employees")]
 public class EmployeesController : Controller
 {
     private readonly IEmployeeDevicesApi _api;
+    private readonly LocalAppDbContext _db;
+
     
     public override void OnActionExecuting(ActionExecutingContext context)
     {
@@ -26,30 +31,50 @@ public class EmployeesController : Controller
         base.OnActionExecuting(context);
     }
 
-    public EmployeesController(IEmployeeDevicesApi api)
+    public EmployeesController(IEmployeeDevicesApi api,LocalAppDbContext db)
     {
         _api = api;
+        _db = db;
     }
 
     [HttpGet("")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(int? employeeId, CancellationToken ct)
     {
-        return View("Search");
+        if (!employeeId.HasValue || employeeId.Value <= 0)
+            return View("Search", null); // صفحة البحث فقط بدون نتائج
+
+        var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId.Value, ct);
+        return View("Search", screen);
     }
+    [HttpGet("search")]
+    public async Task<IActionResult> Search(int employeeId, CancellationToken ct)
+    {
+        if (employeeId <= 0) return View("Search");
+
+        var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
+        TempData["LastEmployeeId"] = employeeId.ToString();
+        return View("Search", screen);
+    }
+
+
+
 
     [HttpPost("search")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Search([FromForm] int employeeId, CancellationToken ct)
+    public async Task<IActionResult> SearchPost([FromForm] int employeeId, CancellationToken ct)
     {
         var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
+        TempData["LastEmployeeId"] = employeeId.ToString();
+
         if (screen == null)
         {
             ViewBag.NotFound = "الموظف غير موجود";
-            TempData["LastEmployeeId"] = employeeId.ToString();
             return View("Search");
         }
+
         return View("Search", screen);
     }
+
 
     [HttpPost("assign")]
     [ValidateAntiForgeryToken]
@@ -112,26 +137,75 @@ public class EmployeesController : Controller
         return View("Search", screen);
     }
 
-    [HttpPost("DelegateRegion")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DelegateRegion(
-        int employeeId,
-        List<string> terminalIds,
-        DateTime startDate,
-        DateTime endDate,
-        CancellationToken ct)
+  [HttpPost("DelegateRegion")]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> DelegateRegion(
+    int employeeId,
+    List<string> terminalIds,
+    DateTime startDate,
+    DateTime endDate,
+    CancellationToken ct)
+{
+    if (terminalIds == null || terminalIds.Count == 0)
     {
-        // Logic للانتداب المؤقت
-        foreach (var terminalId in terminalIds)
-        {
-            // تنفيذ logic الانتداب هنا
-            await _api.AssignOneAsync(employeeId, terminalId, ct);
-        }
-
-        TempData["ToastType"] = "success";
-        TempData["ToastMsg"] = $"✅ تم انتداب {terminalIds.Count} جهاز";
-
-        var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
-        return View("Search", screen);
+        TempData["ToastType"] = "danger";
+        TempData["ToastMsg"] = "❌ اختر أجهزة أولاً";
+        TempData["LastEmployeeId"] = employeeId.ToString();
+        return RedirectToAction("Search", "Employees", new { employeeId });
     }
+
+    if (endDate < startDate)
+    {
+        TempData["ToastType"] = "danger";
+        TempData["ToastMsg"] = "❌ تاريخ النهاية لازم يكون بعد البداية";
+        TempData["LastEmployeeId"] = employeeId.ToString();
+        return RedirectToAction("Search", "Employees", new { employeeId });
+    }
+
+    // (اختياري) ضبط البداية على بداية اليوم
+    startDate = startDate.Date;
+
+    // ✅ النهاية
+#if DEBUG
+    endDate = DateTime.Now.AddMinutes(2); // اختبار: ينتهي بعد دقيقتين
+#else
+    endDate = endDate.Date.AddDays(1);    // إنتاج: نهاية اليوم المختار
+#endif
+
+    var now = DateTime.Now;
+
+    // ✅ مهم: حدد الحالة حسب الوقت
+    var status = (startDate <= now && endDate > now) ? "Active" : "Scheduled";
+
+    var d = new Delegation
+    {
+        EmployeeId = employeeId,
+        StartDate = startDate,
+        EndDate = endDate,
+        Status = status,
+        CreatedAt = now,
+        Terminals = terminalIds
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(t => new DelegationTerminal { TerminalId = t.Trim() })
+            .ToList()
+    };
+
+    _db.Delegations.Add(d);
+    await _db.SaveChangesAsync(ct);
+
+    TempData["ToastType"] = "success";
+    TempData["ToastMsg"] = status == "Active"
+        ? $"✅ تم تفعيل انتداب {terminalIds.Count} جهاز"
+        : $"✅ تم جدولة انتداب {terminalIds.Count} جهاز";
+
+    TempData["SelectedTerminalIds"] = string.Join(",", terminalIds);
+    TempData["LastEmployeeId"] = employeeId.ToString();
+
+    // ✅ PRG: رجّع للبحث (GET) عشان يعيد تحميل الداتا ويظهر الندب مباشرة
+    return RedirectToAction("Search", "Employees", new { employeeId });
+    
+}
+
+
+
 }
