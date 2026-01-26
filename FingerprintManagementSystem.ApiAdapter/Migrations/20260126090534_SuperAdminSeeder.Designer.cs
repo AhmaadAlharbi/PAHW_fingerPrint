@@ -3,6 +3,7 @@ using System;
 using FingerprintManagementSystem.ApiAdapter.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FingerprintManagementSystem.ApiAdapter.Migrations
 {
     [DbContext(typeof(LocalAppDbContext))]
-    partial class LocalAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260126090534_SuperAdminSeeder")]
+    partial class SuperAdminSeeder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -63,8 +66,8 @@ namespace FingerprintManagementSystem.ApiAdapter.Migrations
                             Id = 1,
                             Department = "",
                             Email = "admin@admin.com",
-                            EmployeeId = 7300,
-                            FullName = "أحمد زيد الحربي",
+                            EmployeeId = 123456789,
+                            FullName = "System Admin",
                             IsActive = true,
                             IsAdmin = true
                         });

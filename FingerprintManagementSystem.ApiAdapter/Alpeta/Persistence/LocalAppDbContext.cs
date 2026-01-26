@@ -16,6 +16,8 @@ public class LocalAppDbContext : DbContext
 
     public DbSet<Region> Regions => Set<Region>();
     public DbSet<TerminalRegionMap> TerminalRegionMaps => Set<TerminalRegionMap>();
+    public DbSet<AllowedUser> AllowedUsers => Set<AllowedUser>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -83,6 +85,38 @@ public class LocalAppDbContext : DbContext
             .Property(x => x.TerminalId)
             .HasMaxLength(50)
             .IsRequired();
+        
+        modelBuilder.Entity<AllowedUser>()
+            .HasKey(x => x.Id);
+
+        modelBuilder.Entity<AllowedUser>()
+            .HasIndex(x => x.EmployeeId)
+            .IsUnique();
+
+        modelBuilder.Entity<AllowedUser>()
+            .Property(x => x.FullName)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<AllowedUser>()
+            .Property(x => x.Email)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<AllowedUser>()
+            .Property(x => x.Department)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<AllowedUser>().HasData(
+            new AllowedUser
+            {
+                Id = 1,
+                EmployeeId = 7300,
+                FullName = "أحمد زيد الحربي",
+                Email = "admin@admin.com",
+                Department = "",
+                IsActive = true,
+                IsAdmin = true
+            }
+        );
 
     }
 
