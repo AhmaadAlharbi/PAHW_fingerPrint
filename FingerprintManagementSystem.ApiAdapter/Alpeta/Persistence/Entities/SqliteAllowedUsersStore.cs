@@ -25,4 +25,12 @@ public class SqliteAllowedUsersStore : IAllowedUsersStore
 
         return true;
     }
+    public async Task<bool> IsAdminAsync(int employeeId, CancellationToken ct)
+    {
+        var user = await _db.AllowedUsers
+            .FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.IsActive, ct);
+
+        return user?.IsAdmin == true;
+    }
+
 }

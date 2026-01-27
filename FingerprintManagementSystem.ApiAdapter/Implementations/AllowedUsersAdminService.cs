@@ -72,4 +72,73 @@ public class AllowedUsersAdminService : IAllowedUsersAdmin
         await _db.SaveChangesAsync(ct);
         return true;
     }
+    public async Task<List<AllowedUserListItemDto>> ListAsync(CancellationToken ct)
+    {
+        var rows = await _db.AllowedUsers
+            .OrderByDescending(x => x.IsActive)
+            .ThenBy(x => x.EmployeeId)
+            .Select(x => new AllowedUserListItemDto(
+                x.EmployeeId,
+                x.FullName,
+                x.Email,
+                x.Department,
+                x.IsActive,
+                x.IsAdmin,
+                x.ValidUntil
+            ))
+            .ToListAsync(ct);
+
+        return rows;
+    }
+
+    public async Task<bool> SetActiveAsync(int employeeId, bool isActive, CancellationToken ct)
+    {
+        var user = await _db.AllowedUsers
+            .FirstOrDefaultAsync(x => x.EmployeeId == employeeId, ct);
+
+        if (user == null)
+            return false;
+
+        // ❗ لو بنعطّل Admin، تأكد مو آخر واحد
+        if (!isActive && user.IsAdmin)
+        {
+            var adminCount = await _db.AllowedUsers
+                .CountAsync(x => x.IsAdmin && x.IsActive, ct);
+
+            if (adminCount <= 1)
+                return false; // لا تعطّل آخر Admin
+        }
+
+        // ✅ الآن نغيّر
+        user.IsActive = isActive;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+
+    public async Task<bool> DeleteAsync(int employeeId, CancellationToken ct)
+    {
+        var user = await _db.AllowedUsers
+            .FirstOrDefaultAsync(x => x.EmployeeId == employeeId, ct);
+
+        if (user == null)
+            return false;
+
+        // لا تحذف آخر Admin
+        if (user.IsAdmin)
+        {
+            var adminCount = await _db.AllowedUsers
+                .CountAsync(x => x.IsAdmin && x.IsActive, ct);
+
+            if (adminCount <= 1)
+                return false;
+        }
+
+        _db.AllowedUsers.Remove(user);
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+
+
 }

@@ -1,0 +1,67 @@
+﻿@model List<FingerprintManagementSystem.Contracts.AllowedUserListItemDto>
+@{
+    var currentEmpId = Context.Session.GetString("EmpId") ?? "";
+}
+<h3>قائمة المسموح لهم بالدخول (Allowlist)</h3>
+
+@if (TempData["ErrorMsg"] != null) { <div style="color:red">@TempData["ErrorMsg"]</div> }
+@if (TempData["SuccessMsg"] != null) { <div style="color:green">@TempData["SuccessMsg"]</div> }
+
+<p>
+    <a asp-action="Create">+ إضافة موظف</a>
+</p>
+
+
+<table border="1" cellpadding="6" cellspacing="0" style="width:100%">
+    <thead>
+    <tr>
+        <th>الرقم الوظيفي</th>
+        <th>الاسم</th>
+        <th>الإيميل</th>
+        <th>القسم</th>
+        <th>Admin</th>
+        <th>الحالة</th>
+        <th>Valid Until</th>
+        <th>إجراءات</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var u in Model)
+    {
+        <tr>
+            <td>@u.EmployeeId</td>
+            <td>@u.FullName</td>
+            <td>@u.Email</td>
+            <td>@u.Department</td>
+            <td>@(u.IsAdmin ? "نعم" : "لا")</td>
+            <td>@(u.IsActive ? "فعال" : "معطّل")</td>
+            <td>@(u.ValidUntil?.ToString("yyyy-MM-dd") ?? "-")</td>
+            <td>
+                <form method="post" asp-action="Toggle" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="employeeId" value="@u.EmployeeId" />
+                    <input type="hidden" name="makeActive" value="@(u.IsActive ? "false" : "true")" />
+
+                    @if (u.EmployeeId.ToString() != currentEmpId)
+                    {
+                        <button type="submit">
+                            @(u.IsActive ? "تعطيل" : "تفعيل")
+                        </button>
+                    }
+                </form>
+
+                @* اخفِ الحذف عن نفسك *@
+                @if (u.EmployeeId.ToString() != currentEmpId)
+                {
+                    <form method="post" asp-action="Delete" style="display:inline"
+                          onsubmit="return confirm('متأكد حذف نهائي؟');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="employeeId" value="@u.EmployeeId" />
+                        <button type="submit">حذف</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

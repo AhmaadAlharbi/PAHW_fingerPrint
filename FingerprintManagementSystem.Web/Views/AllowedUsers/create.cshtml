@@ -1,0 +1,51 @@
+﻿@model FingerprintManagementSystem.Contracts.AllowedUserDto
+
+<h3>إضافة موظف إلى Allowlist</h3>
+
+@if (TempData["ErrorMsg"] != null) { <div style="color:red">@TempData["ErrorMsg"]</div> }
+@if (TempData["SuccessMsg"] != null) { <div style="color:green">@TempData["SuccessMsg"]</div> }
+
+<hr/>
+
+<form method="post" asp-action="Fetch">
+    <label>الرقم الوظيفي:</label>
+    <input type="number" name="employeeId" required />
+    <button type="submit">جلب من SOAP</button>
+</form>
+
+@if (Model != null)
+{
+    <hr/>
+    <form method="post" asp-action="Save">
+        <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
+
+        <div>
+            <label>الاسم</label>
+            <input type="text" name="fullName" value="@Model.FullName" />
+        </div>
+
+        <div>
+            <label>الإيميل</label>
+            <input type="text" name="email" value="@Model.Email" />
+        </div>
+
+        <div>
+            <label>القسم</label>
+            <input type="text" name="department" value="@Model.Department" />
+        </div>
+
+        <div>
+            <label>Valid Until (اختياري)</label>
+            <input type="date" name="validUntil" />
+        </div>
+
+        <div>
+            <label>
+                <input type="checkbox" name="isAdmin" />
+                Admin
+            </label>
+        </div>
+
+        <button type="submit">إضافة</button>
+    </form>
+}

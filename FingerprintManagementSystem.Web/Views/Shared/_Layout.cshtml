@@ -27,6 +27,13 @@
                     </ul>
                 </div>
             </div>
+            @if (Context.Session.GetString("IsAdmin") == "1")
+            {
+                <li>
+                    <a asp-controller="AllowedUsers" asp-action="Index">إدارة المستخدمين</a>
+                </li>
+            }
+
             @if (Context.Session.GetString("EmpName") != null)
             {
                 <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">

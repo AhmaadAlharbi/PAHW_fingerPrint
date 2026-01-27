@@ -5,7 +5,7 @@ using FingerprintManagementSystem.ApiAdapter.Soap;
 using FingerprintManagementSystem.Contracts;
 using Microsoft.EntityFrameworkCore;
 using FingerprintManagementSystem.Web.Services;
-
+using FingerprintManagementSystem.ApiAdapter;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
@@ -31,7 +31,8 @@ builder.Services.AddScoped<RegionMappingService>();
 builder.Services.AddHttpClient(); // مهم لأن SoapLoginApi يعتمد على HttpClient
 builder.Services.AddScoped<ILoginApi, SoapLoginApi>();
 builder.Services.AddSession();
-
+builder.Services.AddScoped<IAllowedUsersStore, SqliteAllowedUsersStore>();
+builder.Services.AddScoped<IAllowedUsersAdmin, AllowedUsersAdminService>();
 // -------------------------
 // ✅ SOAP client
 // -------------------------

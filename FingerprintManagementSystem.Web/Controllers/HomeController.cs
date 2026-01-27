@@ -8,8 +8,12 @@ namespace FingerprintManagementSystem.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILoginApi _login;
-
-        public HomeController(ILoginApi login) => _login = login;
+        private readonly IAllowedUsersStore _allowedUsers;
+        public HomeController(ILoginApi login, IAllowedUsersStore allowedUsers)
+        {
+            _login = login;
+            _allowedUsers = allowedUsers;
+        }
         public IActionResult Index()
         {
             if (HttpContext.Session.GetString("EmpName") != null)
@@ -28,20 +32,42 @@ namespace FingerprintManagementSystem.Web.Controllers
             // فشل
             if (result.ResultCode != 1)
             {
-                TempData["ErrorMsg"] = result.Message;   // ✅ نفس المفتاح اللي تقراه Index.cshtml
+                TempData["ErrorMsg"] = result.Message;
                 return RedirectToAction("Index");
             }
 
-            // نجاح
-            TempData["SuccessMsg"] = $"Welcome {result.EmployeeName}"; // ✅ بنعرضه في Index
+            // ✅ حوّل الرقم الوظيفي بأمان
+            if (!int.TryParse(empId, out var empIdInt))
+            {
+                TempData["ErrorMsg"] = "الرقم الوظيفي غير صحيح.";
+                return RedirectToAction("Index");
+            }
 
-            // إذا تبي "تسجيل دخول" حقيقي، فعّل Session وخزّن:
+            // ✅ تحقق من السماحية قبل أي Session
+            var allowed = await _allowedUsers.IsAllowedAsync(empIdInt, ct);
+            if (!allowed)
+            {
+                // احتياط: امسح أي شي قديم
+                HttpContext.Session.Clear();
+
+                TempData["ErrorMsg"] = "غير مصرح لك بالدخول. راجع قسم الإجازات والدوام.";
+                return RedirectToAction("Index");
+            }
+            
+// ✅ خزّن IsAdmin               
+            var isAdmin = await _allowedUsers.IsAdminAsync(empIdInt, ct);
+            HttpContext.Session.SetString("IsAdmin", isAdmin ? "1" : "0");
+
+
+            // ✅ الآن فقط خزّن Session
             HttpContext.Session.SetString("SessionKey", result.SessionKey);
             HttpContext.Session.SetString("EmpName", result.EmployeeName);
+            HttpContext.Session.SetString("EmpId", empId);
+            TempData["SuccessMsg"] = $"Welcome {result.EmployeeName}";
 
             return RedirectToAction("Index", "Employees");
-
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Logout()
