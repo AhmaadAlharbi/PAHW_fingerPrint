@@ -1,25 +1,21 @@
 ﻿@model FingerprintManagementSystem.Contracts.DTOs.EmployeeDevicesScreenDto
 @{
-    ViewData["Title"] = "بحث موظف";
-    var toastType = TempData["ToastType"] as string;
-    var toastMsg = TempData["ToastMsg"] as string;
-    var lastEmployeeId = TempData["LastEmployeeId"]?.ToString();
-    var devices = Model?.Devices ?? new List<FingerprintManagementSystem.Contracts.DTOs.DeviceRowDto>();
-    var assigned = devices.Where(x => x.IsEffectivelyAssigned).ToList();
+ViewData["Title"] = "بحث موظف";
+var toastType = TempData["ToastType"] as string;
+var toastMsg = TempData["ToastMsg"] as string;
+var lastEmployeeId = TempData["LastEmployeeId"]?.ToString();
+var devices = Model?.Devices ?? new List<FingerprintManagementSystem.Contracts.DTOs.DeviceRowDto>();
+var assigned = devices.Where(x => x.IsEffectivelyAssigned).ToList();
 }
 @{
-    // Peek: يقرأ بدون ما يمسح TempData
-    var selectedTerminalsRaw = TempData["SelectedTerminalIds"] as string;
-
-    var selectedTerminals = new HashSet<string>(
-        (selectedTerminalsRaw ?? "")
-        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-        .Select(x => x.Trim()),
-        StringComparer.OrdinalIgnoreCase
-    );
+var selectedTerminalsRaw = TempData["SelectedTerminalIds"] as string;
+var selectedTerminals = new HashSet<string>(
+(selectedTerminalsRaw ?? "")
+.Split(',', StringSplitOptions.RemoveEmptyEntries)
+.Select(x => x.Trim()),
+StringComparer.OrdinalIgnoreCase
+);
 }
-
-
 
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -28,219 +24,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- استخدام site.css الموحد -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- أنماط خاصة بصفحة البحث فقط -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --maroon: #692f39;
-            --maroon-light: #8b3d4d;
-            --maroon-dark: #52242d;
-            --blue: #3e596e;
-            --blue-light: #4d6c85;
-            --copper: #8c7d68;
-            --copper-light: #a8987f;
-            --emerald: #10b981;
-            --emerald-light: #34d399;
-            --rose: #f43f5e;
-            --amber: #f59e0b;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-400: #9ca3af;
-            --gray-500: #6b7280;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
-        }
-
-        body {
-            font-family: 'Tajawal', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
-            line-height: 1.6;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Animated Background Particles */
-        .bg-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--maroon), var(--blue));
-            opacity: 0.03;
-            animation: float-particle 20s infinite ease-in-out;
-        }
-
-            .particle:nth-child(1) {
-                width: 300px;
-                height: 300px;
-                top: 10%;
-                left: 10%;
-                animation-delay: 0s;
-            }
-
-            .particle:nth-child(2) {
-                width: 200px;
-                height: 200px;
-                top: 60%;
-                left: 70%;
-                animation-delay: 5s;
-            }
-
-            .particle:nth-child(3) {
-                width: 250px;
-                height: 250px;
-                top: 80%;
-                left: 20%;
-                animation-delay: 10s;
-            }
-
-            .particle:nth-child(4) {
-                width: 180px;
-                height: 180px;
-                top: 30%;
-                left: 80%;
-                animation-delay: 15s;
-            }
-
-        @@keyframes float-particle {
-            0%, 100% {
-                transform: translate(0, 0) scale(1);
-            }
-
-            25% {
-                transform: translate(30px, -30px) scale(1.1);
-            }
-
-            50% {
-                transform: translate(-20px, 20px) scale(0.9);
-            }
-
-            75% {
-                transform: translate(40px, 10px) scale(1.05);
-            }
-        }
-
-        /* Enhanced Navbar */
-        .navbar {
-            background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-dark) 100%);
-            padding: 20px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 8px 32px rgba(105, 47, 57, 0.15);
-            position: relative;
-            z-index: 100;
-            border-bottom: 3px solid var(--copper);
-        }
-
-            .navbar::before {
-                content: '';
-                position: absolute;
-                bottom: -3px;
-                left: 0;
-                width: 100%;
-                height: 3px;
-                background: linear-gradient(90deg, var(--copper), var(--blue), var(--maroon));
-                background-size: 200% 100%;
-                animation: shimmer 3s linear infinite;
-            }
-
-        @@keyframes shimmer {
-            0% {
-                background-position: 100% 0;
-            }
-
-            100% {
-                background-position: -100% 0;
-            }
-        }
-
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            color: white;
-        }
-
-        .navbar-logo {
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-            .navbar-logo:hover {
-                transform: rotate(5deg) scale(1.05);
-                box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
-            }
-
-            .navbar-logo img {
-                height: 40px;
-                filter: brightness(0) invert(1);
-            }
-
-        .navbar-title {
-            font-size: 1.5em;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-            .navbar-user:hover {
-                background: rgba(255, 255, 255, 0.25);
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            }
-
-        .user-avatar {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, var(--blue), var(--copper));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.2em;
-            border: 3px solid white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
         /* Main Content */
         .main-content {
             padding: 50px;
@@ -262,7 +51,6 @@
                 opacity: 0;
                 transform: translateY(-30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -299,26 +87,21 @@
             animation: fadeInUp 0.6s ease both;
         }
 
-            .premium-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 4px;
-                background: linear-gradient(90deg, var(--maroon), var(--blue), var(--copper));
-                background-size: 200% 100%;
-                animation: slideGradient 3s linear infinite;
-            }
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--maroon), var(--blue), var(--copper));
+            background-size: 200% 100%;
+            animation: slideGradient 3s linear infinite;
+        }
 
         @@keyframes slideGradient {
-            0% {
-                background-position: 0% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
-            }
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
         }
 
         @@keyframes fadeInUp {
@@ -326,24 +109,15 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        .premium-card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .premium-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .premium-card:nth-child(3) {
-            animation-delay: 0.3s;
-        }
+        .premium-card:nth-child(1) { animation-delay: 0.1s; }
+        .premium-card:nth-child(2) { animation-delay: 0.2s; }
+        .premium-card:nth-child(3) { animation-delay: 0.3s; }
 
         /* Section Header Design */
         .section-header {
@@ -356,15 +130,15 @@
             position: relative;
         }
 
-            .section-header::after {
-                content: '';
-                position: absolute;
-                bottom: -2px;
-                left: 0;
-                width: 120px;
-                height: 2px;
-                background: linear-gradient(90deg, var(--maroon), transparent);
-            }
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 120px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--maroon), transparent);
+        }
 
         .section-number {
             width: 52px;
@@ -414,13 +188,13 @@
             font-family: 'Tajawal', sans-serif;
         }
 
-            .form-input:focus {
-                outline: none;
-                border-color: var(--maroon);
-                background: white;
-                box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.1);
-                transform: translateY(-2px);
-            }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--maroon);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.1);
+            transform: translateY(-2px);
+        }
 
         /* Alert Boxes */
         .alert {
@@ -439,7 +213,6 @@
                 opacity: 0;
                 transform: translateX(30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -477,72 +250,72 @@
             border-color: var(--emerald);
         }
 
-            .alert-success .alert-icon {
-                background: var(--emerald);
-                color: white;
-            }
+        .alert-success .alert-icon {
+            background: var(--emerald);
+            color: white;
+        }
 
-            .alert-success .alert-title {
-                color: #065f46;
-            }
+        .alert-success .alert-title {
+            color: #065f46;
+        }
 
-            .alert-success .alert-message {
-                color: #047857;
-            }
+        .alert-success .alert-message {
+            color: #047857;
+        }
 
         .alert-warning {
             background: linear-gradient(135deg, #fffbeb, #fef3c7);
             border-color: var(--amber);
         }
 
-            .alert-warning .alert-icon {
-                background: var(--amber);
-                color: white;
-            }
+        .alert-warning .alert-icon {
+            background: var(--amber);
+            color: white;
+        }
 
-            .alert-warning .alert-title {
-                color: #92400e;
-            }
+        .alert-warning .alert-title {
+            color: #92400e;
+        }
 
-            .alert-warning .alert-message {
-                color: #b45309;
-            }
+        .alert-warning .alert-message {
+            color: #b45309;
+        }
 
         .alert-danger {
             background: linear-gradient(135deg, #fef2f2, #fee2e2);
             border-color: var(--rose);
         }
 
-            .alert-danger .alert-icon {
-                background: var(--rose);
-                color: white;
-            }
+        .alert-danger .alert-icon {
+            background: var(--rose);
+            color: white;
+        }
 
-            .alert-danger .alert-title {
-                color: #991b1b;
-            }
+        .alert-danger .alert-title {
+            color: #991b1b;
+        }
 
-            .alert-danger .alert-message {
-                color: #dc2626;
-            }
+        .alert-danger .alert-message {
+            color: #dc2626;
+        }
 
         .alert-info {
             background: linear-gradient(135deg, #eff6ff, #dbeafe);
             border-color: var(--blue);
         }
 
-            .alert-info .alert-icon {
-                background: var(--blue);
-                color: white;
-            }
+        .alert-info .alert-icon {
+            background: var(--blue);
+            color: white;
+        }
 
-            .alert-info .alert-title {
-                color: #1e40af;
-            }
+        .alert-info .alert-title {
+            color: #1e40af;
+        }
 
-            .alert-info .alert-message {
-                color: #1e3a8a;
-            }
+        .alert-info .alert-message {
+            color: #1e3a8a;
+        }
 
         /* Employee Info Card */
         .employee-card {
@@ -555,17 +328,17 @@
             overflow: hidden;
         }
 
-            .employee-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 200px;
-                height: 200px;
-                background: radial-gradient(circle, rgba(105, 47, 57, 0.05), transparent);
-                border-radius: 50%;
-                transform: translate(50%, -50%);
-            }
+        .employee-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(105, 47, 57, 0.05), transparent);
+            border-radius: 50%;
+            transform: translate(50%, -50%);
+        }
 
         .employee-grid {
             display: grid;
@@ -613,9 +386,9 @@
             cursor: default;
         }
 
-            .stat-badge:hover {
-                transform: translateY(-2px) scale(1.05);
-            }
+        .stat-badge:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
 
         .stat-badge-primary {
             background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
@@ -627,6 +400,40 @@
             background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
             color: white;
             box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .stat-badge-info {
+            background: linear-gradient(135deg, var(--gray-900), var(--gray-600));          
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 86, 116, 0.3);        }
+
+        /* Region Filters */
+        .region-filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 2px solid var(--gray-300);
+            background: white;
+            color: var(--gray-700);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--maroon);
+            background: var(--gray-50);
+        }
+
+        .filter-pill.active {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            color: white;
+            border-color: var(--maroon);
         }
 
         /* Region Cards */
@@ -647,11 +454,11 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
         }
 
-            .region-card:hover {
-                border-color: var(--maroon);
-                box-shadow: 0 16px 48px rgba(105, 47, 57, 0.15);
-                transform: translateY(-6px);
-            }
+        .region-card:hover {
+            border-color: var(--maroon);
+            box-shadow: 0 16px 48px rgba(105, 47, 57, 0.15);
+            transform: translateY(-6px);
+        }
 
         .region-header {
             background: linear-gradient(135deg, var(--gray-50), white);
@@ -660,14 +467,14 @@
             transition: all 0.3s ease;
         }
 
-            .region-header:hover {
-                background: linear-gradient(135deg, white, #fef2f2);
-            }
+        .region-header:hover {
+            background: linear-gradient(135deg, white, #fef2f2);
+        }
 
-            .region-header.active {
-                background: linear-gradient(135deg, #fef2f2, #fee2e2);
-                border-bottom-color: var(--maroon);
-            }
+        .region-header.active {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-bottom-color: var(--maroon);
+        }
 
         .region-top {
             display: flex;
@@ -699,16 +506,16 @@
         .region-info {
             flex: 1;
             min-width: 0;
-            cursor:pointer;
+            cursor: pointer;
         }
 
-            .region-info h4 {
-                font-size: 1.7em;
-                font-weight: 900;
-                color: var(--gray-900);
-                margin-bottom: 12px;
-                letter-spacing: -0.5px;
-            }
+        .region-info h4 {
+            font-size: 1.7em;
+            font-weight: 900;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
 
         .region-meta {
             display: flex;
@@ -728,10 +535,10 @@
             gap: 6px;
         }
 
-            .meta-badge.success {
-                background: #d1fae5;
-                color: #065f46;
-            }
+        .meta-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
 
         .btn-icon-toggle {
             width: 52px;
@@ -749,11 +556,11 @@
             flex-shrink: 0;
         }
 
-            .btn-icon-toggle:hover {
-                border-color: var(--maroon);
-                color: var(--maroon);
-                transform: scale(1.1);
-            }
+        .btn-icon-toggle:hover {
+            border-color: var(--maroon);
+            color: var(--maroon);
+            transform: scale(1.1);
+        }
 
         .toggle-icon {
             transition: transform 0.3s ease;
@@ -769,9 +576,9 @@
             transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-            .collapse.show {
-                max-height: 6000px;
-            }
+        .collapse.show {
+            max-height: 6000px;
+        }
 
         /* Region Options */
         .region-options {
@@ -836,45 +643,45 @@
             position: relative;
         }
 
-            .radio-option input[type="radio"] {
-                position: absolute;
-                opacity: 0;
-            }
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
 
-            .radio-option label {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                padding: 24px 16px;
-                background: white;
-                border: 3px solid var(--gray-200);
-                border-radius: 18px;
-                font-weight: 800;
-                font-size: 1em;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                min-height: 120px;
-            }
+        .radio-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 24px 16px;
+            background: white;
+            border: 3px solid var(--gray-200);
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 120px;
+        }
 
-                .radio-option label span:first-child {
-                    font-size: 2.5em;
-                }
+        .radio-option label span:first-child {
+            font-size: 2.5em;
+        }
 
-            .radio-option input[type="radio"]:checked + label {
-                background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
-                border-color: var(--maroon);
-                color: white;
-                box-shadow: 0 10px 30px rgba(105, 47, 57, 0.4);
-                transform: translateY(-6px) scale(1.05);
-            }
+        .radio-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            border-color: var(--maroon);
+            color: white;
+            box-shadow: 0 10px 30px rgba(105, 47, 57, 0.4);
+            transform: translateY(-6px) scale(1.05);
+        }
 
-            .radio-option label:hover {
-                border-color: var(--maroon);
-                transform: translateY(-3px);
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            }
+        .radio-option label:hover {
+            border-color: var(--maroon);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
 
         /* Date Fields */
         .dates-row {
@@ -888,11 +695,11 @@
             margin-top: 0;
         }
 
-            .dates-row.show {
-                opacity: 1;
-                max-height: 300px;
-                margin-top: 24px;
-            }
+        .dates-row.show {
+            opacity: 1;
+            max-height: 300px;
+            margin-top: 24px;
+        }
 
         .date-field {
             display: flex;
@@ -909,9 +716,9 @@
             gap: 10px;
         }
 
-            .date-label span:first-child {
-                font-size: 1.4em;
-            }
+        .date-label span:first-child {
+            font-size: 1.4em;
+        }
 
         .date-input {
             padding: 18px 22px;
@@ -925,12 +732,12 @@
             color: var(--gray-800);
         }
 
-            .date-input:focus {
-                outline: none;
-                border-color: var(--maroon);
-                box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.15);
-                transform: translateY(-2px);
-            }
+        .date-input:focus {
+            outline: none;
+            border-color: var(--maroon);
+            box-shadow: 0 0 0 4px rgba(105, 47, 57, 0.15);
+            transform: translateY(-2px);
+        }
 
         .warning-note {
             margin-top: 20px;
@@ -950,14 +757,14 @@
             transition: all 0.5s ease;
         }
 
-            .warning-note.show {
-                opacity: 1;
-                max-height: 150px;
-            }
+        .warning-note.show {
+            opacity: 1;
+            max-height: 150px;
+        }
 
-            .warning-note span:first-child {
-                font-size: 1.6em;
-            }
+        .warning-note span:first-child {
+            font-size: 1.6em;
+        }
 
         .submit-region-btn {
             margin-top: 24px;
@@ -978,14 +785,14 @@
             justify-content: center;
         }
 
-            .submit-region-btn:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 14px 36px rgba(16, 185, 129, 0.5);
-            }
+        .submit-region-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 36px rgba(16, 185, 129, 0.5);
+        }
 
-            .submit-region-btn span:first-child {
-                font-size: 1.4em;
-            }
+        .submit-region-btn span:first-child {
+            font-size: 1.4em;
+        }
 
         /* Devices Section */
         .devices-section {
@@ -1016,40 +823,40 @@
             transition: all 0.3s ease;
         }
 
-            .select-all-box:hover {
-                border-color: var(--maroon);
-                background: var(--gray-50);
-                box-shadow: 0 6px 20px rgba(105, 47, 57, 0.1);
-                transform: translateY(-2px);
-            }
+        .select-all-box:hover {
+            border-color: var(--maroon);
+            background: var(--gray-50);
+            box-shadow: 0 6px 20px rgba(105, 47, 57, 0.1);
+            transform: translateY(-2px);
+        }
 
-            .select-all-box input[type="checkbox"] {
-                width: 30px;
-                height: 30px;
-                cursor: pointer;
-                appearance: none;
-                border: 3px solid var(--gray-300);
-                border-radius: 10px;
-                background: white;
-                transition: all 0.3s ease;
-                position: relative;
-            }
+        .select-all-box input[type="checkbox"] {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            appearance: none;
+            border: 3px solid var(--gray-300);
+            border-radius: 10px;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
 
-                .select-all-box input[type="checkbox"]:checked {
-                    background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
-                    border-color: var(--maroon);
-                }
+        .select-all-box input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+            border-color: var(--maroon);
+        }
 
-                    .select-all-box input[type="checkbox"]:checked::after {
-                        content: '✓';
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        color: white;
-                        font-weight: 900;
-                        font-size: 18px;
-                    }
+        .select-all-box input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: 18px;
+        }
 
         .select-all-label {
             font-weight: 800;
@@ -1076,38 +883,42 @@
             overflow: hidden;
         }
 
-            .device-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 5px;
-                height: 100%;
-                background: linear-gradient(135deg, var(--maroon), var(--copper));
-                transform: scaleY(0);
-                transition: transform 0.3s ease;
-            }
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--maroon), var(--copper));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
 
-            .device-card:hover {
-                border-color: var(--copper);
-                transform: translateX(-6px);
-                box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-            }
+        .device-card:hover {
+            border-color: var(--copper);
+            transform: translateX(-6px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+        }
 
-                .device-card:hover::before {
-                    transform: scaleY(1);
-                }
+        .device-card:hover::before {
+            transform: scaleY(1);
+        }
 
-            .device-card.selected {
-                background: linear-gradient(135deg, #ecfdf5, white);
-                border-color: var(--emerald);
-                box-shadow: 0 10px 36px rgba(16, 185, 129, 0.25);
-            }
+        .device-card.selected {
+            background: linear-gradient(135deg, #ecfdf5, white);
+            border-color: var(--emerald);
+            box-shadow: 0 10px 36px rgba(16, 185, 129, 0.25);
+        }
 
-                .device-card.selected::before {
-                    transform: scaleY(1);
-                    background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
-                }
+        .device-card.selected::before {
+            transform: scaleY(1);
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+        }
+
+        .device-card.is-hidden {
+            display: none !important;
+        }
 
         .device-checkbox input[type="checkbox"] {
             width: 28px;
@@ -1121,26 +932,26 @@
             position: relative;
         }
 
-            .device-checkbox input[type="checkbox"]:hover {
-                border-color: var(--maroon);
-                transform: scale(1.1);
-            }
+        .device-checkbox input[type="checkbox"]:hover {
+            border-color: var(--maroon);
+            transform: scale(1.1);
+        }
 
-            .device-checkbox input[type="checkbox"]:checked {
-                background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
-                border-color: var(--emerald);
-            }
+        .device-checkbox input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+            border-color: var(--emerald);
+        }
 
-                .device-checkbox input[type="checkbox"]:checked::after {
-                    content: '✓';
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    color: white;
-                    font-weight: 900;
-                    font-size: 16px;
-                }
+        .device-checkbox input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: 16px;
+        }
 
         .device-icon {
             width: 64px;
@@ -1196,28 +1007,28 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-            .btn-device:hover {
-                transform: translateY(-3px) scale(1.1);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            }
+        .btn-device:hover {
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
 
         .btn-device-success {
             background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
             color: white;
         }
 
-            .btn-device-success:hover {
-                box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
-            }
+        .btn-device-success:hover {
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
 
         .btn-device-danger {
             background: linear-gradient(135deg, var(--rose), #f43f5e);
             color: white;
         }
 
-            .btn-device-danger:hover {
-                box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
-            }
+        .btn-device-danger:hover {
+            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.4);
+        }
 
         /* Bulk Actions Bar */
         .bulk-bar {
@@ -1238,9 +1049,9 @@
             transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
 
-            .bulk-bar.show {
-                transform: translateX(-50%) translateY(0);
-            }
+        .bulk-bar.show {
+            transform: translateX(-50%) translateY(0);
+        }
 
         .bulk-info {
             display: flex;
@@ -1261,11 +1072,9 @@
             0% {
                 box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8);
             }
-
             70% {
                 box-shadow: 0 0 0 18px rgba(16, 185, 129, 0);
             }
-
             100% {
                 box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
             }
@@ -1305,12 +1114,12 @@
             color: var(--maroon);
         }
 
-            .btn-bulk-success:hover {
-                background: var(--emerald);
-                color: white;
-                transform: translateY(-4px);
-                box-shadow: 0 14px 32px rgba(16, 185, 129, 0.5);
-            }
+        .btn-bulk-success:hover {
+            background: var(--emerald);
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: 0 14px 32px rgba(16, 185, 129, 0.5);
+        }
 
         .btn-bulk-danger {
             background: rgba(255, 255, 255, 0.22);
@@ -1318,12 +1127,12 @@
             border: 3px solid rgba(255, 255, 255, 0.35);
         }
 
-            .btn-bulk-danger:hover {
-                background: var(--rose);
-                border-color: var(--rose);
-                transform: translateY(-4px);
-                box-shadow: 0 14px 32px rgba(244, 63, 94, 0.5);
-            }
+        .btn-bulk-danger:hover {
+            background: var(--rose);
+            border-color: var(--rose);
+            transform: translateY(-4px);
+            box-shadow: 0 14px 32px rgba(244, 63, 94, 0.5);
+        }
 
         /* Action Buttons */
         .form-actions {
@@ -1354,10 +1163,10 @@
             box-shadow: 0 10px 28px rgba(105, 47, 57, 0.35);
         }
 
-            .btn-primary:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 14px 40px rgba(105, 47, 57, 0.45);
-            }
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 40px rgba(105, 47, 57, 0.45);
+        }
 
         .empty-state {
             text-align: center;
@@ -1379,48 +1188,48 @@
             font-weight: 600;
         }
 
+        .btn-logout {
+            background: #dc2626;
+            color: #fff;
+            border: 0;
+            padding: 8px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .btn-logout:hover {
+            background: #b91c1c;
+        }
+
         /* Responsive */
         @@media (max-width: 1400px) {
             .regions-container {
                 grid-template-columns: 1fr;
             }
-
             .radio-options {
                 grid-template-columns: 1fr;
             }
         }
 
         @@media (max-width: 768px) {
-            .navbar {
-                padding: 16px 24px;
-                flex-direction: column;
-                gap: 16px;
-            }
-
             .main-content {
                 padding: 30px 20px;
             }
-
             .page-header h1 {
                 font-size: 2.2em;
             }
-
             .premium-card {
                 padding: 28px 24px;
             }
-
             .devices-grid {
                 grid-template-columns: 1fr;
             }
-
             .dates-row {
                 grid-template-columns: 1fr;
             }
-
             .radio-options {
                 grid-template-columns: 1fr;
             }
-
             .bulk-bar {
                 flex-direction: column;
                 gap: 18px;
@@ -1428,21 +1237,17 @@
                 border-radius: 28px;
                 width: calc(100% - 40px);
             }
-
             .bulk-actions {
                 width: 100%;
                 flex-direction: column;
             }
-
             .btn-bulk {
                 width: 100%;
                 justify-content: center;
             }
-
             .form-actions {
                 flex-direction: column;
             }
-
             .btn {
                 width: 100%;
                 justify-content: center;
@@ -1451,171 +1256,142 @@
     </style>
 </head>
 <body>
-    <!-- Background Particles -->
-    <div class="bg-particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
+<!-- جزيئات الخلفية من site.css -->
+<div class="bg-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</div>
+
+
+<!-- المحتوى الرئيسي - باقي الكود كما هو -->
+<div class="main-content">
+    <div class="page-header">
+        <h1>🔍 بحث عن موظف</h1>
     </div>
 
-    <!-- Navbar -->
-    <div class="navbar">
-        <div class="navbar-brand">
-            <div class="navbar-logo">
-                <img src="https://www.pahw.gov.kw/images/PAHW-Logo.png" alt="PAHW" />
-            </div>
-            <span class="navbar-title">نظام إدارة البصمات الذكي</span>
-        </div>
-        <div class="navbar-user">
-            <span style="font-weight: 700;">مسؤول النظام</span>
-            <div class="user-avatar">م</div>
+    @if (!string.IsNullOrWhiteSpace(toastMsg))
+    {
+    var alertClass = "alert-info";
+    var alertIcon = "ℹ️";
+    var alertTitle = "معلومة";
+
+    if (toastType == "success")
+    {
+    alertClass = "alert-success";
+    alertIcon = "✅";
+    alertTitle = "نجح";
+    }
+    else if (toastType == "danger")
+    {
+    alertClass = "alert-danger";
+    alertIcon = "❌";
+    alertTitle = "خطأ";
+    }
+    else if (toastType == "warning")
+    {
+    alertClass = "alert-warning";
+    alertIcon = "⚠️";
+    alertTitle = "تحذير";
+    }
+
+    <div class="alert @alertClass">
+        <div class="alert-icon">@alertIcon</div>
+        <div class="alert-content">
+            <div class="alert-title">@alertTitle</div>
+            <div class="alert-message">@toastMsg</div>
         </div>
     </div>
+    }
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1>🔍 بحث عن موظف</h1>
-            <p>نظام متطور لإدارة أجهزة البصمة بكفاءة وسهولة</p>
+    <div class="premium-card">
+        <div class="section-header">
+            <div class="section-number">1</div>
+            <h3 class="section-title">البحث عن الموظف</h3>
         </div>
 
-        <!-- Toast Messages -->
-        @if (!string.IsNullOrWhiteSpace(toastMsg))
-        {
-            var alertClass = "alert-info";
-            var alertIcon = "ℹ️";
-            var alertTitle = "معلومة";
-
-            if (toastType == "success")
-            {
-                alertClass = "alert-success";
-                alertIcon = "✅";
-                alertTitle = "نجح";
-            }
-            else if (toastType == "danger")
-            {
-                alertClass = "alert-danger";
-                alertIcon = "❌";
-                alertTitle = "خطأ";
-            }
-            else if (toastType == "warning")
-            {
-                alertClass = "alert-warning";
-                alertIcon = "⚠️";
-                alertTitle = "تحذير";
-            }
-
-            <div class="alert @alertClass">
-                <div class="alert-icon">@alertIcon</div>
-                <div class="alert-content">
-                    <div class="alert-title">@alertTitle</div>
-                    <div class="alert-message">@toastMsg</div>
-                </div>
-            </div>
-        }
-        <style>
-  .btn-logout{background:#dc2626;color:#fff;border:0;padding:8px 14px;border-radius:10px;cursor:pointer}
-  .btn-logout:hover{background:#b91c1c}
-</style>
-
-      
-        
-
-
-        <!-- Search Section -->
-        <div class="premium-card">
-            <div class="section-header">
-                <div class="section-number">1</div>
-                <h3 class="section-title">البحث عن الموظف</h3>
+        <form method="post" action="/employees/search">
+            @Html.AntiForgeryToken()
+            <div class="form-field">
+                <label class="form-label">
+                    <i>🔍</i>
+                    الرقم الوظيفي للموظف
+                </label>
+                <input type="number" name="employeeId" class="form-input"
+                       placeholder="أدخل الرقم الوظيفي للبحث..."
+                       value="@(Model?.Employee?.EmployeeId.ToString() ?? lastEmployeeId ?? "")"
+                       required />
             </div>
 
-            <form method="post" action="/employees/search">
-                @Html.AntiForgeryToken()
-                <div class="form-field">
-                    <label class="form-label">
-                        <i>🔍</i>
-                        الرقم الوظيفي للموظف
-                    </label>
-                    <input type="number" name="employeeId" class="form-input"
-                           placeholder="أدخل الرقم الوظيفي للبحث..."
-                           value="@(Model?.Employee?.EmployeeId.ToString() ?? lastEmployeeId ?? "")"
-                           required />
-                </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span>🔍</span>
+                    <span>بحث</span>
+                </button>
+            </div>
+        </form>
+    </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <span>🔍</span>
-                        <span>بحث</span>
-                    </button>
-                </div>
-            </form>
+    @if (Model?.Employee != null)
+    {
+    <div class="premium-card">
+        <div class="section-header">
+            <div class="section-number">2</div>
+            <h3 class="section-title">معلومات الموظف</h3>
         </div>
 
-        @if (Model?.Employee != null)
-        {
-            <!-- Employee Info -->
-            <div class="premium-card">
-                <div class="section-header">
-                    <div class="section-number">2</div>
-                    <h3 class="section-title">معلومات الموظف</h3>
+        <div class="employee-card">
+            <div class="employee-grid">
+                <div class="employee-item">
+                    <span class="employee-label">👤 الاسم الكامل</span>
+                    <span class="employee-value">@Model.Employee.FullNameAr</span>
                 </div>
-
-                <div class="employee-card">
-                    <div class="employee-grid">
-                        <div class="employee-item">
-                            <span class="employee-label">👤 الاسم الكامل</span>
-                            <span class="employee-value">@Model.Employee.FullNameAr</span>
-                        </div>
-                        <div class="employee-item">
-                            <span class="employee-label">🏢 الإدارة / القسم</span>
-                            <span class="employee-value">@Model.Employee.Department</span>
-                        </div>
-                        <div class="employee-item">
-                            <span class="employee-label">💼 المسمى الوظيفي</span>
-                            <span class="employee-value">@Model.Employee.JobTitle</span>
-                        </div>
-                        <div class="employee-item">
-                            <span class="employee-label">📊 إحصائيات الأجهزة</span>
-                            <div class="stats-badges">
-                                <span class="stat-badge stat-badge-primary">
+                <div class="employee-item">
+                    <span class="employee-label">🏢 الإدارة / القسم</span>
+                    <span class="employee-value">@Model.Employee.Department</span>
+                </div>
+                <div class="employee-item">
+                    <span class="employee-label">💼 المسمى الوظيفي</span>
+                    <span class="employee-value">@Model.Employee.JobTitle</span>
+                </div>
+                <div class="employee-item">
+                    <span class="employee-label">📊 إحصائيات الأجهزة</span>
+                    <div class="stats-badges">
+                                <span onclick="setRegionFilter('all')" class="stat-badge stat-badge-primary">
                                     <span>🖥️</span>
                                     <span>@devices.Count إجمالي</span>
                                 </span>
-                                <span class="stat-badge stat-badge-success">
+                                <span onclick="setRegionFilter('assigned')" class="stat-badge stat-badge-success">
                                     <span>✅</span>
                                     <span>@assigned.Count مرتبطة</span>
                                 </span>
-                                
-                            </div>
-                        </div>
+                                <span onclick="setRegionFilter('unassigned')"  class="stat-badge stat-badge-info">
+                                    <span>✅</span>
+                                    <span>@assigned.Count غير مرتبطة </span>
+                                </span>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Devices Section -->
-            @if (Model.RegionGroups != null && Model.RegionGroups.Any())
+    @if (Model.RegionGroups != null && Model.RegionGroups.Any())
+    {
+    <div class="premium-card">
+        <div class="section-header">
+            <div class="section-number">3</div>
+            <h3 class="section-title">إدارة أجهزة البصمة</h3>
+        </div>
+
+      
+
+        <div class="regions-container">
+            @for (int i = 0; i < Model.RegionGroups.Count; i++)
             {
-               <div class="premium-card">
-    <div class="section-header">
-        <div class="section-number">3</div>
-        <h3 class="section-title">إدارة أجهزة البصمة</h3>
-    </div>
-
-    <div class="region-filters">
-        <button type="button" class="filter-pill active" data-filter="all" onclick="setRegionFilter('all')">🌍 الكل</button>
-        <button type="button" class="filter-pill" data-filter="assigned" onclick="setRegionFilter('assigned')">✅ الأجهزة المرتبطة</button>
-        <button type="button" class="filter-pill" data-filter="unassigned" onclick="setRegionFilter('unassigned')">➕ الأجهزة غير المرتبطة</button>
-    </div>
-
-    <div class="regions-container">
-        @for (int i = 0; i < Model.RegionGroups.Count; i++)
-        {
             var g = Model.RegionGroups[i];
             var collapseId = $"collapse_{i}";
             var regionKey = "reg_" + i;
-
             var hasAssigned = g.AssignedDevices > 0;
             var hasUnassigned = (g.TotalDevices - g.AssignedDevices) > 0;
 
@@ -1626,37 +1402,32 @@
                 <div class="region-header">
                     <div class="region-top">
                         <div class="region-left">
-                            <div class="region-icon-wrapper">
-                                📍
-                            </div>
+                            <div class="region-icon-wrapper">📍</div>
                             <div class="region-info" onclick="toggleRegionCollapse('@collapseId')">
                                 <h4>@g.RegionName</h4>
                                 <div class="region-meta">
-                                    <span class="meta-badge">
-                                        <span>🖥️</span>
-                                        <span>@g.TotalDevices أجهزة</span>
-                                    </span>
+                                                    <span class="meta-badge">
+                                                        <span>🖥️</span>
+                                                        <span>@g.TotalDevices أجهزة</span>
+                                                    </span>
                                     @{
-                                        var assignedCount = g.Devices.Count(x => x.IsEffectivelyAssigned);
-                                        var delegatedCount = g.Devices.Count(x => x.IsDelegated);
+                                    var assignedCount = g.Devices.Count(x => x.IsEffectivelyAssigned);
+                                    var delegatedCount = g.Devices.Count(x => x.IsDelegated);
                                     }
-
                                     @if (assignedCount > 0)
                                     {
-                                        <span class="meta-badge success">
-                                            <span>✅</span>
-                                            <span>@assignedCount مرتبطة</span>
-                                        </span>
+                                    <span class="meta-badge success">
+                                                            <span>✅</span>
+                                                            <span>@assignedCount مرتبطة</span>
+                                                        </span>
                                     }
-
                                     @if (delegatedCount > 0)
                                     {
-                                        <span class="meta-badge" style="background:#dbeafe; color:#1e40af;">
-                                            <span>🟦</span>
-                                            <span>@delegatedCount ندب</span>
-                                        </span>
+                                    <span class="meta-badge" style="background:#dbeafe; color:#1e40af;">
+                                                            <span>🟦</span>
+                                                            <span>@delegatedCount ندب</span>
+                                                        </span>
                                     }
-
                                 </div>
                             </div>
                         </div>
@@ -1667,26 +1438,9 @@
                 </div>
 
                 <div id="@collapseId" class="collapse">
-                    <!-- Region Options -->
                     <div class="region-options">
-                        <div class="options-title">
-                            ⚙️ اختر العملية المطلوبة
-                        </div>
-
-                        <div class="instruction-box">
-                            <div class="instruction-box-icon">💡</div>
-                            <div class="instruction-box-content">
-                                <div class="instruction-box-title">كيفية الاستخدام:</div>
-                                <div class="instruction-box-text">
-                                    1️⃣ اختر نوع العملية (نقل، ندب، إزالة)
-                                    <br>
-                                    2️⃣ حدد الأجهزة من القائمة أدناه
-                                    <br>
-                                    3️⃣ اضغط "تطبيق" لتنفيذ العملية على الأجهزة المحددة
-                                </div>
-                            </div>
-                        </div>
-
+                        <div class="options-title">⚙️ اختر العملية المطلوبة</div>
+                        
                         <div class="radio-options">
                             <div class="radio-option">
                                 <input type="radio" name="operation_@regionKey" id="transfer_@regionKey" value="transfer" checked onchange="toggleDates('@regionKey', 'transfer')">
@@ -1735,17 +1489,15 @@
 
                         @if (g.RegionId.HasValue && g.RegionId.Value > 0)
                         {
-                            <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
-                                <span>✓</span>
-                                <span>تطبيق على الأجهزة المحددة</span>
-                            </button>
+                        <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
+                            <span>✓</span>
+                            <span>تطبيق على الأجهزة المحددة</span>
+                        </button>
                         }
                     </div>
 
                     <div class="devices-section">
-                        <div class="devices-section-title">
-                            💻 حدد الأجهزة
-                        </div>
+                        <div class="devices-section-title">💻 حدد الأجهزة</div>
 
                         <div class="select-all-box">
                             <input type="checkbox" id="check-@regionKey" class="select-all-region">
@@ -1753,334 +1505,319 @@
                         </div>
 
                         <div class="devices-grid">
-                        
-
                             @foreach (var d in g.Devices)
-{
-    var isSelected = selectedTerminals.Contains((d.DeviceId ?? "").Trim());
+                            {
+                            var isSelected = selectedTerminals.Contains((d.DeviceId ?? "").Trim());
 
-    <div class="device-card @((d.IsEffectivelyAssigned || isSelected) ? "selected" : "")"
-         data-is-assigned="@(d.IsEffectivelyAssigned ? "1" : "0")">
+                            <div class="device-card @((d.IsEffectivelyAssigned || isSelected) ? "selected" : "")"
+                                 data-is-assigned="@(d.IsEffectivelyAssigned ? "1" : "0")">
 
-        <div class="device-checkbox" onclick="event.stopPropagation();">
-            <input type="checkbox"
-                   class="device-chk"
-                   value="@d.DeviceId"
-                   id="chk-@d.DeviceId"
-                   @((d.IsEffectivelyAssigned || isSelected) ? "checked" : "")
-                   onclick="event.stopPropagation();"
-                   onchange="updateDeviceSelection(this)" />
-        </div>
+                                <div class="device-checkbox" onclick="event.stopPropagation();">
+                                    <input type="checkbox"
+                                           class="device-chk"
+                                           value="@d.DeviceId"
+                                           id="chk-@d.DeviceId"
+                                           @((d.IsEffectivelyAssigned || isSelected) ? "checked" : "")
+                                           onclick="event.stopPropagation();"
+                                           onchange="updateDeviceSelection(this)" />
+                                </div>
 
-        <div class="device-icon">💻</div>
+                                <div class="device-icon">💻</div>
 
-        <div class="device-details">
-            <div class="device-name">@d.DeviceName</div>
-            <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
-        </div>
+                                <div class="device-details">
+                                    <div class="device-name">@d.DeviceName</div>
+                                    <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
+                                </div>
 
-        <div class="device-action" onclick="event.stopPropagation();">
-            @if (d.IsAssigned)
-            {
-                <form method="post" action="/employees/unassign" style="display:inline;">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                    <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                    <button type="submit" class="btn-device btn-device-danger">
-                        <span>✖️</span>
-                    </button>
-                </form>
-            }
-            else
-            {
-                <form method="post" action="/employees/assign" style="display:inline;">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                    <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                    <button type="submit" class="btn-device btn-device-success">
-                        <span>✓</span>
-                    </button>
-                </form>
-            }
-        </div>
-    </div>
-}
-
+                                <div class="device-action" onclick="event.stopPropagation();">
+                                    @if (d.IsAssigned)
+                                    {
+                                    <form method="post" action="/employees/unassign" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                                        <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                                        <button type="submit" class="btn-device btn-device-danger">
+                                            <span>✖️</span>
+                                        </button>
+                                    </form>
+                                    }
+                                    else
+                                    {
+                                    <form method="post" action="/employees/assign" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
+                                        <input type="hidden" name="terminalId" value="@d.DeviceId" />
+                                        <button type="submit" class="btn-device btn-device-success">
+                                            <span>✓</span>
+                                        </button>
+                                    </form>
+                                    }
+                                </div>
+                            </div>
+                            }
                         </div>
                     </div>
                 </div>
-
             </div>
-        }
+            }
+        </div>
+    </div>
+    }
+    }
+</div>
+
+<div class="bulk-bar" id="bulkBar">
+    <div class="bulk-info">
+        <span class="pulse-indicator"></span>
+        <div>
+            <div class="bulk-count"><span id="selectedCount">0</span></div>
+            <div class="bulk-label">جهاز محدد</div>
+        </div>
+    </div>
+    <div class="bulk-actions">
+        <button type="button" class="btn-bulk btn-bulk-success" onclick="submitBulk('AssignBulk')">
+            <span>✓</span>
+            <span>ربط بالجملة</span>
+        </button>
+        <button type="button" class="btn-bulk btn-bulk-danger" onclick="submitBulk('UnassignBulk')">
+            <span>✕</span>
+            <span>إلغاء ربط بالجملة</span>
+        </button>
     </div>
 </div>
 
-            }
+<form id="bulkForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
+    <div id="bulkInputsContainer"></div>
+</form>
+
+<form id="regionForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
+    <input type="hidden" id="regionIdInput" name="regionId" value="" />
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function updateBulkBar() {
+        const selectedCount = document.querySelectorAll('.device-chk:checked').length;
+        document.getElementById('selectedCount').textContent = selectedCount;
+        const bar = document.getElementById('bulkBar');
+        if (selectedCount > 0) {
+            bar.classList.add('show');
+        } else {
+            bar.classList.remove('show');
         }
-    </div>
+    }
 
-    <div class="bulk-bar" id="bulkBar" >
-
-        <div class="bulk-info">
-            <span class="pulse-indicator"></span>
-            <div>
-                <div class="bulk-count"><span id="selectedCount">0</span></div>
-                <div class="bulk-label">جهاز محدد</div>
-            </div>
-        </div>
-        <div class="bulk-actions">
-            <button type="button" class="btn-bulk btn-bulk-success" onclick="submitBulk('AssignBulk')">
-                <span>✓</span>
-                <span>ربط بالجملة</span>
-            </button>
-            <button type="button" class="btn-bulk btn-bulk-danger" onclick="submitBulk('UnassignBulk')">
-                <span>✕</span>
-                <span>إلغاء ربط بالجملة</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Hidden Forms -->
-    <form id="bulkForm" method="post" style="display:none;">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
-        <div id="bulkInputsContainer"></div>
-    </form>
-
-    <form id="regionForm" method="post" style="display:none;">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
-        <input type="hidden" id="regionIdInput" name="regionId" value="" />
-    </form>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function updateBulkBar() {
-            const selectedCount = document.querySelectorAll('.device-chk:checked').length;
-            document.getElementById('selectedCount').textContent = selectedCount;
-            const bar = document.getElementById('bulkBar');
-            if (selectedCount > 0) {
-                bar.classList.add('show');
-            } else {
-                bar.classList.remove('show');
-            }
+    function updateDeviceSelection(checkbox) {
+        const card = checkbox.closest('.device-card');
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
         }
+        updateBulkBar();
+    }
 
-        function updateDeviceSelection(checkbox) {
-            const card = checkbox.closest('.device-card');
-            if (checkbox.checked) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
-            updateBulkBar();
-        }
+    function toggleDeviceCheckbox(checkboxId) {
+        const checkbox = document.getElementById(checkboxId);
+        checkbox.checked = !checkbox.checked;
+        updateDeviceSelection(checkbox);
+    }
 
-        function toggleDeviceCheckbox(checkboxId) {
-            const checkbox = document.getElementById(checkboxId);
-            checkbox.checked = !checkbox.checked;
-            updateDeviceSelection(checkbox);
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBulkBar();
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updateBulkBar();
+        document.querySelectorAll('.select-all-region').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const regionCard = this.closest('.region-card');
+                const deviceCheckboxes = regionCard.querySelectorAll('.device-chk');
 
-            // Setup select-all checkboxes
-            document.querySelectorAll('.select-all-region').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const regionCard = this.closest('.region-card');
-                    const deviceCheckboxes = regionCard.querySelectorAll('.device-chk');
-
-                    deviceCheckboxes.forEach(cb => {
-                        cb.checked = this.checked;
-                        updateDeviceSelection(cb);
-                    });
+                deviceCheckboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                    updateDeviceSelection(cb);
                 });
             });
         });
+    });
 
-        function toggleRegionCollapse(collapseId) {
-            const element = document.getElementById(collapseId);
-            const header = element.previousElementSibling;
+    function toggleRegionCollapse(collapseId) {
+        const element = document.getElementById(collapseId);
+        const header = element.previousElementSibling;
 
-            if (element.classList.contains('show')) {
-                element.classList.remove('show');
-                header.classList.remove('active');
-            } else {
-                element.classList.add('show');
-                header.classList.add('active');
-            }
+        if (element.classList.contains('show')) {
+            element.classList.remove('show');
+            header.classList.remove('active');
+        } else {
+            element.classList.add('show');
+            header.classList.add('active');
         }
+    }
 
-        function toggleDates(regionKey, operation) {
-            const datesRow = document.getElementById('dates_' + regionKey);
-            const warning = document.getElementById('warning_' + regionKey);
+    function toggleDates(regionKey, operation) {
+        const datesRow = document.getElementById('dates_' + regionKey);
+        const warning = document.getElementById('warning_' + regionKey);
 
-            if (operation === 'delegate') {
-                datesRow.classList.add('show');
-                warning.classList.add('show');
-            } else {
-                datesRow.classList.remove('show');
-                warning.classList.remove('show');
-            }
+        if (operation === 'delegate') {
+            datesRow.classList.add('show');
+            warning.classList.add('show');
+        } else {
+            datesRow.classList.remove('show');
+            warning.classList.remove('show');
         }
+    }
 
-        function submitRegionWithOptions(regionId, regionKey) {
-            const operation = document.querySelector(`input[name="operation_${regionKey}"]:checked`).value;
-            const startDate = document.getElementById(`startDate_${regionKey}`).value;
-            const endDate = document.getElementById(`endDate_${regionKey}`).value;
+    function submitRegionWithOptions(regionId, regionKey) {
+        const operation = document.querySelector(`input[name="operation_${regionKey}"]:checked`).value;
+        const startDate = document.getElementById(`startDate_${regionKey}`).value;
+        const endDate = document.getElementById(`endDate_${regionKey}`).value;
 
-            // Get selected devices
-            const regionCard = document.querySelector(`#check-${regionKey}`).closest('.region-card');
-            const selectedDevices = Array.from(regionCard.querySelectorAll('.device-chk:checked'));
+        const regionCard = document.querySelector(`#check-${regionKey}`).closest('.region-card');
+        const selectedDevices = Array.from(regionCard.querySelectorAll('.device-chk:checked'));
 
-            if (selectedDevices.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'تنبيه',
-                    text: 'يرجى اختيار الأجهزة أولاً',
-                    confirmButtonColor: '#692f39',
-                    confirmButtonText: 'حسناً'
-                });
-                return;
-            }
-
-            if (operation === 'delegate' && (!startDate || !endDate)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'تنبيه',
-                    text: 'يرجى تحديد تاريخ البداية والنهاية للانتداب',
-                    confirmButtonColor: '#692f39',
-                    confirmButtonText: 'حسناً'
-                });
-                return;
-            }
-
-            let actionName = '';
-            let operationText = '';
-            let operationIcon = '';
-
-            if (operation === 'transfer') {
-                actionName = 'AssignBulk';
-                operationText = 'نقل دائم';
-                operationIcon = '🔁';
-            } else if (operation === 'delegate') {
-                actionName = 'DelegateRegion';
-                operationText = `انتداب من ${startDate} إلى ${endDate}`;
-                operationIcon = '📅';
-            } else if (operation === 'remove') {
-                actionName = 'UnassignBulk';
-                operationText = 'إزالة البصمة';
-                operationIcon = '✖️';
-            }
-
+        if (selectedDevices.length === 0) {
             Swal.fire({
-                title: 'تأكيد العملية',
-                html: `<div style="text-align: center; padding: 20px;">
+                icon: 'warning',
+                title: 'تنبيه',
+                text: 'يرجى اختيار الأجهزة أولاً',
+                confirmButtonColor: '#692f39',
+                confirmButtonText: 'حسناً'
+            });
+            return;
+        }
+
+        if (operation === 'delegate' && (!startDate || !endDate)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'تنبيه',
+                text: 'يرجى تحديد تاريخ البداية والنهاية للانتداب',
+                confirmButtonColor: '#692f39',
+                confirmButtonText: 'حسناً'
+            });
+            return;
+        }
+
+        let actionName = '';
+        let operationText = '';
+        let operationIcon = '';
+
+        if (operation === 'transfer') {
+            actionName = 'AssignBulk';
+            operationText = 'نقل دائم';
+            operationIcon = '🔁';
+        } else if (operation === 'delegate') {
+            actionName = 'DelegateRegion';
+            operationText = `انتداب من ${startDate} إلى ${endDate}`;
+            operationIcon = '📅';
+        } else if (operation === 'remove') {
+            actionName = 'UnassignBulk';
+            operationText = 'إزالة البصمة';
+            operationIcon = '✖️';
+        }
+
+        Swal.fire({
+            title: 'تأكيد العملية',
+            html: `<div style="text-align: center; padding: 20px;">
                     <div style="font-size: 3.5em; margin-bottom: 16px;">${operationIcon}</div>
                     <p style="font-size: 1.15em; margin-bottom: 10px;">هل أنت متأكد من تنفيذ</p>
                     <p style="font-size: 1.4em; font-weight: 800; color: #692f39; margin: 10px 0;">${operationText}</p>
                     <p style="font-size: 1.8em; font-weight: 900; color: #10b981; margin: 10px 0;">${selectedDevices.length} جهاز</p>
                 </div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#692f39',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: '✓ تنفيذ',
-                cancelButtonText: '✕ إلغاء'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('bulkForm');
-                    form.action = '/employees/' + actionName;
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#692f39',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '✓ تنفيذ',
+            cancelButtonText: '✕ إلغاء'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('bulkForm');
+                form.action = '/employees/' + actionName;
 
-                    const container = document.getElementById('bulkInputsContainer');
-                    container.innerHTML = '';
+                const container = document.getElementById('bulkInputsContainer');
+                container.innerHTML = '';
 
-                    selectedDevices.forEach(cb => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'terminalIds';
-                        input.value = cb.value;
-                        container.appendChild(input);
-                    });
+                selectedDevices.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'terminalIds';
+                    input.value = cb.value;
+                    container.appendChild(input);
+                });
 
-                    if (operation === 'delegate') {
-                        let startInput = document.createElement('input');
-                        startInput.type = 'hidden';
-                        startInput.name = 'startDate';
-                        startInput.value = startDate;
-                        container.appendChild(startInput);
+                if (operation === 'delegate') {
+                    let startInput = document.createElement('input');
+                    startInput.type = 'hidden';
+                    startInput.name = 'startDate';
+                    startInput.value = startDate;
+                    container.appendChild(startInput);
 
-                        let endInput = document.createElement('input');
-                        endInput.type = 'hidden';
-                        endInput.name = 'endDate';
-                        endInput.value = endDate;
-                        container.appendChild(endInput);
-                    }
-
-                    form.submit();
+                    let endInput = document.createElement('input');
+                    endInput.type = 'hidden';
+                    endInput.name = 'endDate';
+                    endInput.value = endDate;
+                    container.appendChild(endInput);
                 }
+
+                form.submit();
+            }
+        });
+    }
+
+    function submitBulk(actionName) {
+        const selectedIds = [];
+        document.querySelectorAll('.device-chk:checked').forEach(cb => {
+            selectedIds.push(cb.value);
+        });
+
+        if (selectedIds.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'تنبيه',
+                text: 'يرجى اختيار الأجهزة أولاً',
+                confirmButtonColor: '#692f39',
+                confirmButtonText: 'حسناً'
             });
+            return;
         }
 
-        function submitBulk(actionName) {
-            const selectedIds = [];
-            document.querySelectorAll('.device-chk:checked').forEach(cb => {
-                selectedIds.push(cb.value);
-            });
-
-            if (selectedIds.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'تنبيه',
-                    text: 'يرجى اختيار الأجهزة أولاً',
-                    confirmButtonColor: '#692f39',
-                    confirmButtonText: 'حسناً'
-                });
-                return;
-            }
-
-            Swal.fire({
-                title: 'تأكيد العملية',
-                html: `<div style="text-align: center; padding: 20px;">
+        Swal.fire({
+            title: 'تأكيد العملية',
+            html: `<div style="text-align: center; padding: 20px;">
                     <div style="font-size: 3em; margin-bottom: 16px;">🔐</div>
                     <p style="font-size: 1.1em; margin-bottom: 10px;">هل أنت متأكد من تنفيذ العملية على</p>
                     <p style="font-size: 2em; font-weight: 900; color: #692f39;">${selectedIds.length} جهاز؟</p>
                 </div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#692f39',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: '✓ تنفيذ',
-                cancelButtonText: '✕ إلغاء'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('bulkForm');
-                    form.action = '/employees/' + actionName;
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#692f39',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '✓ تنفيذ',
+            cancelButtonText: '✕ إلغاء'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('bulkForm');
+                form.action = '/employees/' + actionName;
 
-                    const container = document.getElementById('bulkInputsContainer');
-                    container.innerHTML = '';
-                    selectedIds.forEach(id => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'terminalIds';
-                        input.value = id;
-                        container.appendChild(input);
-                    });
+                const container = document.getElementById('bulkInputsContainer');
+                container.innerHTML = '';
+                selectedIds.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'terminalIds';
+                    input.value = id;
+                    container.appendChild(input);
+                });
 
-                    form.submit();
-                }
-            });
-        }
-    </script>
-    <script>
-    // =========================
-    // Region + Devices Filtering
-    // =========================
+                form.submit();
+            }
+        });
+    }
 
     function setRegionFilter(mode) {
-        // mode: 'all' | 'assigned' | 'unassigned'
         const pills = document.querySelectorAll('.region-filters .filter-pill');
         pills.forEach(p => p.classList.remove('active'));
 
@@ -2093,27 +1830,21 @@
             const hasAssigned = region.getAttribute('data-has-assigned') === '1';
             const hasUnassigned = region.getAttribute('data-has-unassigned') === '1';
 
-            // Decide region visibility
             let showRegion = true;
             if (mode === 'assigned') showRegion = hasAssigned;
             if (mode === 'unassigned') showRegion = hasUnassigned;
 
             region.style.display = showRegion ? '' : 'none';
 
-            // Filter devices inside region
             const devices = region.querySelectorAll('.device-card');
             devices.forEach(dev => {
                 const isAssigned = dev.getAttribute('data-is-assigned') === '1';
-
                 let showDevice = true;
                 if (mode === 'assigned') showDevice = isAssigned;
                 if (mode === 'unassigned') showDevice = !isAssigned;
-
-                // نخفي الجهاز بدون ما نخرب الستايل الأساسي
                 dev.classList.toggle('is-hidden', !showDevice);
             });
 
-            // إذا المنطقة ظاهرة لكن كل أجهزتها مخفية (حالة نادرة) نخفي المنطقة أيضاً
             if (showRegion) {
                 const visibleDevices = region.querySelectorAll('.device-card:not(.is-hidden)');
                 if (visibleDevices.length === 0) {
@@ -2121,18 +1852,12 @@
                 }
             }
 
-            // Reset "select all" checkbox if exists
             const selectAll = region.querySelector('.select-all-region');
             if (selectAll) selectAll.checked = false;
-
-            // Update bulk bar if you have it
-            if (typeof updateBulkBar === 'function') updateBulkBar();
+            updateBulkBar();
         });
     }
 
-    // =========================
-    // Select All Per Region (visible only)
-    // =========================
     document.addEventListener('change', function (e) {
         if (!e.target.classList.contains('select-all-region')) return;
 
@@ -2140,42 +1865,20 @@
         const regionCard = selectAll.closest('.region-card');
         if (!regionCard) return;
 
-        // فقط الأجهزة الظاهرة (غير المخفية)
         const deviceCheckboxes = regionCard.querySelectorAll('.device-card:not(.is-hidden) .device-chk');
 
         deviceCheckboxes.forEach(chk => {
             chk.checked = selectAll.checked;
-
-            // لو عندك function تسوي تحديث UI
             if (typeof updateDeviceSelection === 'function') {
                 updateDeviceSelection(chk);
             } else {
-                // fallback: update selected class
                 const devCard = chk.closest('.device-card');
                 if (devCard) devCard.classList.toggle('selected', chk.checked);
             }
         });
 
-        if (typeof updateBulkBar === 'function') updateBulkBar();
+        updateBulkBar();
     });
-
-    // =========================
-    // Default filter (اختياري)
-    // =========================
-    // إذا تبيها تفتح على "الأجهزة المرتبطة" تلقائياً:
-     // document.addEventListener('DOMContentLoaded', () => setRegionFilter('assigned'));
-
 </script>
-    <script>
-  document.addEventListener('DOMContentLoaded', () => {
-      if (typeof updateBulkBar === 'function') updateBulkBar();
-  });
-</script>
-
-<style>
-    /* hiding helper for device cards */
-    .device-card.is-hidden { display: none !important; }
-</style>
-
 </body>
 </html>

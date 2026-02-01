@@ -63,7 +63,7 @@ namespace FingerprintManagementSystem.Web.Controllers
             HttpContext.Session.SetString("SessionKey", result.SessionKey);
             HttpContext.Session.SetString("EmpName", result.EmployeeName);
             HttpContext.Session.SetString("EmpId", empId);
-            TempData["SuccessMsg"] = $"Welcome {result.EmployeeName}";
+            // TempData["SuccessMsg"] = $"Welcome {result.EmployeeName}";
 
             return RedirectToAction("Index", "Employees");
         }

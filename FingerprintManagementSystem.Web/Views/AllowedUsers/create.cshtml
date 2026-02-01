@@ -1,51 +1,245 @@
 ﻿@model FingerprintManagementSystem.Contracts.AllowedUserDto
-
-<h3>إضافة موظف إلى Allowlist</h3>
-
-@if (TempData["ErrorMsg"] != null) { <div style="color:red">@TempData["ErrorMsg"]</div> }
-@if (TempData["SuccessMsg"] != null) { <div style="color:green">@TempData["SuccessMsg"]</div> }
-
-<hr/>
-
-<form method="post" asp-action="Fetch">
-    <label>الرقم الوظيفي:</label>
-    <input type="number" name="employeeId" required />
-    <button type="submit">جلب من SOAP</button>
-</form>
-
-@if (Model != null)
-{
-    <hr/>
-    <form method="post" asp-action="Save">
-        <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
-
-        <div>
-            <label>الاسم</label>
-            <input type="text" name="fullName" value="@Model.FullName" />
-        </div>
-
-        <div>
-            <label>الإيميل</label>
-            <input type="text" name="email" value="@Model.Email" />
-        </div>
-
-        <div>
-            <label>القسم</label>
-            <input type="text" name="department" value="@Model.Department" />
-        </div>
-
-        <div>
-            <label>Valid Until (اختياري)</label>
-            <input type="date" name="validUntil" />
-        </div>
-
-        <div>
-            <label>
-                <input type="checkbox" name="isAdmin" />
-                Admin
-            </label>
-        </div>
-
-        <button type="submit">إضافة</button>
-    </form>
+@{
+ViewData["Title"] = "إضافة موظف جديد";
+var currentEmpId = Context.Session.GetString("EmpId") ?? "";
 }
+
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/shared-styles.css" />
+</head>
+<body>
+<!-- جزيئات الخلفية المتحركة -->
+<div class="bg-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</div>
+
+
+<!-- المحتوى الرئيسي -->
+<div class="main-container">
+    <div class="content-card fade-in" style="max-width: 800px; margin: 0 auto;">
+        <!-- رسائل التنبيه -->
+        @if (TempData["ErrorMsg"] != null)
+        {
+        <div class="alert alert-error">
+            <span class="alert-icon">⚠️</span>
+            <span>@TempData["ErrorMsg"]</span>
+        </div>
+        }
+        @if (TempData["SuccessMsg"] != null)
+        {
+        <div class="alert alert-success">
+            <span class="alert-icon">✅</span>
+            <span>@TempData["SuccessMsg"]</span>
+        </div>
+        }
+
+        <!-- رأس الصفحة -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <span class="page-title-icon">➕</span>
+                <span>إضافة موظف إلى Allowlist</span>
+            </h1>
+            <a href="/allowlist" class="btn btn-secondary">
+                <span>↩️</span>
+                <span>العودة للقائمة</span>
+            </a>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- خطوة 1: جلب بيانات الموظف من SOAP -->
+        <div style="background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%); padding: 24px; border-radius: 12px; color: white; margin-bottom: 32px;">
+            <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 1.3em;">
+                <span style="font-size: 1.5em;">🔍</span>
+                <span>الخطوة 1: جلب بيانات الموظف</span>
+            </h3>
+            <p style="opacity: 0.9; margin-bottom: 20px;">أدخل الرقم الوظيفي للموظف لجلب بياناته   </p>
+
+            <form method="post" asp-action="Fetch">
+                <div style="display: flex; gap: 12px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.95em;">
+                            الرقم الوظيفي:
+                        </label>
+                        <input type="number"
+                               name="employeeId"
+                               required
+                               placeholder="مثال: 12345"
+                               style="width: 100%; padding: 14px 16px; border: none; border-radius: 10px; font-size: 1.1em; font-family: 'Tajawal', sans-serif; font-weight: 700;" />
+                    </div>
+                    <button type="submit" class="btn btn-lg" style="background: white; color: var(--blue); padding: 14px 32px;">
+                        <span>🔄</span>
+                        <span>جلب البيانات</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- خطوة 2: حفظ الموظف (تظهر فقط بعد جلب البيانات) -->
+        @if (Model != null)
+        {
+        <div style="background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-light) 100%); padding: 24px; border-radius: 12px; color: white; margin-bottom: 32px;">
+            <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 1.3em;">
+                <span style="font-size: 1.5em;">✓</span>
+                <span>تم جلب البيانات بنجاح!</span>
+            </h3>
+        </div>
+
+        <div style="background: var(--gray-50); padding: 32px; border-radius: 12px; border: 2px solid var(--gray-200);">
+            <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-size: 1.3em; color: var(--maroon);">
+                <span style="font-size: 1.5em;">📝</span>
+                <span>الخطوة 2: مراجعة وحفظ البيانات</span>
+            </h3>
+
+            <form method="post" asp-action="Save">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
+
+                <div class="form-row">
+                    <!-- الاسم -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span style="color: var(--maroon);">👤</span>
+                            الاسم الكامل
+                        </label>
+                        <input type="text"
+                               name="fullName"
+                               value="@Model.FullName"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <!-- البريد الإلكتروني -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span style="color: var(--maroon);">📧</span>
+                            البريد الإلكتروني
+                        </label>
+                        <input type="email"
+                               name="email"
+                               value="@Model.Email"
+                               class="form-control"
+                               required />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <!-- القسم -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span style="color: var(--maroon);">🏢</span>
+                            القسم
+                        </label>
+                        <input type="text"
+                               name="department"
+                               value="@Model.Department"
+                               class="form-control"
+                               required />
+                    </div>
+                    
+                </div>
+
+                <!-- صلاحيات الإدارة -->
+                <div class="form-group">
+                    <label class="form-label" style="margin-bottom: 12px;">
+                        <span style="color: var(--maroon);">⭐</span>
+                        صلاحيات الحساب
+                    </label>
+                    <div class="form-check">
+                        <input type="checkbox"
+                               name="isAdmin"
+                               id="isAdmin"
+                               value="true" />
+                        <label for="isAdmin">
+                            منح صلاحيات المدير (Admin)
+                        </label>
+                    </div>
+                    <small style="display: block; margin-top: 8px; color: var(--gray-500); font-size: 0.85em; padding-right: 32px;">
+                        المدراء لديهم صلاحيات كاملة لإدارة النظام والموظفين
+                    </small>
+                </div>
+
+                <!-- معلومات إضافية -->
+                <div style="background: linear-gradient(135deg, var(--copper-light) 0%, var(--copper) 100%); padding: 20px; border-radius: 10px; margin: 24px 0; color: white;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 4px;">الرقم الوظيفي</div>
+                            <div style="font-size: 1.3em; font-weight: 900;">@Model.EmployeeId</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 4px;">الحالة الافتراضية</div>
+                            <div style="font-size: 1.3em; font-weight: 900;">✓ فعال</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات -->
+                <div class="form-actions">
+                    <a href="/allowlist" class="btn btn-secondary">
+                        <span>✕</span>
+                        <span>إلغاء</span>
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <span>✓</span>
+                        <span>حفظ وإضافة الموظف</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+        }
+        else
+        {
+        <!-- إرشادات -->
+        <div style="background: var(--gray-50); padding: 32px; border-radius: 12px; border: 2px dashed var(--gray-300); text-align: center;">
+            <div style="font-size: 4em; margin-bottom: 16px; opacity: 0.3;">📋</div>
+            <h3 style="color: var(--gray-600); margin-bottom: 12px;">في انتظار جلب البيانات</h3>
+            <p style="color: var(--gray-500); line-height: 1.8;">
+                أدخل الرقم الوظيفي في الخطوة الأولى أعلاه لجلب بيانات الموظف<br/>
+                من نظام SOAP، ثم ستظهر هنا نموذج إدخال البيانات
+            </p>
+        </div>
+        }
+    </div>
+</div>
+
+<script>
+    // تأثير الظهور التدريجي للعناصر
+    document.addEventListener('DOMContentLoaded', function() {
+        const formGroups = document.querySelectorAll('.form-group');
+        formGroups.forEach((group, index) => {
+            group.style.opacity = '0';
+            group.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                group.style.transition = 'all 0.4s ease';
+                group.style.opacity = '1';
+                group.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+
+    // التحقق من صحة النموذج
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form[asp-action="Save"]');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const email = form.querySelector('input[name="email"]').value;
+                if (email && !email.includes('@@')) {
+                    e.preventDefault();
+                    alert('⚠️ يرجى إدخال بريد إلكتروني صحيح');
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,62 +1,177 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    var currentEmpId = Context.Session.GetString("EmpId") ?? "";
+    var currentEmpName = Context.Session.GetString("EmpName") ?? "غير مسجل";
+    var isAdmin = Context.Session.GetString("IsAdmin") == "true";
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - نظام إدارة البصمات PAHW</title>
+    
+    <!-- خط Tajawal -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- ملف CSS الموحد -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FingerprintManagementSystem.Web.styles.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FingerprintManagementSystem.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        @* <li class="nav-item"> *@
-                        @*     <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a> *@
-                        @* </li> *@
-                      
-                    </ul>
-                </div>
-            </div>
-            @if (Context.Session.GetString("IsAdmin") == "1")
-            {
-                <li>
-                    <a asp-controller="AllowedUsers" asp-action="Index">إدارة المستخدمين</a>
-                </li>
-            }
-
-            @if (Context.Session.GetString("EmpName") != null)
-            {
-                <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-danger">تسجيل الخروج</button>
-                </form>
-            }
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    <!-- جزيئات الخلفية المتحركة -->
+    <div class="bg-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - FingerprintManagementSystem.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <!-- شريط التنقل -->
+    <nav class="navbar navbar-sticky">
+        <div class="navbar-container">
+            <!-- القسم الأيمن: الشعار والعنوان -->
+            <div class="navbar-section">
+                <a href="/" class="navbar-brand">
+                    <div class="navbar-logo">
+                        <img src="https://www.pahw.gov.kw/images/PAHW-Logo.png" alt="PAHW" style="height: 90px; filter: brightness(0) invert(1);" />
+                    </div>
+                  
+                </a>
+            </div>
+
+            <!-- زر القائمة للموبايل -->
+            <button class="navbar-mobile-toggle" onclick="toggleMobileMenu()">
+                ☰
+            </button>
+
+            <!-- القسم الأوسط: روابط التنقل -->
+            <div class="navbar-nav" id="navbarNav">
+                <a href="/employees/search" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Search" ? "active" : "")">
+                    <span class="navbar-link-icon">🔍</span>
+                    <span class="navbar-link-text">بحث موظف</span>
+                </a>
+                
+                <a href="/allowedUsers" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Allowlist" ? "active" : "")">
+                    <span class="navbar-link-icon">👥</span>
+                    <span class="navbar-link-text">قائمة الصلاحيات</span>
+                </a>
+
+                @if (isAdmin)
+                {
+                    <div class="navbar-divider"></div>
+                    
+                    <a href="/admin/reports" class="nav-link">
+                        <span class="navbar-link-icon">📊</span>
+                        <span class="navbar-link-text">التقارير</span>
+                    </a>
+                    
+                    <a href="/admin/settings" class="nav-link">
+                        <span class="navbar-link-icon">⚙️</span>
+                        <span class="navbar-link-text">الإعدادات</span>
+                    </a>
+                }
+            </div>
+
+            <!-- القسم الأيسر: معلومات المستخدم -->
+            <div class="navbar-section">
+                <div class="navbar-dropdown" id="userDropdown">
+                    <div class="navbar-user" onclick="toggleUserDropdown()">
+                        <div class="user-avatar">
+                            @(currentEmpName.Length > 0 ? currentEmpName.Substring(0, 1) : "U")
+                        </div>
+                        <div class="navbar-user-info">
+                            <span class="navbar-user-name">@currentEmpName</span>
+                            <span class="navbar-user-role">
+                                @if (isAdmin)
+                                {
+                                    <span>⭐ مدير</span>
+                                }
+                                else
+                                {
+                                    <span>@currentEmpId</span>
+                                }
+                            </span>
+                        </div>
+                        <span style="font-size: 0.8em;">▼</span>
+                    </div>
+                    
+                    <!-- قائمة المستخدم المنسدلة -->
+                    <div class="navbar-dropdown-menu">
+                
+                        
+                        @if (Context.Session.GetString("EmpName") != null)
+                        {
+                            <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="navbar-dropdown-item navbar-logout" style="width: 100%; border: none; background: none; text-align: right; font-family: inherit;">
+                                    <span class="navbar-dropdown-item-icon">🚪</span>
+                                    <span>تسجيل الخروج</span>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-container">
+        @RenderBody()
+    </main>
+
+    <!-- تضمين Scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- JavaScript للـ Navbar -->
+    <script>
+        // Toggle User Dropdown
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Toggle Mobile Menu
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const isClickInside = dropdown.contains(event.target);
+            
+            if (!isClickInside && dropdown.classList.contains('active')) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Navbar Scroll Effect
+        let lastScrollTop = 0;
+        const navbar = document.querySelector('.navbar');
+        
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > 50) {
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const nav = document.getElementById('navbarNav');
+                nav.classList.remove('active');
+            });
+        });
+    </script>
 </body>
 </html>

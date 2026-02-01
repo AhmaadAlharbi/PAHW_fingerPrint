@@ -2,10 +2,113 @@
     ViewData["Title"] = "403 - غير مصرح";
 }
 
-<h2 style="color:#b91c1c">🚫 403 - غير مصرح</h2>
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .error-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-<p>ليس لديك صلاحية للوصول إلى هذه الصفحة.</p>
+        .error-card {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
 
-<p>
-    <a href="/Employees">العودة إلى النظام</a>
-</p>
+        .error-icon {
+            font-size: 8em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .error-code {
+            font-size: 6em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            line-height: 1;
+        }
+
+        .error-title {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .error-message {
+            font-size: 1.1em;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        @@media (max-width: 768px) {
+            .error-code {
+                font-size: 4em;
+            }
+
+            .error-title {
+                font-size: 1.4em;
+            }
+
+            .error-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="error-page">
+        <div class="error-card card">
+            <div class="error-icon">🚫</div>
+            <h1 class="error-title">غير مصرح</h1>
+            <p class="error-message">
+                عذراً، ليس لديك صلاحية للوصول إلى هذه الصفحة.<br>
+                يرجى التواصل مع المسؤول للحصول على الصلاحيات المطلوبة.
+            </p>
+            <div class="error-actions">
+                <a href="/Employees" class="btn btn-primary">العودة إلى النظام</a>
+                <a href="/" class="btn" style="background: var(--gray-100); color: var(--gray-700);">
+                    الصفحة الرئيسية
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
