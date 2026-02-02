@@ -26,7 +26,11 @@ if (cs.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
     }
 }
 
-builder.Services.AddDbContext<LocalAppDbContext>(opt => opt.UseSqlite(cs));
+var connectionString = builder.Configuration.GetConnectionString("LocalDb")
+                       ?? throw new Exception("Missing ConnectionStrings:LocalDb");
+
+builder.Services.AddDbContext<LocalAppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 builder.Services.AddScoped<RegionMappingService>();
 builder.Services.AddHttpClient(); // مهم لأن SoapLoginApi يعتمد على HttpClient
 builder.Services.AddScoped<ILoginApi, SoapLoginApi>();

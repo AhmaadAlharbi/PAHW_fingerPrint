@@ -9,7 +9,7 @@ public class LocalAppDbContextFactory : IDesignTimeDbContextFactory<LocalAppDbCo
     public LocalAppDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<LocalAppDbContext>()
-            .UseSqlite("Data Source=../FingerprintManagementSystem.Web/App_Data/local.db")
+            .UseSqlServer("Server=localhost;Database=FingerprintLocal;Trusted_Connection=True;TrustServerCertificate=True;")
             .Options;
 
         return new LocalAppDbContext(options);

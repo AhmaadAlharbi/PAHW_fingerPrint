@@ -1267,42 +1267,52 @@ StringComparer.OrdinalIgnoreCase
 
 <!-- المحتوى الرئيسي - باقي الكود كما هو -->
 <div class="main-content">
+    @{
+    var isAdmin = Context.Session.GetString("IsAdmin") == "1";
+    }
+
+    @if (isAdmin)
+    {
+    <button id="autoAssignBtn" class="btn btn-primary">
+        تحديث توزيع الأجهزة
+    </button>
+    }
     <div class="page-header">
         <h1>🔍 بحث عن موظف</h1>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(toastMsg))
     {
-    var alertClass = "alert-info";
-    var alertIcon = "ℹ️";
-    var alertTitle = "معلومة";
+        var alertClass = "alert-info";
+        var alertIcon = "ℹ️";
+        var alertTitle = "معلومة";
 
-    if (toastType == "success")
-    {
-    alertClass = "alert-success";
-    alertIcon = "✅";
-    alertTitle = "نجح";
-    }
-    else if (toastType == "danger")
-    {
-    alertClass = "alert-danger";
-    alertIcon = "❌";
-    alertTitle = "خطأ";
-    }
-    else if (toastType == "warning")
-    {
-    alertClass = "alert-warning";
-    alertIcon = "⚠️";
-    alertTitle = "تحذير";
-    }
+        if (toastType == "success")
+        {
+            alertClass = "alert-success";
+            alertIcon = "✅";
+            alertTitle = "نجح";
+        }
+        else if (toastType == "danger")
+        {
+            alertClass = "alert-danger";
+            alertIcon = "❌";
+            alertTitle = "خطأ";
+        }
+        else if (toastType == "warning")
+        {
+            alertClass = "alert-warning";
+            alertIcon = "⚠️";
+            alertTitle = "تحذير";
+        }
 
-    <div class="alert @alertClass">
-        <div class="alert-icon">@alertIcon</div>
-        <div class="alert-content">
-            <div class="alert-title">@alertTitle</div>
-            <div class="alert-message">@toastMsg</div>
+        <div class="alert @alertClass">
+            <div class="alert-icon">@alertIcon</div>
+            <div class="alert-content">
+                <div class="alert-title">@alertTitle</div>
+                <div class="alert-message">@toastMsg</div>
+            </div>
         </div>
-    </div>
     }
 
     <div class="premium-card">
@@ -1321,7 +1331,7 @@ StringComparer.OrdinalIgnoreCase
                 <input type="number" name="employeeId" class="form-input"
                        placeholder="أدخل الرقم الوظيفي للبحث..."
                        value="@(Model?.Employee?.EmployeeId.ToString() ?? lastEmployeeId ?? "")"
-                       required />
+                       required/>
             </div>
 
             <div class="form-actions">
@@ -1335,234 +1345,234 @@ StringComparer.OrdinalIgnoreCase
 
     @if (Model?.Employee != null)
     {
-    <div class="premium-card">
-        <div class="section-header">
-            <div class="section-number">2</div>
-            <h3 class="section-title">معلومات الموظف</h3>
-        </div>
+        <div class="premium-card">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <h3 class="section-title">معلومات الموظف</h3>
+            </div>
 
-        <div class="employee-card">
-            <div class="employee-grid">
-                <div class="employee-item">
-                    <span class="employee-label">👤 الاسم الكامل</span>
-                    <span class="employee-value">@Model.Employee.FullNameAr</span>
-                </div>
-                <div class="employee-item">
-                    <span class="employee-label">🏢 الإدارة / القسم</span>
-                    <span class="employee-value">@Model.Employee.Department</span>
-                </div>
-                <div class="employee-item">
-                    <span class="employee-label">💼 المسمى الوظيفي</span>
-                    <span class="employee-value">@Model.Employee.JobTitle</span>
-                </div>
-                <div class="employee-item">
-                    <span class="employee-label">📊 إحصائيات الأجهزة</span>
-                    <div class="stats-badges">
-                                <span onclick="setRegionFilter('all')" class="stat-badge stat-badge-primary">
-                                    <span>🖥️</span>
-                                    <span>@devices.Count إجمالي</span>
-                                </span>
-                                <span onclick="setRegionFilter('assigned')" class="stat-badge stat-badge-success">
-                                    <span>✅</span>
-                                    <span>@assigned.Count مرتبطة</span>
-                                </span>
-                                <span onclick="setRegionFilter('unassigned')"  class="stat-badge stat-badge-info">
-                                    <span>✅</span>
-                                    <span>@assigned.Count غير مرتبطة </span>
-                                </span>
+            <div class="employee-card">
+                <div class="employee-grid">
+                    <div class="employee-item">
+                        <span class="employee-label">👤 الاسم الكامل</span>
+                        <span class="employee-value">@Model.Employee.FullNameAr</span>
+                    </div>
+                    <div class="employee-item">
+                        <span class="employee-label">🏢 الإدارة / القسم</span>
+                        <span class="employee-value">@Model.Employee.Department</span>
+                    </div>
+                    <div class="employee-item">
+                        <span class="employee-label">💼 المسمى الوظيفي</span>
+                        <span class="employee-value">@Model.Employee.JobTitle</span>
+                    </div>
+                    <div class="employee-item">
+                        <span class="employee-label">📊 إحصائيات الأجهزة</span>
+                        <div class="stats-badges">
+                            <span onclick="setRegionFilter('all')" class="stat-badge stat-badge-primary">
+                                <span>🖥️</span>
+                                <span>@devices.Count إجمالي</span>
+                            </span>
+                            <span onclick="setRegionFilter('assigned')" class="stat-badge stat-badge-success">
+                                <span>✅</span>
+                                <span>@assigned.Count مرتبطة</span>
+                            </span>
+                            <span onclick="setRegionFilter('unassigned')" class="stat-badge stat-badge-info">
+                                <span>✅</span>
+                                <span>@assigned.Count غير مرتبطة </span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    @if (Model.RegionGroups != null && Model.RegionGroups.Any())
-    {
-    <div class="premium-card">
-        <div class="section-header">
-            <div class="section-number">3</div>
-            <h3 class="section-title">إدارة أجهزة البصمة</h3>
-        </div>
+        @if (Model.RegionGroups != null && Model.RegionGroups.Any())
+        {
+            <div class="premium-card">
+                <div class="section-header">
+                    <div class="section-number">3</div>
+                    <h3 class="section-title">إدارة أجهزة البصمة</h3>
+                </div>
 
-      
 
-        <div class="regions-container">
-            @for (int i = 0; i < Model.RegionGroups.Count; i++)
-            {
-            var g = Model.RegionGroups[i];
-            var collapseId = $"collapse_{i}";
-            var regionKey = "reg_" + i;
-            var hasAssigned = g.AssignedDevices > 0;
-            var hasUnassigned = (g.TotalDevices - g.AssignedDevices) > 0;
 
-            <div class="region-card"
-                 data-has-assigned="@(hasAssigned ? "1" : "0")"
-                 data-has-unassigned="@(hasUnassigned ? "1" : "0")">
+                <div class="regions-container">
+                    @for (int i = 0; i < Model.RegionGroups.Count; i++)
+                    {
+                        var g = Model.RegionGroups[i];
+                        var collapseId = $"collapse_{i}";
+                        var regionKey = "reg_" + i;
+                        var hasAssigned = g.AssignedDevices > 0;
+                        var hasUnassigned = (g.TotalDevices - g.AssignedDevices) > 0;
 
-                <div class="region-header">
-                    <div class="region-top">
-                        <div class="region-left">
-                            <div class="region-icon-wrapper">📍</div>
-                            <div class="region-info" onclick="toggleRegionCollapse('@collapseId')">
-                                <h4>@g.RegionName</h4>
-                                <div class="region-meta">
-                                                    <span class="meta-badge">
-                                                        <span>🖥️</span>
-                                                        <span>@g.TotalDevices أجهزة</span>
+                        <div class="region-card"
+                             data-has-assigned="@(hasAssigned ? "1" : "0")"
+                             data-has-unassigned="@(hasUnassigned ? "1" : "0")">
+
+                            <div class="region-header">
+                                <div class="region-top">
+                                    <div class="region-left">
+                                        <div class="region-icon-wrapper">📍</div>
+                                        <div class="region-info" onclick="toggleRegionCollapse('@collapseId')">
+                                            <h4>@g.RegionName</h4>
+                                            <div class="region-meta">
+                                                <span class="meta-badge">
+                                                    <span>🖥️</span>
+                                                    <span>@g.TotalDevices أجهزة</span>
+                                                </span>
+                                                @{
+                                                    var assignedCount = g.Devices.Count(x => x.IsEffectivelyAssigned);
+                                                    var delegatedCount = g.Devices.Count(x => x.IsDelegated);
+                                                }
+                                                @if (assignedCount > 0)
+                                                {
+                                                    <span class="meta-badge success">
+                                                        <span>✅</span>
+                                                        <span>@assignedCount مرتبطة</span>
                                                     </span>
-                                    @{
-                                    var assignedCount = g.Devices.Count(x => x.IsEffectivelyAssigned);
-                                    var delegatedCount = g.Devices.Count(x => x.IsDelegated);
-                                    }
-                                    @if (assignedCount > 0)
-                                    {
-                                    <span class="meta-badge success">
-                                                            <span>✅</span>
-                                                            <span>@assignedCount مرتبطة</span>
-                                                        </span>
-                                    }
-                                    @if (delegatedCount > 0)
-                                    {
-                                    <span class="meta-badge" style="background:#dbeafe; color:#1e40af;">
-                                                            <span>🟦</span>
-                                                            <span>@delegatedCount ندب</span>
-                                                        </span>
-                                    }
+                                                }
+                                                @if (delegatedCount > 0)
+                                                {
+                                                    <span class="meta-badge" style="background:#dbeafe; color:#1e40af;">
+                                                        <span>🟦</span>
+                                                        <span>@delegatedCount ندب</span>
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-icon-toggle" onclick="toggleRegionCollapse('@collapseId')">
+                                        <span class="toggle-icon">⌄</span>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                        <button type="button" class="btn-icon-toggle" onclick="toggleRegionCollapse('@collapseId')">
-                            <span class="toggle-icon">⌄</span>
-                        </button>
-                    </div>
-                </div>
 
-                <div id="@collapseId" class="collapse">
-                    <div class="region-options">
-                        <div class="options-title">⚙️ اختر العملية المطلوبة</div>
-                        
-                        <div class="radio-options">
-                            <div class="radio-option">
-                                <input type="radio" name="operation_@regionKey" id="transfer_@regionKey" value="transfer" checked onchange="toggleDates('@regionKey', 'transfer')">
-                                <label for="transfer_@regionKey">
-                                    <span>🔁</span>
-                                    <span>نقل دائم</span>
-                                </label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" name="operation_@regionKey" id="delegate_@regionKey" value="delegate" onchange="toggleDates('@regionKey', 'delegate')">
-                                <label for="delegate_@regionKey">
-                                    <span>📅</span>
-                                    <span>انتداب مؤقت</span>
-                                </label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" name="operation_@regionKey" id="remove_@regionKey" value="remove" onchange="toggleDates('@regionKey', 'remove')">
-                                <label for="remove_@regionKey">
-                                    <span>✖️</span>
-                                    <span>إزالة البصمة</span>
-                                </label>
-                            </div>
-                        </div>
+                            <div id="@collapseId" class="collapse">
+                                <div class="region-options">
+                                    <div class="options-title">⚙️ اختر العملية المطلوبة</div>
 
-                        <div class="dates-row" id="dates_@regionKey">
-                            <div class="date-field">
-                                <label class="date-label">
-                                    <span>📅</span>
-                                    <span>تاريخ البداية</span>
-                                </label>
-                                <input type="date" class="date-input" id="startDate_@regionKey">
-                            </div>
-                            <div class="date-field">
-                                <label class="date-label">
-                                    <span>📅</span>
-                                    <span>تاريخ النهاية</span>
-                                </label>
-                                <input type="date" class="date-input" id="endDate_@regionKey">
-                            </div>
-                        </div>
+                                    <div class="radio-options">
+                                        <div class="radio-option">
+                                            <input type="radio" name="operation_@regionKey" id="transfer_@regionKey" value="transfer" checked onchange="toggleDates('@regionKey', 'transfer')">
+                                            <label for="transfer_@regionKey">
+                                                <span>🔁</span>
+                                                <span>نقل دائم</span>
+                                            </label>
+                                        </div>
+                                        <div class="radio-option">
+                                            <input type="radio" name="operation_@regionKey" id="delegate_@regionKey" value="delegate" onchange="toggleDates('@regionKey', 'delegate')">
+                                            <label for="delegate_@regionKey">
+                                                <span>📅</span>
+                                                <span>انتداب مؤقت</span>
+                                            </label>
+                                        </div>
+                                        <div class="radio-option">
+                                            <input type="radio" name="operation_@regionKey" id="remove_@regionKey" value="remove" onchange="toggleDates('@regionKey', 'remove')">
+                                            <label for="remove_@regionKey">
+                                                <span>✖️</span>
+                                                <span>إزالة البصمة</span>
+                                            </label>
+                                        </div>
+                                    </div>
 
-                        <div class="warning-note" id="warning_@regionKey">
-                            <span>⚠️</span>
-                            <span>سيتم إلغاء الانتداب تلقائياً في التاريخ المحدد</span>
-                        </div>
+                                    <div class="dates-row" id="dates_@regionKey">
+                                        <div class="date-field">
+                                            <label class="date-label">
+                                                <span>📅</span>
+                                                <span>تاريخ البداية</span>
+                                            </label>
+                                            <input type="date" class="date-input" id="startDate_@regionKey">
+                                        </div>
+                                        <div class="date-field">
+                                            <label class="date-label">
+                                                <span>📅</span>
+                                                <span>تاريخ النهاية</span>
+                                            </label>
+                                            <input type="date" class="date-input" id="endDate_@regionKey">
+                                        </div>
+                                    </div>
 
-                        @if (g.RegionId.HasValue && g.RegionId.Value > 0)
-                        {
-                        <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
-                            <span>✓</span>
-                            <span>تطبيق على الأجهزة المحددة</span>
-                        </button>
-                        }
-                    </div>
+                                    <div class="warning-note" id="warning_@regionKey">
+                                        <span>⚠️</span>
+                                        <span>سيتم إلغاء الانتداب تلقائياً في التاريخ المحدد</span>
+                                    </div>
 
-                    <div class="devices-section">
-                        <div class="devices-section-title">💻 حدد الأجهزة</div>
-
-                        <div class="select-all-box">
-                            <input type="checkbox" id="check-@regionKey" class="select-all-region">
-                            <label for="check-@regionKey" class="select-all-label">تحديد جميع أجهزة المنطقة</label>
-                        </div>
-
-                        <div class="devices-grid">
-                            @foreach (var d in g.Devices)
-                            {
-                            var isSelected = selectedTerminals.Contains((d.DeviceId ?? "").Trim());
-
-                            <div class="device-card @((d.IsEffectivelyAssigned || isSelected) ? "selected" : "")"
-                                 data-is-assigned="@(d.IsEffectivelyAssigned ? "1" : "0")">
-
-                                <div class="device-checkbox" onclick="event.stopPropagation();">
-                                    <input type="checkbox"
-                                           class="device-chk"
-                                           value="@d.DeviceId"
-                                           id="chk-@d.DeviceId"
-                                           @((d.IsEffectivelyAssigned || isSelected) ? "checked" : "")
-                                           onclick="event.stopPropagation();"
-                                           onchange="updateDeviceSelection(this)" />
-                                </div>
-
-                                <div class="device-icon">💻</div>
-
-                                <div class="device-details">
-                                    <div class="device-name">@d.DeviceName</div>
-                                    <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
-                                </div>
-
-                                <div class="device-action" onclick="event.stopPropagation();">
-                                    @if (d.IsAssigned)
+                                    @if (g.RegionId.HasValue && g.RegionId.Value > 0)
                                     {
-                                    <form method="post" action="/employees/unassign" style="display:inline;">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                        <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                        <button type="submit" class="btn-device btn-device-danger">
-                                            <span>✖️</span>
-                                        </button>
-                                    </form>
-                                    }
-                                    else
-                                    {
-                                    <form method="post" action="/employees/assign" style="display:inline;">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId" />
-                                        <input type="hidden" name="terminalId" value="@d.DeviceId" />
-                                        <button type="submit" class="btn-device btn-device-success">
+                                        <button type="button" class="submit-region-btn" onclick="submitRegionWithOptions(@g.RegionId.Value, '@regionKey')">
                                             <span>✓</span>
+                                            <span>تطبيق على الأجهزة المحددة</span>
                                         </button>
-                                    </form>
                                     }
                                 </div>
+
+                                <div class="devices-section">
+                                    <div class="devices-section-title">💻 حدد الأجهزة</div>
+
+                                    <div class="select-all-box">
+                                        <input type="checkbox" id="check-@regionKey" class="select-all-region">
+                                        <label for="check-@regionKey" class="select-all-label">تحديد جميع أجهزة المنطقة</label>
+                                    </div>
+
+                                    <div class="devices-grid">
+                                        @foreach (var d in g.Devices)
+                                        {
+                                            var isSelected = selectedTerminals.Contains((d.DeviceId ?? "").Trim());
+
+                                            <div class="device-card @((d.IsEffectivelyAssigned || isSelected) ? "selected" : "")"
+                                                 data-is-assigned="@(d.IsEffectivelyAssigned ? "1" : "0")">
+
+                                                <div class="device-checkbox" onclick="event.stopPropagation();">
+                                                    <input type="checkbox"
+                                                           class="device-chk"
+                                                           value="@d.DeviceId"
+                                                           id="chk-@d.DeviceId"
+                                                           @((d.IsEffectivelyAssigned || isSelected) ? "checked" : "")
+                                                           onclick="event.stopPropagation();"
+                                                           onchange="updateDeviceSelection(this)"/>
+                                                </div>
+
+                                                <div class="device-icon">💻</div>
+
+                                                <div class="device-details">
+                                                    <div class="device-name">@d.DeviceName</div>
+                                                    <div class="device-meta">📍 @d.Location • ID: @d.DeviceId</div>
+                                                </div>
+
+                                                <div class="device-action" onclick="event.stopPropagation();">
+                                                    @if (d.IsAssigned)
+                                                    {
+                                                        <form method="post" action="/employees/unassign" style="display:inline;">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId"/>
+                                                            <input type="hidden" name="terminalId" value="@d.DeviceId"/>
+                                                            <button type="submit" class="btn-device btn-device-danger">
+                                                                <span>✖️</span>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <form method="post" action="/employees/assign" style="display:inline;">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="employeeId" value="@Model.Employee.EmployeeId"/>
+                                                            <input type="hidden" name="terminalId" value="@d.DeviceId"/>
+                                                            <button type="submit" class="btn-device btn-device-success">
+                                                                <span>✓</span>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
                             </div>
-                            }
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
-            }
-        </div>
-    </div>
-    }
+        }
     }
 </div>
 
@@ -1879,6 +1889,27 @@ StringComparer.OrdinalIgnoreCase
 
         updateBulkBar();
     });
+        document.getElementById("autoAssignBtn")?.addEventListener("click", async () => {
+        if (!confirm("هل تريد تحديث توزيع الأجهزة؟")) return;
+
+        const res = await fetch("/api/terminals/auto-assign-regions", {
+        method: "POST"
+    });
+
+        if (res.status === 403) {
+        alert("غير مصرح لك (Admin فقط)");
+        return;
+    }
+
+        const data = await res.json();
+        alert(
+        `تم التحديث بنجاح\n` +
+        `عدد الأجهزة: ${data.totalDevices}\n` +
+        `جديد: ${data.inserted}\n` +
+        `تم تعديلها: ${data.updated}`
+        );
+    });
+
 </script>
 </body>
 </html>
