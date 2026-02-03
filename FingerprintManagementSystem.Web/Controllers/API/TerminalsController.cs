@@ -51,50 +51,114 @@ public class TerminalsController : ControllerBase
         return Ok(new { total = maps.Count, maps });
     }
 
-    // 🔹 توزيع / إعادة توزيع الأجهزة (SAFE – يشتغل أكثر من مرة)
     [HttpPost("auto-assign-regions")]
     public async Task<IActionResult> AutoAssignRegions(CancellationToken ct)
     {
-        // 🔒 Admin only (يعتمد على اللي تسويه عند تسجيل الدخول)
-        if (HttpContext.Session.GetString("IsAdmin") != "1")
-            return Forbid(); // 403
+        // 1) جلب المناطق والخرائط الحالية لتقليل استهلاك قاعدة البيانات
+        var regionsList = await _db.Regions.AsNoTracking().ToListAsync(ct);
+        var existingMaps = await _db.TerminalRegionMaps.ToDictionaryAsync(x => x.TerminalId, x => x, ct);
 
-        var regions = await _db.Regions.AsNoTracking().ToListAsync(ct);
-
-        // خله Tracking لأننا بنعدل على entities
-        var existingMaps = await _db.TerminalRegionMaps
-            .ToDictionaryAsync(x => x.TerminalId, x => x, ct);
-
-        var regionIds = regions
+        var regionIds = regionsList
             .GroupBy(r => Normalize(r.Name))
             .ToDictionary(g => g.Key, g => g.First().Id);
 
-        int? TryGetRegionId(string name)
-            => regionIds.TryGetValue(Normalize(name), out var id) ? id : null;
+        int? TryGetRegionId(string regionName)
+            => regionIds.TryGetValue(Normalize(regionName), out var id) ? id : null;
 
+        static bool ContainsAny(string normalizedText, params string[] tokens)
+            => tokens.Any(t => normalizedText.Contains(Normalize(t), StringComparison.OrdinalIgnoreCase));
+
+        // 2) منطق التوزيع المحدث (يشمل اختلاف الـ spelling + السالمي)
+        int? GetRegionIdByTerminal(int terminalId, string terminalName)
+        {
+            var other = TryGetRegionId("مواقع أخرى");
+            if (other is null) return null;
+
+            // المبنى الرئيسي (IDs 3..26)
+            if (terminalId >= 3 && terminalId <= 26)
+                return TryGetRegionId("المبنى الرئيسي") ?? other;
+
+            var n = Normalize(terminalName);
+
+            // المطلاع
+            if (ContainsAny(n, "mutlaa", "mutla", "المطلاع", "مطلاع"))
+                return TryGetRegionId("المطلاع") ?? other;
+
+            // برج التحرير
+            if (ContainsAny(n, "liberation", "tower", "تحرير", "برج التحرير"))
+                return TryGetRegionId("برج التحرير") ?? other;
+
+            // صباح السالم (يغطي: SABAH ELSALEM / SABAH SALIM / صباح السالم)
+            if (ContainsAny(n,
+                    "sabah al salem", "sabah elsalem", "sabah el salem", "sabah salem", "sabah salim",
+                    "صباح السالم", "صباح سالم"))
+                return TryGetRegionId("صباح السالم") ?? other;
+
+            // سعد العبدالله
+            if (ContainsAny(n, "saad", "سعد"))
+                return TryGetRegionId("سعد العبدالله") ?? other;
+
+            // جابر الأحمد
+            if (ContainsAny(n, "jaber", "جابر"))
+                return TryGetRegionId("جابر الأحمد") ?? other;
+
+            // الصليبية (يغطي: Sulaibia / Sulaibiya)
+            if (ContainsAny(n, "sulaibia", "sulaibiya", "sulaibi", "الصليبية", "صليبية"))
+                return TryGetRegionId("الصليبية") ?? other;
+
+            // مبارك الكبير (يغطي: Mubarak / Mubark Alkabir)
+            if (ContainsAny(n, "mubarak", "mubark", "alkabir", "al kabir", "مبارك الكبير"))
+                return TryGetRegionId("مبارك الكبير") ?? other;
+
+            // النهضة
+            if (ContainsAny(n, "nahda", "النهضة", "نهضة"))
+                return TryGetRegionId("النهضة") ?? other;
+
+            // غرب الجليب
+            if (ContainsAny(n, "west jleeb", "west jleib", "jleeb", "غرب الجليب"))
+                return TryGetRegionId("غرب الجليب") ?? other;
+
+            // السالمي (جديد) — يغطي: Salmi / السالمي
+            if (ContainsAny(n, "salmi", "السالمي", "سالمي"))
+                return TryGetRegionId("السالمي") ?? other;
+
+            // الجهراء (حكومة مول / تيماء) — يغطي: Jahra/Jahrah
+            if (ContainsAny(n, "jahra", "jahrah", "جهراء", "الجهراء"))
+            {
+                if (ContainsAny(n, "taima", "tayma", "تيماء"))
+                    return TryGetRegionId("الجهراء - تيماء") ?? other;
+
+                return TryGetRegionId("الجهراء - حكومة مول") ?? other;
+            }
+
+            // القرين - حكومة مول
+            if (ContainsAny(n, "qurain", "قرين", "القرين"))
+                return TryGetRegionId("القرين - حكومة مول") ?? other;
+
+            return other;
+        }
+
+        // 3) جلب الأجهزة من Alpeta API
         var devices = await _alpeta.GetAllDevicesAsync(ct);
 
         int inserted = 0, updated = 0, skippedInvalidId = 0;
 
         foreach (var d in devices)
         {
-            if (!int.TryParse(d.DeviceId, out _))
+            if (!int.TryParse(d.DeviceId, out var tid))
             {
                 skippedInvalidId++;
                 continue;
             }
 
-            var targetRegionId = TryGetRegionId(d.DeviceName)
-                                 ?? TryGetRegionId("مواقع أخرى");
+            var targetRegionId = GetRegionIdByTerminal(tid, d.DeviceName);
+            if (targetRegionId == null) continue;
 
-            if (targetRegionId == null)
-                continue;
-
-            if (existingMaps.TryGetValue(d.DeviceId, out var map))
+            if (existingMaps.TryGetValue(d.DeviceId, out var existingMap))
             {
-                if (map.RegionId != targetRegionId.Value)
+                if (existingMap.RegionId != targetRegionId.Value)
                 {
-                    map.RegionId = targetRegionId.Value;
+                    existingMap.RegionId = targetRegionId.Value;
                     updated++;
                 }
             }
@@ -113,10 +177,10 @@ public class TerminalsController : ControllerBase
 
         return Ok(new
         {
-            message = "تم تحديث توزيع الأجهزة",
+            message = "تم تحديث توزيع الأجهزة بنجاح",
             totalDevices = devices.Count,
-            inserted,
-            updated,
+            newlyAssigned = inserted,
+            updatedRegions = updated,
             invalidDeviceIds = skippedInvalidId
         });
     }

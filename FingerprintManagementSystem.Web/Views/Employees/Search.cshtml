@@ -6,6 +6,7 @@ var toastMsg = TempData["ToastMsg"] as string;
 var lastEmployeeId = TempData["LastEmployeeId"]?.ToString();
 var devices = Model?.Devices ?? new List<FingerprintManagementSystem.Contracts.DTOs.DeviceRowDto>();
 var assigned = devices.Where(x => x.IsEffectivelyAssigned).ToList();
+var unassigned = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
 }
 @{
 var selectedTerminalsRaw = TempData["SelectedTerminalIds"] as string;
@@ -17,17 +18,7 @@ StringComparer.OrdinalIgnoreCase
 );
 }
 
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- استخدام site.css الموحد -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
+@section Styles {
     <!-- أنماط خاصة بصفحة البحث فقط -->
     <style>
         /* Main Content */
@@ -1254,8 +1245,7 @@ StringComparer.OrdinalIgnoreCase
             }
         }
     </style>
-</head>
-<body>
+}
 <!-- جزيئات الخلفية من site.css -->
 <div class="bg-particles">
     <div class="particle"></div>
@@ -1377,8 +1367,8 @@ StringComparer.OrdinalIgnoreCase
                                 <span>@assigned.Count مرتبطة</span>
                             </span>
                             <span onclick="setRegionFilter('unassigned')" class="stat-badge stat-badge-info">
-                                <span>✅</span>
-                                <span>@assigned.Count غير مرتبطة </span>
+                                <span>X</span>
+                                    <span>@unassigned.Count غير مرتبطة </span>
                             </span>
                         </div>
                     </div>
@@ -1608,6 +1598,7 @@ StringComparer.OrdinalIgnoreCase
     <input type="hidden" id="regionIdInput" name="regionId" value="" />
 </form>
 
+@section Scripts {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -1911,5 +1902,4 @@ StringComparer.OrdinalIgnoreCase
     });
 
 </script>
-</body>
-</html>
+}

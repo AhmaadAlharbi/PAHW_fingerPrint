@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FingerprintManagementSystem.ApiAdapter.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSqlServer : Migration
+    public partial class initalserver : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

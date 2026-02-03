@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FingerprintManagementSystem.ApiAdapter.Migrations
 {
     [DbContext(typeof(LocalAppDbContext))]
-    [Migration("20260201074537_InitialSqlServer")]
-    partial class InitialSqlServer
+    [Migration("20260203080423_inital-server")]
+    partial class initalserver
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

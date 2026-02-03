@@ -6,28 +6,16 @@ using FingerprintManagementSystem.Contracts;
 using Microsoft.EntityFrameworkCore;
 using FingerprintManagementSystem.Web.Services;
 using FingerprintManagementSystem.ApiAdapter;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// -------------------------
-// ✅ Local SQLite (fix relative path)
-// -------------------------
-var cs = builder.Configuration.GetConnectionString("LocalDb")
-         ?? "Data Source=App_Data/local.db";
 
-if (cs.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-{
-    var dbRel = cs.Substring("Data Source=".Length).Trim();
-    if (!Path.IsPathRooted(dbRel))
-    {
-        var dbAbs = Path.Combine(builder.Environment.ContentRootPath, dbRel);
-        cs = $"Data Source={dbAbs}";
-    }
-}
+var connectionString = builder.Configuration.GetConnectionString("serverDB")
+                       ?? throw new Exception("Missing ConnectionStrings:serverDB");
+Console.WriteLine($"[DEBUG] Using connection: {connectionString}");
 
-var connectionString = builder.Configuration.GetConnectionString("LocalDb")
-                       ?? throw new Exception("Missing ConnectionStrings:LocalDb");
 
 builder.Services.AddDbContext<LocalAppDbContext>(options =>
     options.UseSqlServer(connectionString));

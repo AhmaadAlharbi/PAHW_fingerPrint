@@ -4,17 +4,7 @@ var errorMsg = TempData["ErrorMsg"] as string;
 var successMsg = TempData["SuccessMsg"] as string;
 }
 
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- استخدام site.css الموحد -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
+@section Styles {
     <!-- أنماط خاصة بصفحة Login فقط -->
     <style>
         /* Login Container */
@@ -348,17 +338,7 @@ var successMsg = TempData["SuccessMsg"] as string;
             }
         }
     </style>
-</head>
-<body>
-<!-- Background Particles من site.css -->
-<div class="bg-particles">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-</div>
-
-
+}
 
 <!-- Login Container -->
 <div class="login-container">
@@ -447,5 +427,3 @@ var successMsg = TempData["SuccessMsg"] as string;
         </div>
     </div>
 </div>
-</body>
-</html>
