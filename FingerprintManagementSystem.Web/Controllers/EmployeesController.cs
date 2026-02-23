@@ -2,39 +2,17 @@
 using Microsoft.AspNetCore.Mvc;
 
 namespace FingerprintManagementSystem.Web.Controllers;
-using Microsoft.AspNetCore.Mvc.Filters;
-using FingerprintManagementSystem.ApiAdapter.Persistence;
-using FingerprintManagementSystem.ApiAdapter.Persistence.Entities;
-using Microsoft.EntityFrameworkCore;
 
 [Route("employees")]
 public class EmployeesController : Controller
 {
     private readonly IEmployeeDevicesApi _api;
-    private readonly LocalAppDbContext _db;
+    private readonly IDelegationService _delegations;
 
-    
-    public override void OnActionExecuting(ActionExecutingContext context)
-    {
-        // تشيك هل المستخدم مسجل دخول
-        var isLoggedIn = !string.IsNullOrWhiteSpace(
-            HttpContext.Session.GetString("EmpName")
-        );
-
-        if (!isLoggedIn)
-        {
-            // إذا مو مسجل دخول → رجّعه لصفحة الدخول
-            context.Result = RedirectToAction("Index", "Home");
-            return; // مهم
-        }
-
-        base.OnActionExecuting(context);
-    }
-
-    public EmployeesController(IEmployeeDevicesApi api,LocalAppDbContext db)
+    public EmployeesController(IEmployeeDevicesApi api, IDelegationService delegations)
     {
         _api = api;
-        _db = db;
+        _delegations = delegations;
     }
 
     [HttpGet("")]
@@ -97,7 +75,7 @@ public class EmployeesController : Controller
     {
         var ok = await _api.UnassignOneAsync(employeeId, terminalId, ct);
         TempData["ToastType"] = ok ? "success" : "danger";
-        TempData["ToastMsg"] = ok ? "✅ تم فك الربط" : "❌ فشل فك الربط";
+        TempData["ToastMsg"] = ok ? "✅ تم فك الارتباط" : "❌ فشل فك الارتباط";
         TempData["LastEmployeeId"] = employeeId.ToString();
 
         // ✅ الإصلاح: إرجاع البيانات بدل redirect لصفحة فاضية
@@ -132,7 +110,7 @@ public class EmployeesController : Controller
         }
 
         TempData["ToastType"] = "success";
-        TempData["ToastMsg"] = $"✅ تم فك {terminalIds.Count} جهاز";
+        TempData["ToastMsg"] = $"✅ تم فك الارتباط عن {terminalIds.Count} جهاز";
 
         var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
         return View("Search", screen);
@@ -147,62 +125,9 @@ public async Task<IActionResult> DelegateRegion(
     DateTime endDate,
     CancellationToken ct)
 {
-    if (terminalIds == null || terminalIds.Count == 0)
-    {
-        TempData["ToastType"] = "danger";
-        TempData["ToastMsg"] = "❌ اختر أجهزة أولاً";
-        TempData["LastEmployeeId"] = employeeId.ToString();
-        return RedirectToAction("Search", "Employees", new { employeeId });
-    }
-
-    if (endDate < startDate)
-    {
-        TempData["ToastType"] = "danger";
-        TempData["ToastMsg"] = "❌ تاريخ النهاية لازم يكون بعد البداية";
-        TempData["LastEmployeeId"] = employeeId.ToString();
-        return RedirectToAction("Search", "Employees", new { employeeId });
-    }
-
-    // (اختياري) ضبط البداية على بداية اليوم
-    startDate = startDate.Date;
-
-    // ✅ النهاية
-#if DEBUG
-    endDate = DateTime.Now.AddMinutes(2); // اختبار: ينتهي بعد دقيقتين
-#else
-    endDate = endDate.Date.AddDays(1);    // إنتاج: نهاية اليوم المختار
-#endif
-
-    var now = DateTime.Now;
-
-    // ✅ مهم: حدد الحالة حسب الوقت
-    var status = (startDate <= now && endDate > now) ? "Active" : "Scheduled";
-
-    var d = new Delegation
-    {
-        EmployeeId = employeeId,
-        StartDate = startDate,
-        EndDate = endDate,
-        Status = status,
-        CreatedAt = now,
-        Terminals = terminalIds
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .Select(t => new DelegationTerminal { TerminalId = t.Trim() })
-            .ToList()
-    };
-
-    _db.Delegations.Add(d);
-    await _db.SaveChangesAsync(ct);
-
-    TempData["ToastType"] = "success";
-    TempData["ToastMsg"] = status == "Active"
-        ? $"✅ تم تفعيل انتداب {terminalIds.Count} جهاز"
-        : $"✅ تم جدولة انتداب {terminalIds.Count} جهاز";
-
-    TempData["SelectedTerminalIds"] = string.Join(",", terminalIds);
-    TempData["LastEmployeeId"] = employeeId.ToString();
-
-    // ✅ إرجاع البيانات مباشرة بدل redirect عشان يظهر التحديث فوراً
+    var result = await _delegations.SaveDelegationAsync(employeeId, terminalIds, startDate, endDate, ct);
+    if (result == "Invalid") { TempData["ToastType"] = "danger"; TempData["ToastMsg"] = "❌ فشل في حفظ الانتداب، تحقق من التواريخ"; }
+    else { TempData["ToastType"] = "success"; TempData["ToastMsg"] = "✅ تم جدولة الانتداب بنجاح"; }
     var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
     return View("Search", screen);
 }

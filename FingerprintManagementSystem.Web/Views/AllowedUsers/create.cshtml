@@ -1,6 +1,6 @@
 ﻿@model FingerprintManagementSystem.Contracts.AllowedUserDto
 @{
-ViewData["Title"] = "إضافة موظف جديد";
+ViewData["Title"] = "إضافة مستخدم";
 var currentEmpId = Context.Session.GetString("EmpId") ?? "";
 }
 
@@ -46,7 +46,7 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
         <div class="page-header">
             <h1 class="page-title">
                 <span class="page-title-icon">➕</span>
-                <span>إضافة موظف إلى قائمة المشرفين</span>
+                <span>إضافة مستخدم</span>
             </h1>
             <a href="/allowlist" class="btn btn-secondary">
                 <span>↩️</span>
@@ -60,20 +60,20 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
         <div style="background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%); padding: 24px; border-radius: 12px; color: white; margin-bottom: 32px;">
             <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 1.3em;">
                 <span style="font-size: 1.5em;">🔍</span>
-                <span>الخطوة 1: جلب بيانات الموظف</span>
+                <span>الخطوة 1: جلب بيانات المستخدم</span>
             </h3>
-            <p style="opacity: 0.9; margin-bottom: 20px;">أدخل الرقم الوظيفي للموظف لجلب بياناته   </p>
+            <p style="opacity: 0.9; margin-bottom: 20px;">أدخل اسم المستخدم لجلب بياناته</p>
 
             <form method="post" asp-action="Fetch">
                 <div style="display: flex; gap: 12px; align-items: flex-end;">
                     <div style="flex: 1;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.95em;">
-                            الرقم الوظيفي:
+                            اسم المستخدم:
                         </label>
                         <input type="number"
                                name="employeeId"
                                required
-                               placeholder="الرقم الوظيفي"
+                               placeholder="اسم المستخدم"
                                style="width: 100%; padding: 14px 16px; border: none; border-radius: 10px; font-size: 1.1em; font-family: 'Tajawal', sans-serif; font-weight: 700;" />
                     </div>
                     <button type="submit" class="btn btn-lg" style="background: white; color: var(--blue); padding: 14px 32px;">
@@ -152,7 +152,7 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
                 <div class="form-group">
                     <label class="form-label" style="margin-bottom: 12px;">
                         <span style="color: var(--maroon);">⭐</span>
-                        صلاحيات الحساب
+                        صلاحية مدير
                     </label>
                     <div class="form-check">
                         <input type="checkbox"
@@ -160,11 +160,11 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
                                id="isAdmin"
                                value="true" />
                         <label for="isAdmin">
-                            منح صلاحيات المدير (Admin)
+                            منح صلاحية مدير
                         </label>
                     </div>
                     <small style="display: block; margin-top: 8px; color: var(--gray-500); font-size: 0.85em; padding-right: 32px;">
-                        المدراء لديهم صلاحيات كاملة لإدارة النظام والموظفين
+                        المدير لديه صلاحيات كاملة لإدارة النظام والمستخدمين
                     </small>
                 </div>
 
@@ -172,7 +172,7 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
                 <div style="background: linear-gradient(135deg, var(--copper-light) 0%, var(--copper) 100%); padding: 20px; border-radius: 10px; margin: 24px 0; color: white;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                         <div>
-                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 4px;">الرقم الوظيفي</div>
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 4px;">اسم المستخدم</div>
                             <div style="font-size: 1.3em; font-weight: 900;">@Model.EmployeeId</div>
                         </div>
                         <div>
@@ -190,7 +190,7 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
                     </a>
                     <button type="submit" class="btn btn-success btn-lg">
                         <span>✓</span>
-                        <span>حفظ وإضافة الموظف</span>
+                        <span>حفظ</span>
                     </button>
                 </div>
             </form>
@@ -203,8 +203,8 @@ var currentEmpId = Context.Session.GetString("EmpId") ?? "";
             <div style="font-size: 4em; margin-bottom: 16px; opacity: 0.3;">📋</div>
             <h3 style="color: var(--gray-600); margin-bottom: 12px;">في انتظار جلب البيانات</h3>
             <p style="color: var(--gray-500); line-height: 1.8;">
-                أدخل الرقم الوظيفي في الخطوة الأولى أعلاه لجلب بيانات الموظف<br/>
-                من نظام SOAP، ثم ستظهر هنا نموذج إدخال البيانات
+                أدخل اسم المستخدم في الخطوة الأولى أعلاه لجلب بيانات المستخدم<br/>
+                من نظام SOAP، ثم سيظهر هنا نموذج إدخال البيانات
             </p>
         </div>
         }

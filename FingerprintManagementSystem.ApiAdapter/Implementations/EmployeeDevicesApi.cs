@@ -67,6 +67,21 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
                 d.EndDate > now)
             .SelectMany(d => d.Terminals.Select(t => t.TerminalId))
             .ToHashSetAsync(ct);
+
+        var delegatedDatesList = await _db.Delegations
+            .Where(d => d.EmployeeId == employeeId &&
+                        (d.Status == "Active" || d.Status == "Scheduled"))
+            .SelectMany(d => d.Terminals.Select(t => new
+            {
+                t.TerminalId,
+                d.StartDate,
+                d.EndDate
+            }))
+            .ToListAsync(ct);
+
+        var delegatedDatesByTerminal = delegatedDatesList
+            .GroupBy(x => x.TerminalId)
+            .ToDictionary(g => g.Key, g => g.First());
         var baseDto = await GetEmployeeWithDevicesAsync(employeeId, ct);
         if (baseDto?.Employee is null) return null;
 
@@ -97,6 +112,8 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
             regionNameById.TryGetValue(regId, out var regName);
             var isAssigned = assignedSet.Contains(id);
             var isDelegatedActive = activeDelegatedTerminalIds.Contains(id);
+            delegatedDatesByTerminal.TryGetValue(id, out var delDates);
+            var isDelegated = delDates != null;
             rows.Add(new DeviceRowDto
             {
                 DeviceId = id,
@@ -104,8 +121,10 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
                 IsAssigned = isAssigned,
 
                 // ✅ مهم: الجديد
-                IsDelegated = isDelegatedActive,
+                IsDelegated = isDelegated,
                 IsEffectivelyAssigned = isAssigned || isDelegatedActive,
+                DelegationStartDate = delDates?.StartDate,
+                DelegationEndDate = delDates?.EndDate,
 
                 RegionId = regId == 0 ? null : regId,
                 RegionName = string.IsNullOrWhiteSpace(regName) ? "أجهزة غير مصنفة" : regName

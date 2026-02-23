@@ -6,7 +6,7 @@
     <h2 style="margin-bottom:12px">الأجهزة والمناطق</h2>
 
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-        <button id="btnAuto" style="padding:10px 14px;cursor:pointer">تشغيل Auto Assign</button>
+        <button id="btnAuto" style="padding:10px 14px;cursor:pointer">تشغيل التوزيع التلقائي</button>
 
         <label>فلترة حسب المنطقة:</label>
         <select id="regionFilter" style="padding:10px;min-width:220px">
@@ -19,9 +19,9 @@
     <table border="1" cellpadding="10" cellspacing="0" style="width:100%;border-collapse:collapse">
         <thead>
             <tr style="background:#f3f4f6">
-                <th>Terminal ID</th>
-                <th>Region</th>
-                <th>Region ID</th>
+                <th>رقم الجهاز</th>
+                <th>المنطقة</th>
+                <th>رقم المنطقة</th>
             </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -86,7 +86,7 @@
     btnAuto.addEventListener("click", async () => {
         try {
             btnAuto.disabled = true;
-            setStatus("جاري تشغيل Auto Assign...");
+            setStatus("جاري تشغيل التوزيع التلقائي...");
             const res = await fetch(`${apiBase}/api/terminals/auto-assign-regions`, {
                 method: "POST"
             });
@@ -97,7 +97,7 @@
             }
 
             const result = await res.json();
-            setStatus(`تم: inserted=${result.inserted}, updated=${result.updated}, totalDevices=${result.totalDevices}`);
+            setStatus(`تم التحديث: تمت الإضافة=${result.inserted}، تم التعديل=${result.updated}، إجمالي الأجهزة=${result.totalDevices}`);
             await loadMaps();
         } catch (e) {
             setStatus("خطأ: " + e.message);

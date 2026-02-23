@@ -17,6 +17,8 @@ public class DeviceRowDto
     // ✅ جديد
     public bool IsDelegated { get; set; }
     public bool IsEffectivelyAssigned { get; set; }
+    public DateTime? DelegationStartDate { get; set; }
+    public DateTime? DelegationEndDate { get; set; }
 
     public int? RegionId { get; set; }
     public string? RegionName { get; set; }

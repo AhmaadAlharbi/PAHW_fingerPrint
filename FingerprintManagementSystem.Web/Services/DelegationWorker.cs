@@ -9,10 +9,12 @@ namespace FingerprintManagementSystem.Web.Services;
 public class DelegationWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<DelegationWorker> _logger;
 
-    public DelegationWorker(IServiceScopeFactory scopeFactory)
+    public DelegationWorker(IServiceScopeFactory scopeFactory, ILogger<DelegationWorker> logger)
     {
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,7 +29,7 @@ public class DelegationWorker : BackgroundService
 
                 var now = DateTime.Now;
 
-                // 1) START: Scheduled -> Active (Assign)
+                // 1) التحقق من الانتدابات الجاهزة للبدء
                 var toStart = await db.Delegations
                     .Where(x => x.Status == "Scheduled" && x.StartDate <= now)
                     .ToListAsync(stoppingToken);
@@ -40,13 +42,21 @@ public class DelegationWorker : BackgroundService
                         .ToListAsync(stoppingToken);
 
                     foreach (var terminalId in terminals)
-                        await api.AssignOneAsync(del.EmployeeId, terminalId, stoppingToken);
+                    {
+                        // نحاول 3 مرات قبل الفشل
+                        var success = false;
+                        for (var i = 1; i <= 3 && !success; i++)
+                        {
+                            success = await api.AssignOneAsync(del.EmployeeId, terminalId, stoppingToken);
+                            if (!success) await Task.Delay(500, stoppingToken);
+                        }
+                    }
 
                     del.Status = "Active";
                     del.ActivatedAt = now;
                 }
 
-                // 2) EXPIRE: Active -> Expired (Unassign)
+                // 2) التحقق من الانتدابات المنتهية
                 var toExpire = await db.Delegations
                     .Where(x => x.Status == "Active" && x.EndDate <= now)
                     .ToListAsync(stoppingToken);
@@ -59,7 +69,15 @@ public class DelegationWorker : BackgroundService
                         .ToListAsync(stoppingToken);
 
                     foreach (var terminalId in terminals)
-                        await api.UnassignOneAsync(del.EmployeeId, terminalId, stoppingToken);
+                    {
+                        // نحاول 3 مرات قبل الفشل
+                        var success = false;
+                        for (var i = 1; i <= 3 && !success; i++)
+                        {
+                            success = await api.UnassignOneAsync(del.EmployeeId, terminalId, stoppingToken);
+                            if (!success) await Task.Delay(500, stoppingToken);
+                        }
+                    }
 
                     del.Status = "Expired";
                     del.ExpiredAt = now;
@@ -67,9 +85,10 @@ public class DelegationWorker : BackgroundService
 
                 await db.SaveChangesAsync(stoppingToken);
             }
-            catch
+            catch (Exception ex)
             {
-                // لا توقف التطبيق لو صار خطأ مؤقت
+                // نسجل الخطأ بدل الصمت
+                _logger.LogError("Something went wrong: " + ex.Message);
             }
 
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

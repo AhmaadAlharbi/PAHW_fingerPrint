@@ -5,6 +5,7 @@ var successMsg = TempData["SuccessMsg"] as string;
 }
 
 @section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <!-- أنماط خاصة بصفحة Login فقط -->
     <style>
         /* Login Container */
@@ -174,7 +175,7 @@ var successMsg = TempData["SuccessMsg"] as string;
 
         .form-input {
             width: 100%;
-            padding: 20px 60px 20px 24px;
+            padding: 20px 60px 20px 60px;
             border: 3px solid var(--gray-300);
             border-radius: 16px;
             font-size: 1.1em;
@@ -211,6 +212,29 @@ var successMsg = TempData["SuccessMsg"] as string;
         .form-input:focus + .input-icon {
             color: var(--maroon);
             transform: translateY(-50%) scale(1.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: var(--gray-400);
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: var(--maroon);
+        }
+
+        /* إخفاء أيقونة المتصفح الافتراضية لكلمة المرور (Edge/IE) */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
         }
 
         /* Submit Button */
@@ -406,8 +430,12 @@ var successMsg = TempData["SuccessMsg"] as string;
                            name="password"
                            class="form-input"
                            placeholder="أدخل كلمة المرور"
+                           id="passwordInput"
                            required />
                     <span class="input-icon">🔒</span>
+                    <button type="button" class="password-toggle" id="togglePasswordBtn" aria-label="إظهار أو إخفاء كلمة المرور">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
                 </div>
             </div>
 
@@ -427,3 +455,24 @@ var successMsg = TempData["SuccessMsg"] as string;
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('passwordInput');
+            const btn = document.getElementById('togglePasswordBtn');
+            if (!input || !btn) return;
+
+            btn.addEventListener('click', function () {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('fa-eye', !isPassword);
+                    icon.classList.toggle('fa-eye-slash', isPassword);
+                }
+            });
+        });
+    </script>
+}

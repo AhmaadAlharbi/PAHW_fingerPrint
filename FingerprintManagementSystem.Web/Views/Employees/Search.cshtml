@@ -1750,14 +1750,14 @@ StringComparer.OrdinalIgnoreCase
                                             <input type="radio" name="operation_@regionKey" id="delegate_@regionKey" value="delegate" onchange="toggleDates('@regionKey', 'delegate')">
                                             <label for="delegate_@regionKey">
                                                 <i class="fa-solid fa-calendar-days icon"></i>
-                                                <span>انتداب مؤقت</span>
+                                                <span>جدولة انتداب</span>
                                             </label>
                                         </div>
                                         <div class="radio-option">
                                             <input type="radio" name="operation_@regionKey" id="remove_@regionKey" value="remove" onchange="toggleDates('@regionKey', 'remove')">
                                             <label for="remove_@regionKey">
                                                 <i class="fa-solid fa-fingerprint icon" style="opacity: 0.7;"></i>
-                                                <span>إزالة البصمة</span>
+                                                <span>فك الارتباط</span>
                                             </label>
                                         </div>
                                     </div>
@@ -1768,14 +1768,14 @@ StringComparer.OrdinalIgnoreCase
                                                 <i class="fa-solid fa-calendar-plus icon"></i>
                                                 <span>تاريخ البداية</span>
                                             </label>
-                                            <input type="text" class="date-input datepicker" id="startDate_@regionKey" placeholder="DD/MM/yyyy" autocomplete="off">
+                                            <input type="text" class="date-input datepicker" id="startDate_@regionKey" placeholder="يوم/شهر/سنة" autocomplete="off">
                                         </div>
                                         <div class="date-field">
                                             <label class="date-label">
                                                 <i class="fa-solid fa-calendar-xmark icon"></i>
                                                 <span>تاريخ النهاية</span>
                                             </label>
-                                            <input type="text" class="date-input datepicker" id="endDate_@regionKey" placeholder="DD/MM/yyyy" autocomplete="off">
+                                            <input type="text" class="date-input datepicker" id="endDate_@regionKey" placeholder="يوم/شهر/سنة" autocomplete="off">
                                         </div>
                                     </div>
 
@@ -1817,7 +1817,13 @@ StringComparer.OrdinalIgnoreCase
 
                                                 <div class="device-details">
                                                     <div class="device-name">@d.DeviceName</div>
-                                                    <div class="device-meta"><i class="fa-solid fa-map-pin icon"></i> @d.Location &bull; ID: @d.DeviceId</div>
+                                                    <div class="device-meta"><i class="fa-solid fa-map-pin icon"></i> @d.Location &bull; رقم الجهاز: @d.DeviceId</div>
+                                                    @if (d.IsDelegated && d.DelegationStartDate.HasValue && d.DelegationEndDate.HasValue)
+                                                    {
+                                                        <span class="badge badge-info">
+                                                            (من: @d.DelegationStartDate.Value.ToString("dd/MM/yyyy") - إلى: @d.DelegationEndDate.Value.ToString("dd/MM/yyyy"))
+                                                        </span>
+                                                    }
                                                 </div>
 
                                                 <div class="device-action" onclick="event.stopPropagation();">
@@ -1880,7 +1886,7 @@ StringComparer.OrdinalIgnoreCase
         </button>
         <button type="button" class="btn-bulk btn-bulk-danger" onclick="submitBulk('UnassignBulk')">
             <i class="fa-solid fa-link-slash icon"></i>
-            <span>إلغاء ربط بالجملة</span>
+            <span>فك الارتباط بالجملة</span>
         </button>
     </div>
 </div>
@@ -2033,11 +2039,11 @@ StringComparer.OrdinalIgnoreCase
             operationIcon = '<i class="fa-solid fa-right-left" style="color: #692f39;"></i>';
         } else if (operation === 'delegate') {
             actionName = 'DelegateRegion';
-            operationText = `انتداب من ${startDateDisplay} إلى ${endDateDisplay}`;
+            operationText = `جدولة انتداب من ${startDateDisplay} إلى ${endDateDisplay}`;
             operationIcon = '<i class="fa-solid fa-calendar-days" style="color: #3b82f6;"></i>';
         } else if (operation === 'remove') {
             actionName = 'UnassignBulk';
-            operationText = 'إزالة البصمة';
+            operationText = 'فك الارتباط';
             operationIcon = '<i class="fa-solid fa-fingerprint" style="color: #ef4444; opacity: 0.7;"></i>';
         }
 

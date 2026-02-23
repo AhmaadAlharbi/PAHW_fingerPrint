@@ -17,8 +17,7 @@ public class AllowedUsersController : Controller
 
         if (!isAdmin)
         {
-            context.HttpContext.Response.StatusCode = 403;
-            context.Result = View("~/Views/Shared/Forbidden.cshtml");
+            context.Result = Forbid();
             return;
         }
 

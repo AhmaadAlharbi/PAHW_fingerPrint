@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using FingerprintManagementSystem.Contracts.DTOs;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FingerprintManagementSystem.ApiAdapter.Alpeta;
 
@@ -10,16 +11,19 @@ public class AlpetaClient
 {
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
+    private readonly IMemoryCache _cache;
     private readonly SemaphoreSlim _loginLock = new(1, 1);
 
 
     // Session UUID بعد Login
     private string? _uuid;
+    private const string UuidCacheKey = "alpeta:uuid";
 
-    public AlpetaClient(HttpClient http, IConfiguration config)
+    public AlpetaClient(HttpClient http, IConfiguration config, IMemoryCache cache)
     {
         _http = http;
         _config = config;
+        _cache = cache;
     }
 
     private string BaseUrl => _config["Alpeta:BaseUrl"] ?? "http://192.168.120.56:9004/v1";
@@ -31,12 +35,35 @@ public class AlpetaClient
 
     private async Task EnsureLoggedInAsync(CancellationToken ct)
     {
+        if (_cache.TryGetValue<string>(UuidCacheKey, out var cached) &&
+            !string.IsNullOrWhiteSpace(cached))
+        {
+            _uuid = cached;
+            _http.DefaultRequestHeaders.Remove("Uuid");
+            _http.DefaultRequestHeaders.Remove("UUID");
+            _http.DefaultRequestHeaders.Add("Uuid", _uuid);
+            _http.DefaultRequestHeaders.Add("UUID", _uuid);
+            return;
+        }
+
         if (!string.IsNullOrWhiteSpace(_uuid))
             return;
 
         await _loginLock.WaitAsync(ct);
         try
         {
+            // double-check بعد ما أخذنا lock
+            if (_cache.TryGetValue<string>(UuidCacheKey, out cached) &&
+                !string.IsNullOrWhiteSpace(cached))
+            {
+                _uuid = cached;
+                _http.DefaultRequestHeaders.Remove("Uuid");
+                _http.DefaultRequestHeaders.Remove("UUID");
+                _http.DefaultRequestHeaders.Add("Uuid", _uuid);
+                _http.DefaultRequestHeaders.Add("UUID", _uuid);
+                return;
+            }
+
             // double-check بعد ما أخذنا lock
             if (!string.IsNullOrWhiteSpace(_uuid))
                 return;
@@ -64,6 +91,8 @@ public class AlpetaClient
             _http.DefaultRequestHeaders.Remove("UUID");
             _http.DefaultRequestHeaders.Add("Uuid", _uuid);
             _http.DefaultRequestHeaders.Add("UUID", _uuid);
+
+            _cache.Set(UuidCacheKey, _uuid, TimeSpan.FromMinutes(20));
         }
         finally
         {

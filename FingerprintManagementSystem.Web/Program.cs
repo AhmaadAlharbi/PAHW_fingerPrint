@@ -6,10 +6,15 @@ using FingerprintManagementSystem.Contracts;
 using Microsoft.EntityFrameworkCore;
 using FingerprintManagementSystem.Web.Services;
 using FingerprintManagementSystem.ApiAdapter;
+using FingerprintManagementSystem.Web.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<SessionGuardFilter>();
+});
+builder.Services.AddMemoryCache();
 
 
 var connectionString = builder.Configuration.GetConnectionString("serverDB")
@@ -25,6 +30,7 @@ builder.Services.AddScoped<ILoginApi, SoapLoginApi>();
 builder.Services.AddSession();
 builder.Services.AddScoped<IAllowedUsersStore, SqliteAllowedUsersStore>();
 builder.Services.AddScoped<IAllowedUsersAdmin, AllowedUsersAdminService>();
+builder.Services.AddScoped<IDelegationService, DelegationService>();
 // -------------------------
 // ✅ SOAP client
 // -------------------------
