@@ -66,9 +66,10 @@ public class EmployeesController : Controller
         var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
         TempData["LastEmployeeId"] = employeeId.ToString();
 
-        if (screen == null)
+        if (screen == null || screen.Employee == null)
         {
-            ViewBag.NotFound = "الموظف غير موجود";
+            TempData["ToastType"] = "danger";
+            TempData["ToastMsg"] = $"لا يوجد موظف بالرقم الوظيفي: {employeeId}";
             return View("Search");
         }
 
@@ -201,9 +202,9 @@ public async Task<IActionResult> DelegateRegion(
     TempData["SelectedTerminalIds"] = string.Join(",", terminalIds);
     TempData["LastEmployeeId"] = employeeId.ToString();
 
-    // ✅ PRG: رجّع للبحث (GET) عشان يعيد تحميل الداتا ويظهر الندب مباشرة
-    return RedirectToAction("Search", "Employees", new { employeeId });
-    
+    // ✅ إرجاع البيانات مباشرة بدل redirect عشان يظهر التحديث فوراً
+    var screen = await _api.GetEmployeeDevicesScreenAsync(employeeId, ct);
+    return View("Search", screen);
 }
 
 

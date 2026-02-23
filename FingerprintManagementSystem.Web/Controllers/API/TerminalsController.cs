@@ -54,6 +54,17 @@ public class TerminalsController : ControllerBase
     [HttpPost("auto-assign-regions")]
     public async Task<IActionResult> AutoAssignRegions(CancellationToken ct)
     {
+        
+        // 1) التحقق من الصلاحية
+        var isAdminStr = HttpContext.Session.GetString("IsAdmin");
+    
+        // نتحقق إذا كان فارغاً أو لا يساوي "1"
+        if (string.IsNullOrEmpty(isAdminStr) || isAdminStr != "1")
+        {
+            // Forbid() تعني أن المستخدم مسجل دخول لكن ليس لديه صلاحية
+            // Unauthorized() تعني أن المستخدم غير معروف أصلاً
+            return Forbid(); 
+        }
         // 1) جلب المناطق والخرائط الحالية لتقليل استهلاك قاعدة البيانات
         var regionsList = await _db.Regions.AsNoTracking().ToListAsync(ct);
         var existingMaps = await _db.TerminalRegionMaps.ToDictionaryAsync(x => x.TerminalId, x => x, ct);
