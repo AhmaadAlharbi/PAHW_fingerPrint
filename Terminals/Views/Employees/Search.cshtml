@@ -9,196 +9,595 @@ var employee       = Model?.Employee;
 var devices        = Model?.Devices ?? new List<Terminals.Web.DTOs.DeviceRowDto>();
 var regionGroups   = Model?.RegionGroups;
 var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
-var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
 }
 
 @section Styles {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 <style>
-    .employees-search-page { padding-bottom: 90px; }
+    .employees-search-page { padding-bottom: 170px; }
 
-    /* ── Step 1: action selector ───────────────────── */
-    .action-selector-title { font-weight: 700; margin-bottom: 8px; }
-    .action-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-    .action-card {
-        flex: 1 1 190px; min-width: 170px;
-        border: 2px solid #e5e0dd; border-radius: 12px;
-        background: #fff; padding: 14px; text-align: center;
-        cursor: pointer; transition: all .15s ease;
+    .search-search-card,
+    .search-workspace-card {
+        max-width: 1320px;
+        margin-inline: auto;
     }
-    .action-card:hover { border-color: #c9b8ba; }
-    .action-card.active { border-color: #692f39; background: #f9f2f3; box-shadow: 0 0 0 3px rgba(105,47,57,.08); }
-    .action-card i { font-size: 20px; color: #692f39; display: block; margin-bottom: 6px; }
-    .action-card-title { font-weight: 700; margin-bottom: 2px; }
-    .action-card-desc { font-size: 12px; color: #6b7280; }
 
-    /* ── Hint shown before any action is picked ── */
-    .choose-action-hint {
-        display: flex; align-items: center; gap: 8px;
-        color: #9ca3af; font-size: 13px; padding: 10px 4px;
+    .search-search-card {
+        padding-block: 22px;
     }
-    .choose-action-hint i { color: #c9b8ba; }
 
-    /* ── Delegation duration picker ────────────────── */
-    .bulk-dates {
-        margin-top: 12px;
-        padding: 14px;
-        border: 1px solid #e8dfd8;
-        border-radius: 16px;
-        background: linear-gradient(180deg, #fff 0%, #fbf8f6 100%);
-    }
-    .bulk-dates-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-    .bulk-dates-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #3d2a2f;
-    }
-    .bulk-dates-title i {
-        width: 36px;
-        height: 36px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        background: #f3e8ea;
-        color: #692f39;
-        font-size: 15px;
-    }
-    .bulk-dates-title strong { display: block; font-size: 14px; }
-    .bulk-dates-title span { display: block; font-size: 12px; color: #7a6a66; }
-    .bulk-dates-summary {
-        flex-shrink: 0;
-        border-radius: 999px;
-        background: #f3efec;
-        color: #6b5b57;
-        padding: 7px 12px;
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-    .bulk-dates-summary.is-selected {
-        background: #692f39;
-        color: #fff;
-    }
-    .custom-date-fields {
-        padding: 12px;
-        border-radius: 14px;
-        background: #fff;
-        border: 1px solid #e6ddda;
-    }
-    .custom-date-fields-label {
-        margin-bottom: 8px;
-        font-size: 12px;
-        font-weight: 700;
-        color: #6b5b57;
-    }
-    .custom-date-fields-note {
-        margin-bottom: 12px;
-        font-size: 12px;
-        line-height: 1.6;
-        color: #7a6a66;
-    }
-    .custom-date-fields-grid {
+    .search-strip {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: minmax(0, 1fr);
+
+        gap: 18px;
+        align-items: end;
+        margin-bottom: 18px;
+    }
+    .search-strip-copy h1 {
+        margin: 0 0 4px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #2e3238;
+    }
+    .search-strip-copy p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+    .search-form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
+        align-items: end;
+    }
+    .search-form-grid .btn { min-width: 118px; }
+
+    .workspace-divider { margin: 20px 0; }
+
+    .empty-inline {
+        color: #6b7280;
+        font-size: 14px;
+        padding: 4px 0 0;
     }
 
-    /* ── Filter toolbar (search + region dropdown) ───── */
-    .filter-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
-    .device-search-box { flex: 1 1 220px; min-width: 180px; }
-
-    .region-select-wrap {
-        display: flex; align-items: center; gap: 8px;
-        flex: 1 1 240px; min-width: 210px;
-        background: #fff;
-        border: 1.5px solid #692f39;
-        border-radius: 10px;
-        padding: 0 12px;
-        transition: box-shadow .15s ease;
-    }
-    .region-select-wrap:focus-within { box-shadow: 0 0 0 3px rgba(105,47,57,.15); }
-    .region-select-icon { color: #692f39; font-size: 13px; flex-shrink: 0; }
-    .region-select-caret { color: #692f39; font-size: 11px; flex-shrink: 0; pointer-events: none; }
-    .region-select {
-        appearance: none; -webkit-appearance: none; -moz-appearance: none;
-        border: none; background: transparent; outline: none;
-        flex: 1; min-width: 0;
-        padding: 10px 2px;
-        font-size: 13.5px; font-weight: 700; color: #33424f;
-        cursor: pointer;
-    }
-
-    /* ── Legend ─────────────────────────────────────── */
-    .device-legend {
-        display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 12.5px; color: #6b7280;
-        background: #f8f7f5; border: 1px solid #eee; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
-    }
-    .device-legend span { display: inline-flex; align-items: center; gap: 6px; }
-    .device-legend i { color: #692f39; }
-
-    /* ── Device eligibility dimming ────────────────── */
-    .device-card.action-mismatch { opacity: .42; }
-    /* Scheduled and active delegations are never dimmed — their action lives in the details panel, not tied to the three bulk cards */
-    .device-card[data-state-key="delegated_scheduled"].action-mismatch,
-    .device-card[data-state-key="delegated_active"].action-mismatch { opacity: 1; }
-
-    /* ── Details toggle: highlight when it also holds a delegation action ── */
-    .device-details-toggle { margin-top: 8px; }
-    .device-details-toggle summary {
-        cursor: pointer;
-        display: inline-flex;
+    .employee-strip {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+        gap: 16px;
         align-items: center;
-        gap: 6px;
+        padding: 14px 16px;
+        border: 1px solid var(--gray-200);
+        border-radius: 14px;
+        background: #fbf9f8;
+        margin-bottom: 16px;
+    }
+    .employee-strip-main { min-width: 0; }
+    .employee-strip-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #2f3338;
+        margin-bottom: 4px;
+    }
+    .employee-strip-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        color: #6b7280;
+        font-size: 13px;
+    }
+    .employee-strip-meta strong {
         color: #692f39;
-        font-size: 12px;
-        font-weight: 700;
-        list-style: none;
+        font-weight: 800;
     }
-    .device-details-toggle summary::-webkit-details-marker { display: none; }
-    .device-details-body {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #ebe7e4;
-    }
-    .device-details-actions {
+    .employee-strip-summary {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-top: 10px;
+        justify-content: flex-end;
+    }
+    .employee-summary-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e6ded8;
+        color: #4b5563;
+        font-size: 12.5px;
+        font-weight: 700;
+        white-space: nowrap;
     }
 
-    /* ── Device card: one compact meta row instead of stacked lines ── */
-    .device-meta {
-        display: flex; flex-wrap: wrap; align-items: center;
-        gap: 4px 12px; font-size: 12px; color: #6b7280; margin-bottom: 6px;
+    .action-panel {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
     }
-    .device-meta span { display: inline-flex; align-items: center; gap: 4px; }
-    .device-meta i { font-size: 11px; }
-    .device-meta-warning { color: #9a3412; }
-
-    /* ── Selection tray + live summary in bulk bar ─── */
-    .selection-tray { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; }
-    .selection-chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: rgba(255,255,255,.12); border-radius: 16px; padding: 4px 10px; font-size: 12px;
+    .action-panel-title {
+        margin: 0;
     }
-    .selection-chip button { border: none; background: none; color: inherit; opacity: .7; cursor: pointer; font-size: 11px; line-height: 1; }
-    .selection-chip button:hover { opacity: 1; }
-    .bulk-summary { font-size: 12.5px; margin-top: 6px; line-height: 1.5; }
-    .bulk-summary.ok { color: #bbf7d0; }
-    .bulk-summary.warn { color: #fca5a5; }
+    .action-options {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .action-option {
+        position: relative;
+    }
+    .action-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .action-option-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        border-radius: 10px;
+        border: 1.5px solid #e2dbd7;
+        background: #fff;
+        color: #374151;
+        font-size: 13.5px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+        text-align: center;
+        padding: 10px 12px;
+    }
+    .action-option input:checked + .action-option-label {
+        border-color: #692f39;
+        background: #f8f1f2;
+        color: #692f39;
+        box-shadow: 0 0 0 3px rgba(105, 47, 57, .08);
+    }
+    .action-option input:focus-visible + .action-option-label,
+    .action-option-label:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(105, 47, 57, .16);
+    }
+    .action-help {
+        color: #6b7280;
+        font-size: 13px;
+        min-height: 20px;
+    }
+    .search-bulk-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .search-bulk-heading .btn-group-sm { display: flex; gap: 8px; }
 
-    /* ── Empty state ────────────────────────────────── */
-    .empty-search-state { text-align: center; padding: 48px 16px; }
-    .empty-search-state i { font-size: 34px; color: #9ca3af; display: block; margin-bottom: 12px; }
+    .delegate-inline {
+        display: none;
+        grid-template-columns: repeat(2, minmax(0, 220px));
+        gap: 12px;
+        align-items: start;
+    }
+    .delegate-inline.is-visible { display: grid; }
+    .delegate-field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #6b5b57;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .delegate-input-wrap {
+        position: relative;
+    }
+    .delegate-input-wrap i {
+        position: absolute;
+        inset-inline-start: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8b929b;
+        font-size: 13px;
+        pointer-events: none;
+    }
+    .delegate-field .form-control {
+        min-height: 44px;
+        border: 1px solid #cdbdb7;
+        border-radius: 10px;
+        background: #fff;
+        padding-inline-start: 36px;
+        font-weight: 700;
+        color: #2f3338;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .delegate-field .form-control::placeholder {
+        color: #9ca3af;
+        font-weight: 500;
+    }
+    .delegate-field .form-control:focus {
+        border-color: #692f39;
+        box-shadow: 0 0 0 3px rgba(105, 47, 57, .08);
+    }
+    .delegate-validation {
+        grid-column: 1 / -1;
+        color: #8a6116;
+        font-size: 12px;
+    }
+    .delegate-validation.is-valid { color: #166534; }
+    .delegate-validation.is-hidden { display: none; }
+
+    .toolbar-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 280px) minmax(200px, 240px) minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .region-select-wrap,
+    .toolbar-filter-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid #ddd5d0;
+        border-radius: 10px;
+        padding: 0 12px;
+    }
+    .region-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 11px 2px;
+        outline: none;
+        font-size: 13px;
+        color: #374151;
+    }
+    .toolbar-filter-wrap .region-select {
+        font-weight: 600;
+    }
+    .toolbar-search {
+        position: relative;
+    }
+    .toolbar-search i {
+        position: absolute;
+        inset-inline-start: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8b929b;
+        font-size: 13px;
+    }
+    .toolbar-search input {
+        padding-inline-start: 36px;
+    }
+
+    .workspace-note {
+        color: #6b7280;
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+    .workspace-note.is-warning {
+        color: #8a6116;
+        background: #fbf5ea;
+        border: 1px solid #eddcbc;
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+    .regions-list {
+        display: grid;
+        gap: 12px;
+    }
+    .region-card {
+        border: 1px solid var(--gray-200);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .region-header {
+        width: 100%;
+        border: none;
+        background: #faf9f8;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        text-align: inherit;
+        cursor: pointer;
+    }
+    .region-header:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 2px rgba(105, 47, 57, .2);
+    }
+    .region-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #2f3338;
+        margin-bottom: 3px;
+    }
+    .region-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+    .region-chevron {
+        color: #8b929b;
+        transition: transform .15s ease;
+        flex-shrink: 0;
+    }
+    .region-header[aria-expanded="true"] .region-chevron {
+        transform: rotate(180deg);
+    }
+    .region-body {
+        display: none;
+        padding: 14px 16px 16px;
+        border-top: 1px solid #efe8e4;
+    }
+    .region-body.show { display: block; }
+    .region-tools {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .region-select-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #374151;
+    }
+    .region-inline-action { margin-inline-start: auto; }
+
+    .devices-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .device-card {
+        border: 1px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+        transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .device-card.is-interactive {
+        cursor: pointer;
+    }
+    .device-card.is-interactive:hover {
+        border-color: #cdbfc2;
+    }
+    .device-card.is-selected {
+        border-color: #692f39;
+        background: #fbf4f5;
+        box-shadow: 0 0 0 3px rgba(105, 47, 57, .08);
+    }
+    .device-card.is-disabled {
+        background: #fbfbfb;
+    }
+    .device-card.is-disabled .device-card-content {
+        opacity: .76;
+    }
+    .device-card:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(105, 47, 57, .16);
+    }
+    .device-card-layout {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+    }
+    .device-check {
+        margin-top: 2px;
+    }
+    .device-topline {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+    .device-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: #2f3338;
+        line-height: 1.35;
+        margin-bottom: 2px;
+    }
+    .device-id {
+        color: #6b7280;
+        font-size: 12px;
+    }
+    .device-badge {
+        flex-shrink: 0;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 11.5px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .device-badge.is-unassigned {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+    .device-badge.is-assigned {
+        background: #edf7f1;
+        color: #166534;
+    }
+    .device-badge.is-delegated-active {
+        background: #fff4df;
+        color: #9a6700;
+    }
+    .device-badge.is-delegated-scheduled {
+        background: #eef4ff;
+        color: #1d4ed8;
+    }
+    .device-note {
+        color: #8b5e19;
+        font-size: 11.5px;
+        margin-top: 4px;
+    }
+    .region-empty,
+    .page-empty {
+        color: #6b7280;
+        font-size: 13px;
+        padding: 10px 0 2px;
+    }
+    .page-empty {
+        border-top: 1px solid #eee7e3;
+        margin-top: 14px;
+    }
+
+    .bulk-bar {
+        display: none;
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 18px;
+        z-index: 40;
+        width: min(1320px, calc(100% - 32px));
+        max-width: calc(100% - 32px);
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border: 1px solid #e7ddd8;
+        border-inline-start: 4px solid var(--maroon);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 14px 34px rgba(17, 24, 39, .12);
+    }
+    .bulk-bar.show {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+    }
+    .bulk-bar-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .bulk-bar-count {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: var(--maroon);
+        color: #fff;
+        font-weight: 800;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+    .bulk-bar-copy {
+        min-width: 0;
+    }
+    .bulk-bar-label {
+        font-size: 13px;
+        color: #6b7280;
+    }
+    .bulk-bar-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #1f2937;
+    }
+    .bulk-bar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .bulk-bar-actions .btn {
+        white-space: nowrap;
+    }
+    .bulk-bar-actions .btn-outline {
+        min-width: 124px;
+    }
+    .bulk-bar-actions .btn-primary {
+        min-width: 220px;
+        font-weight: 800;
+        box-shadow: 0 8px 20px rgba(105, 47, 57, .18);
+    }
+
+    @@media (max-width: 1279.98px) {
+        .devices-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 991.98px) {
+        .search-strip,
+        .employee-strip,
+        .toolbar-row {
+            grid-template-columns: 1fr;
+        }
+        .employee-strip-summary {
+            justify-content: flex-start;
+        }
+        .action-options {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .devices-grid {
+            grid-template-columns: 1fr;
+        }
+        .delegate-inline {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .page-surface {
+            padding: 16px;
+            border-radius: 14px;
+        }
+        .search-form-grid,
+        .delegate-inline {
+            grid-template-columns: 1fr;
+        }
+        .action-options {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .region-tools {
+            align-items: flex-start;
+        }
+        .bulk-bar.show {
+            bottom: 12px;
+            width: calc(100% - 24px);
+            max-width: calc(100% - 24px);
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .bulk-bar-actions {
+            width: 100%;
+        }
+        .bulk-bar-actions .btn {
+            flex: 1 1 0;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .action-options {
+            grid-template-columns: 1fr 1fr;
+        }
+        .action-option-label {
+            min-height: 44px;
+            font-size: 12.5px;
+            padding: 8px 10px;
+        }
+        .device-topline {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
 </style>
 }
 
@@ -206,7 +605,6 @@ var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
      data-employee-id="@(Model?.Employee?.EmployeeId ?? 0)"
      data-employee-name="@(Model?.Employee?.FullNameAr ?? "")">
 
-    @* ── Toast ─────────────────────────────────────────── *@
     @if (!string.IsNullOrWhiteSpace(toastMsg))
     {
     var alertClass = toastType switch {
@@ -224,390 +622,293 @@ var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
     </div>
     }
 
-    @* ── Card 1: Search ────────────────────────────────── *@
-    <div class="content-card mb-3">
-        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-            <h2 class="c-section-title">البحث عن موظف</h2>
+    <div class="content-card fade-in search-search-card">
+        <div class="search-strip">
+            <div class="search-strip-copy">
+                <h1 class="c-section-title mb-0">إدارة أجهزة الموظف</h1>
+                <p>ابحث عن الموظف ثم راجع المناطق والأجهزة قبل اختيار العملية المناسبة.</p>
+            </div>
+            <form id="employeeSearchForm" method="post" asp-controller="Employees" asp-action="SearchPost">
+                @Html.AntiForgeryToken()
+                <div class="search-form-grid">
+                    <div>
+                        <label class="form-label fw-bold">الرقم الوظيفي</label>
+                        <input type="number" name="employeeId" class="form-control"
+                               placeholder="مثال: 7300"
+                               value="@(Model?.Employee?.EmployeeId.ToString() ?? lastEmployeeId ?? "")"
+                               required />
+                    </div>
+                    <button type="submit" class="btn btn-primary u-nowrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>بحث</span>
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <form id="employeeSearchForm" method="post" asp-controller="Employees" asp-action="SearchPost">
-            @Html.AntiForgeryToken()
-            <div class="d-flex gap-2 align-items-end">
-                <div class="flex-grow-1">
-                    <label class="form-label fw-bold">الرقم الوظيفي للموظف</label>
-                    <input type="number" name="employeeId" class="form-control"
-                           placeholder="مثال: 7300"
-                           value="@(Model?.Employee?.EmployeeId.ToString() ?? lastEmployeeId ?? "")"
-                           required />
-                </div>
-                <button type="submit" class="btn btn-primary u-nowrap">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <span>بحث</span>
-                </button>
-            </div>
-        </form>
-        <div id="recentEmployees" class="mt-2 recent-chips" style="display:none"></div>
+        <div id="recentEmployees" class="recent-chips mb-2" style="display:none"></div>
     </div>
 
-    @* ── Empty state (no search performed yet) ──────────── *@
     @if (employee == null)
     {
-    <div class="content-card empty-search-state">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <div class="fw-bold mb-1">ابدأ بالبحث عن موظف</div>
-        <div class="text-muted small">أدخل الرقم الوظيفي في الحقل أعلاه لعرض أجهزة البصمة الخاصة به</div>
+    <div class="search-workspace-card content-card fade-in mt-3">
+        <div class="empty-inline">أدخل الرقم الوظيفي لعرض الموظف ومناطقه وأجهزة البصمة المرتبطة به.</div>
     </div>
     }
-
-    @* ── Card 2: Employee info ──────────────────────────── *@
-    @if (employee != null)
+    else
     {
     var assignedRegionCount = regionGroups?.Count(g => g.Devices.Any(x => x.IsEffectivelyAssigned)) ?? 0;
-    <div class="content-card mb-3">
-        <h2 class="c-section-title mb-3">معلومات الموظف</h2>
-
-        <div class="row g-3 mb-3">
-            <div class="col-sm-6 col-lg-3">
-                <div class="text-muted small mb-1">الاسم الكامل</div>
-                <div class="fw-bold">@employee.FullNameAr</div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="text-muted small mb-1">الإدارة / القسم</div>
-                <div class="fw-bold">@employee.Department</div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="text-muted small mb-1">المسمى الوظيفي</div>
-                <div class="fw-bold">@employee.JobTitle</div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-                <div class="text-muted small mb-1">الرقم الوظيفي</div>
-                <div class="fw-bold text-maroon">@employee.EmployeeId</div>
-            </div>
-        </div>
-
-    </div>
-    <div class="access-summary-strip mb-3">
-        مرتبط بـ <strong>@assigned.Count جهاز</strong> في <strong>@assignedRegionCount منطقة</strong>
-        @if (unassigned.Count > 0)
-        {
-        <span class="text-muted"> — @unassigned.Count غير مرتبطة</span>
-        }
-    </div>
-
-    @* ── Card 3: Regions & Devices ──────────────────── *@
-    @if (regionGroups != null && regionGroups.Any())
-    {
-    <div class="content-card">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h2 class="c-section-title mb-0">إدارة أجهزة البصمة</h2>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline" onclick="expandAllRegions()">فتح الكل</button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="collapseAllRegions()">إغلاق الكل</button>
-            </div>
-        </div>
-
-        @* ── Step 1: what do you want to do? ────────── *@
-        <div class="action-selector mb-3">
-            <div class="action-selector-title">١) ماذا تريد أن تفعل؟</div>
-            <div class="action-cards">
-                <button type="button" class="action-card" data-action="assign" onclick="selectAction('assign')">
-                    <i class="fa-solid fa-link"></i>
-                    <div class="action-card-title">ربط دائم</div>
-                    <div class="action-card-desc">إعطاء الموظف صلاحية دخول دائمة</div>
-                </button>
-                <button type="button" class="action-card" data-action="delegate" onclick="selectAction('delegate')">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    <div class="action-card-title">ندب مؤقت</div>
-                    <div class="action-card-desc">صلاحية دخول لفترة محددة فقط</div>
-                </button>
-                <button type="button" class="action-card" data-action="unassign" onclick="selectAction('unassign')">
-                    <i class="fa-solid fa-link-slash"></i>
-                    <div class="action-card-title">فك الربط / إنهاء</div>
-                    <div class="action-card-desc">إزالة صلاحية دخول قائمة</div>
-                </button>
-                <button type="button" class="action-card" data-action="endDelegation" onclick="selectAction('endDelegation')">
-                    <i class="fa-solid fa-ban"></i>
-                    <div class="action-card-title">إنهاء الندب</div>
-                    <div class="action-card-desc">(لندب نشط فقط)</div>
-                </button>
-            </div>
-
-            @* ── Dates, only relevant for ندب (nested under step 1, not separately numbered) ─── *@
-            <div id="bulkDates" class="bulk-dates is-hidden" aria-hidden="true">
-                <div class="bulk-dates-head">
-                    <div class="bulk-dates-title">
-                        <i class="fa-solid fa-hourglass-half"></i>
-                        <div>
-                            <strong>حدد مدة الندب</strong>
-                            <span>أدخل تاريخ البداية وتاريخ النهاية مباشرة بطريقة بسيطة وواضحة.</span>
-                        </div>
-                    </div>
-                    <div id="bulkDatesSummary" class="bulk-dates-summary">لم يتم الاختيار بعد</div>
-                </div>
-                <div id="customDateFields" class="custom-date-fields">
-                    <div class="custom-date-fields-label">أدخل فترة الندب</div>
-                    <div class="custom-date-fields-note">اختر الفترة المطلوبة كما هي في القرار، وسيتم تطبيق الندب ضمن هذه المدة فقط.</div>
-                    <div class="custom-date-fields-grid">
-                        <input id="bulkStartDate" type="text" class="date-input datepicker" placeholder="تاريخ البداية" autocomplete="off" />
-                        <input id="bulkEndDate"   type="text" class="date-input datepicker" placeholder="تاريخ النهاية"  autocomplete="off" />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @* ── Hint shown until an action is picked ── *@
-        <div id="chooseActionHint" class="choose-action-hint mb-3">
-            <i class="fa-solid fa-arrow-up"></i> اختر أحد الإجراءات أعلاه أولًا لعرض المناطق والأجهزة
-        </div>
-
-        @* ── Everything below stays hidden until an action is chosen, to keep the page focused ── *@
-        <div id="deviceSelectionSection" class="is-hidden" aria-hidden="true">
-
-            <div class="region-filters d-flex gap-2 flex-wrap mb-3">
-                <button type="button" class="btn btn-sm btn-outline filter-pill active" data-filter="all"
-                        onclick="setRegionFilter('all')">
-                    <i class="fa-solid fa-desktop"></i> @devices.Count الكل
-                </button>
-                <button type="button" class="btn btn-sm btn-outline filter-pill" data-filter="assigned"
-                        onclick="setRegionFilter('assigned')">
-                    <i class="fa-solid fa-circle-check"></i> @assigned.Count مرتبطة
-                </button>
-                <button type="button" class="btn btn-sm btn-outline filter-pill" data-filter="unassigned"
-                        onclick="setRegionFilter('unassigned')">
-                    <i class="fa-solid fa-circle-minus"></i> @unassigned.Count غير مرتبطة
-                </button>
-            </div>
-            @* ── Step 2: pick a region and status, then find the devices ───────────────── *@
-            <div class="fw-semibold small mb-2">٢) اختر المنطقة والحالة، ثم حدد الأجهزة</div>
-
-            <div class="filter-toolbar">
-                <div class="region-select-wrap">
-                    <i class="fa-solid fa-location-dot region-select-icon"></i>
-                    <select id="regionSelect" class="region-select"
-                            onchange="setRegionChip(this.value)">
-                        <option value="all">كل المناطق (@devices.Count)</option>
-                        @if (regionGroups != null)
-                        {
-                            @foreach (var g in regionGroups)
-                            {
-                                <option value="@g.RegionName">@g.RegionName (@g.TotalDevices)</option>
-                            }
-                        }
-                    </select>
-                    <i class="fa-solid fa-chevron-down region-select-caret"></i>
-                </div>
-                <input type="text" id="deviceLiveSearch" class="form-control device-search-box"
-                       placeholder="ابحث عن جهاز بالاسم أو الرقم"/>
-
-
-            </div>
-
-          
-
-            <div id="chooseAreaHint" class="choose-action-hint mb-3">
-                <i class="fa-solid fa-arrow-up"></i> اختر منطقة أو حالة أعلاه لعرض الأجهزة
-            </div>
-
-            <div id="deviceGridSection" class="is-hidden" aria-hidden="true">
-                <div class="regions-container">
-                    @for (int i = 0; i < regionGroups.Count; i++)
+    var hasActiveDelegation = devices.Any(x => x.IsDelegatedActive);
+    <div class="search-workspace-card content-card fade-in mt-3">
+        <div class="employee-strip">
+            <div class="employee-strip-main">
+                <div class="employee-strip-name">@employee.FullNameAr</div>
+                <div class="employee-strip-meta">
+                    <span><strong>@employee.EmployeeId</strong></span>
+                    @if (!string.IsNullOrWhiteSpace(employee.Department))
                     {
-                    var g          = regionGroups[i];
-                    var collapseId = $"collapse_{i}";
-                    var regionKey  = "reg_" + i;
-                    var hasAssigned   = g.AssignedDevices > 0;
-                    var hasUnassigned = (g.TotalDevices - g.AssignedDevices) > 0;
-                    var assignedCount = g.Devices.Count(x => x.IsEffectivelyAssigned);
-                    var delegatedCount = g.Devices.Count(x => x.IsDelegated);
-                    var delegatedActiveTerminalIds = g.Devices
-                    .Where(x => x.IsDelegatedActive && !string.IsNullOrWhiteSpace(x.DeviceId))
-                    .Select(x => x.DeviceId!.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                    <div class="region-card mb-3 border rounded"
-                         data-region-name="@g.RegionName"
-                         data-has-assigned="@(hasAssigned ? "1" : "0")"
-                         data-has-unassigned="@(hasUnassigned ? "1" : "0")">
-
-                        @* Region header (clickable) *@
-                        <div class="region-header d-flex align-items-center justify-content-between p-3 bg-light rounded-top"
-                             onclick="toggleRegionCollapse('@collapseId')" style="cursor:pointer">
-                            <div class="d-flex align-items-center gap-3">
-                                <i class="fa-solid fa-location-dot text-maroon fs-5"></i>
-                                <div>
-                                    <div class="fw-bold">@g.RegionName</div>
-                                    <div class="d-flex gap-1 flex-wrap mt-1">
-                                        <span class="badge bg-secondary">@g.TotalDevices أجهزة</span>
-                                        @if (assignedCount > 0)
-                                        {
-                                        <span class="badge bg-success">@assignedCount مرتبطة</span>
-                                        }
-                                        @if (delegatedCount > 0)
-                                        {
-                                        <span class="badge bg-warning text-dark">@delegatedCount ندب</span>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
-                                @if (delegatedActiveTerminalIds.Count > 0)
-                                {
-                                <form method="post" asp-controller="Employees" asp-action="EndDelegation" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="employeeId" value="@employee.EmployeeId" />
-                                    @foreach (var terminalId in delegatedActiveTerminalIds)
-                                    {
-                                    <input type="hidden" name="terminalIds" value="@terminalId" />
-                                    }
-                                    <button type="button" class="btn btn-danger btn-sm u-nowrap"
-                                            onclick="confirmDelegationScopeAction(this, 'region')">
-                                        إنهاء الندب لكل أجهزة المنطقة
-                                    </button>
-                                </form>
-                                }
-                                <i class="fa-solid fa-chevron-down text-muted region-chevron"></i>
-                            </div>
-                        </div>
-
-                        @* Collapse body *@
-                        <div id="@collapseId" class="rgn-collapse p-3">
-
-                            @* Select all (eligible for the chosen action) *@
-                            <div class="form-check bg-light border rounded p-3 mb-3 region-select-all">
-                                <input class="form-check-input select-all-region" type="checkbox"
-                                       id="selectAllRegion_@regionKey" />
-                                <label class="form-check-label fw-semibold" for="selectAllRegion_@regionKey">
-                                    تحديد كل الأجهزة المتاحة هنا لهذا الإجراء
-                                </label>
-                            </div>
-
-                            @* Device grid *@
-                            <div class="row g-2 devices-grid">
-                                @foreach (var d in g.Devices)
-                                {
-                                var terminalId = (d.DeviceId ?? "").Trim();
-                                var regionName = string.IsNullOrWhiteSpace(d.RegionName) ? "أجهزة غير مصنفة" : d.RegionName;
-
-                                var stateText =
-                                d.IsDelegatedActive ? "مرتبط عبر ندب"
-                                : (d.IsDelegated && d.DelegationStatus == "Scheduled") ? "ندب مجدول"
-                                : d.IsAssigned ? "مرتبط فعليًا"
-                                : "غير مرتبط";
-
-                                var stateClass =
-                                d.IsDelegatedActive ? "is-delegated-active"
-                                : (d.IsDelegated && d.DelegationStatus == "Scheduled") ? "is-delegated-scheduled"
-                                : d.IsAssigned ? "is-assigned"
-                                : "is-unassigned";
-
-                                var stateKey =
-                                d.IsDelegatedActive ? "delegated_active"
-                                : (d.IsDelegated && d.DelegationStatus == "Scheduled") ? "delegated_scheduled"
-                                : d.IsAssigned ? "assigned"
-                                : "unassigned";
-
-                                <div class="col-md-6 col-xl-4">
-                                    <div class="device-card"
-                                         data-is-assigned="@(d.IsEffectivelyAssigned ? "1" : "0")"
-                                         data-is-restricted="@(d.IsRestricted ? "1" : "0")"
-                                         data-state="@stateText"
-                                         data-state-key="@stateKey"
-                                         data-terminal-id="@terminalId"
-                                         data-device-name="@d.DeviceName"
-                                         data-delegation-id="@(d.DelegationId?.ToString() ?? "")"
-                                         data-delegation-status="@(d.DelegationStatus ?? "")"
-                                         data-delegation-start="@(d.DelegationStartDate?.ToString("dd/MM/yyyy") ?? "")"
-                                         data-delegation-end="@(d.DelegationEndDate?.ToString("dd/MM/yyyy") ?? "")">
-
-                                        <div class="d-flex align-items-start gap-2">
-                                            <input type="checkbox"
-                                                   class="form-check-input device-chk flex-shrink-0 mt-1"
-                                                   value="@terminalId"
-                                                   id="chk-@terminalId"
-                                                   onclick="event.stopPropagation();"
-                                                   onchange="updateDeviceSelection(this)" />
-
-                                            <div class="flex-grow-1" style="min-width:0">
-                                                <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
-                                                    <div class="device-name fw-bold text-truncate">@d.DeviceName</div>
-                                                    <span class="c-employee-device-state @stateClass">@stateText</span>
-                                                </div>
-
-                                                <div class="device-meta">
-                                                    <span><i class="fa-solid fa-map-pin"></i> @regionName</span>
-                                                    @if (d.IsDelegated && d.DelegationStartDate.HasValue && d.DelegationEndDate.HasValue)
-                                                    {
-                                                    <span>
-                                                                    <i class="fa-regular fa-calendar"></i>
-                                                        @d.DelegationStartDate.Value.ToString("dd/MM") &rarr; @d.DelegationEndDate.Value.ToString("dd/MM/yyyy")
-                                                                </span>
-                                                    }
-                                                    @if (d.IsRestricted)
-                                                    {
-                                                    <span class="device-meta-warning" title="@d.RestrictionReason">
-                                                                    <i class="fa-solid fa-triangle-exclamation"></i> جهاز مُدار
-                                                        @if (!string.IsNullOrWhiteSpace(d.RestrictionSource)) { <text>(@d.RestrictionSource)</text> }
-                                                                </span>
-                                                    }
-                                                </div>
-
-                                              
-                                             
-
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                                }
-                            </div>
-
-                        </div>
-
-                    </div>
+                        <span>@employee.Department</span>
+                         
+                    }
+                  
+                    @if (!string.IsNullOrWhiteSpace(employee.JobTitle))
+                    {
+                    <span>@employee.JobTitle</span>
                     }
                 </div>
-
             </div>
-            @* ── end deviceGridSection ── *@
-
-        </div>
-        @* ── end deviceSelectionSection ── *@
-    </div>
-    }
-    }
-
-    @* ── Bulk action bar (fixed floating) ──────────────── *@
-    <div class="bulk-bar" id="bulkBar">
-        <div id="selectionTray" class="selection-tray"></div>
-        <div class="bulk-info">
-            <span class="pulse-indicator"></span>
-            <div>
-                <div class="bulk-count"><span id="selectedCount">0</span></div>
-                <div class="bulk-label" id="selectedLabel">تم تحديد 0 جهاز</div>
+            <div class="employee-strip-summary">
+                <span class="employee-summary-pill">@assigned.Count جهاز مرتبط</span>
+                <span class="employee-summary-pill">@assignedRegionCount منطقة مرتبطة</span>
+                @if (hasActiveDelegation)
+                {
+                <span class="employee-summary-pill">يوجد ندب نشط</span>
+                }
             </div>
         </div>
-        <div class="bulk-actions bulk-actions--controls">
-            <button id="bulkExecuteBtn" type="button" class="btn-bulk btn-bulk-success" onclick="bulkExecute()">
-                <i class="fa-solid fa-check"></i>
-                <span>تنفيذ</span>
-            </button>
-            <button id="bulkClearSelectionBtn" type="button" class="btn-bulk btn-bulk-danger" onclick="clearSelection()">
-                <i class="fa-solid fa-xmark"></i>
-                <span>إلغاء</span>
-            </button>
-        </div>
-        <div id="bulkSummary" class="bulk-summary"></div>
-    </div>
 
-    @* Hidden bulk submit form *@
+        <div class="divider workspace-divider"></div>
+
+        <div class="action-panel">
+            <h2 class="c-section-title action-panel-title">اختر من الخيارات التالية</h2>
+            <div class="action-options" role="radiogroup" aria-label="اختر العملية المطلوبة">
+                <label class="action-option">
+                    <input type="radio" name="pageAction" value="attach" />
+                    <span class="action-option-label">تفعيل البصمة</span>
+                </label>
+                <label class="action-option">
+                    <input type="radio" name="pageAction" value="delegate" />
+                    <span class="action-option-label">ندب مؤقت</span>
+                </label>
+                <label class="action-option">
+                    <input type="radio" name="pageAction" value="end-delegation" />
+                    <span class="action-option-label">إلغاء ندب</span>
+                </label>
+                <label class="action-option">
+                    <input type="radio" name="pageAction" value="detach" />
+                    <span class="action-option-label">إلغاء ربط</span>
+                </label>
+            </div>
+            <div id="actionHelpText" class="action-help">اختر العملية المطلوبة لتحديد الأجهزة.</div>
+            <div id="delegateInlineFields" class="delegate-inline" aria-hidden="true">
+                <div class="delegate-field">
+                    <label for="bulkStartDate">من تاريخ</label>
+                    <div class="delegate-input-wrap">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input id="bulkStartDate" type="text" class="form-control datepicker" placeholder="02/08/2026" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="delegate-field">
+                    <label for="bulkEndDate">إلى تاريخ</label>
+                    <div class="delegate-input-wrap">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input id="bulkEndDate" type="text" class="form-control datepicker" placeholder="03/08/2026" autocomplete="off" />
+                    </div>
+                </div>
+                <div id="delegateValidation" class="delegate-validation">يرجى اختيار تاريخ بداية الندب وتاريخ نهايته.</div>
+            </div>
+        </div>
+
+        @if (regionGroups != null && regionGroups.Any())
+        {
+        <div class="search-bulk-heading">
+            <h2 class="c-section-title mb-0">المناطق والأجهزة</h2>
+            <div class="btn-group-sm">
+                <button type="button" class="btn btn-outline btn-sm u-nowrap" id="expandRegionsBtn">فتح الكل</button>
+                <button type="button" class="btn btn-outline btn-sm u-nowrap" id="collapseRegionsBtn">إغلاق الكل</button>
+            </div>
+        </div>
+
+        <div class="toolbar-row">
+            <div class="region-select-wrap">
+                <i class="fa-solid fa-location-dot text-maroon"></i>
+                <select id="regionSelect" class="region-select" aria-label="اختر المنطقة">
+                    <option value="all">كل المناطق (@devices.Count)</option>
+                    @foreach (var g in regionGroups)
+                    {
+                    <option value="@g.RegionName">@g.RegionName (@g.TotalDevices)</option>
+                    }
+                </select>
+                <i class="fa-solid fa-chevron-down text-muted"></i>
+            </div>
+            <div class="toolbar-filter-wrap">
+                <i class="fa-solid fa-link text-maroon"></i>
+                <select id="deviceScopeSelect" class="region-select" aria-label="فلترة حسب ارتباط الموظف">
+                    <option value="all">كل الأجهزة</option>
+                    <option value="linked">الأجهزة المرتبطة بالموظف</option>
+                </select>
+                <i class="fa-solid fa-chevron-down text-muted"></i>
+            </div>
+            <div class="toolbar-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="deviceLiveSearch" class="form-control" placeholder="ابحث باسم الجهاز أو رقمه" />
+            </div>
+        </div>
+
+        <div id="workspaceNote" class="workspace-note is-warning">اختر العملية المطلوبة لتحديد الأجهزة.</div>
+        <div id="bulkBar" class="bulk-bar" aria-live="polite">
+            <div class="bulk-bar-main">
+                <div class="bulk-bar-count" id="selectedCount">0</div>
+                <div class="bulk-bar-copy">
+                    <div class="bulk-bar-title" id="bulkTitle">لا توجد أجهزة محددة</div>
+                    <div class="bulk-bar-label" id="bulkLabel">اختر العملية ثم حدّد الأجهزة المناسبة لها.</div>
+                </div>
+            </div>
+            <div class="bulk-bar-actions">
+                <button id="bulkClearSelectionBtn" type="button" class="btn btn-outline">إلغاء التحديد</button>
+                <button id="bulkExecuteBtn" type="button" class="btn btn-primary">تنفيذ العملية</button>
+            </div>
+        </div>
+
+        <div class="regions-list" id="regionsList">
+            @for (int i = 0; i < regionGroups.Count; i++)
+            {
+            var g = regionGroups[i];
+            var collapseId = $"regionCollapse_{i}";
+            var regionKey = $"region_{i}";
+            var activeDelegationTerminalIds = g.Devices
+            .Where(x => x.IsDelegatedActive && !string.IsNullOrWhiteSpace(x.DeviceId))
+            .Select(x => x.DeviceId!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+            <section class="region-card" data-region-name="@g.RegionName">
+                <button type="button"
+                        class="region-header"
+                        data-collapse-target="@collapseId"
+                        aria-expanded="@(i == 0 ? "true" : "false")">
+                    <div>
+                        <div class="region-title">@g.RegionName</div>
+                        <div class="region-meta">
+                            <span>@g.TotalDevices جهاز</span>
+                            <span data-region-available>0 متاح</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-down region-chevron"></i>
+                </button>
+
+                <div id="@collapseId" class="region-body @(i == 0 ? "show" : "")">
+                    <div class="region-tools">
+                        <label class="region-select-all" for="selectAll_@regionKey">
+                            <input class="form-check-input select-all-region" type="checkbox" id="selectAll_@regionKey" />
+                            <span data-select-all-label>تحديد جميع الأجهزة المتاحة (0)</span>
+                        </label>
+
+                        @if (activeDelegationTerminalIds.Count > 0)
+                        {
+                        <div class="region-inline-action">
+                            <form method="post" asp-controller="Employees" asp-action="EndDelegation" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="employeeId" value="@employee.EmployeeId" />
+                                @foreach (var terminalId in activeDelegationTerminalIds)
+                                {
+                                <input type="hidden" name="terminalIds" value="@terminalId" />
+                                }
+                                @* <button type="button" class="btn btn-danger btn-sm" data-delegation-scope="region"> *@
+                                @*     إلغاء الندب النشط للمنطقة *@
+                                @* </button> *@
+                            </form>
+                        </div>
+                        }
+                    </div>
+
+                    @if (g.Devices.Any())
+                    {
+                    <div class="devices-grid">
+                        @foreach (var d in g.Devices)
+                        {
+                        var terminalId = (d.DeviceId ?? "").Trim();
+                        var stateText =
+                        d.IsDelegatedActive ? "ندب نشط"
+                        : (d.IsDelegated && d.DelegationStatus == "Scheduled") ? "ندب مجدول"
+                        : d.IsAssigned ? "مرتبط دائمًا"
+                        : "غير مرتبط";
+
+                        var stateClass =
+                        d.IsDelegatedActive ? "is-delegated-active"
+                        : (d.IsDelegated && d.DelegationStatus == "Scheduled") ? "is-delegated-scheduled"
+                        : d.IsAssigned ? "is-assigned"
+                        : "is-unassigned";
+
+                        var stateKey =
+                        d.IsDelegatedActive ? "delegated_active"
+                        : (d.IsDelegated && d.DelegationStatus == "Scheduled") ? "delegated_scheduled"
+                        : d.IsAssigned ? "assigned"
+                        : "unassigned";
+
+                        <article class="device-card"
+                                 data-state-key="@stateKey"
+                                 data-terminal-id="@terminalId"
+                                 data-device-name="@d.DeviceName"
+                                 data-region-name="@g.RegionName"
+                                 data-delegation-id="@(d.DelegationId?.ToString() ?? "")"
+                                 data-delegation-start="@(d.DelegationStartDate?.ToString("dd/MM/yyyy") ?? "")"
+                                 data-delegation-end="@(d.DelegationEndDate?.ToString("dd/MM/yyyy") ?? "")">
+                            <div class="device-card-layout">
+                                <div class="device-check">
+                                    <input type="checkbox"
+                                           class="form-check-input device-chk"
+                                           id="chk_@(regionKey)_@(terminalId)"
+                                           value="@terminalId"
+                                           disabled />
+                                </div>
+                                <div class="device-card-content">
+                                    <div class="device-topline">
+                                        <div>
+                                            <div class="device-name">@d.DeviceName</div>
+                                            <div class="device-id">@(string.IsNullOrWhiteSpace(terminalId) ? "بدون رقم جهاز" : terminalId)</div>
+                                        </div>
+                                        <span class="device-badge @stateClass">@stateText</span>
+                                    </div>
+                                    <div class="device-note is-hidden" data-device-note></div>
+                                </div>
+                            </div>
+                        </article>
+                        }
+                    </div>
+                    }
+                    else
+                    {
+                    <div class="region-empty">لا توجد أجهزة في هذه المنطقة.</div>
+                    }
+                </div>
+            </section>
+            }
+        </div>
+
+        <div id="pageEmptyState" class="page-empty is-hidden">لم يتم العثور على أجهزة مطابقة.</div>
+        }
+        else
+        {
+        <div class="page-empty">لا توجد مناطق أو أجهزة متاحة لهذا الموظف.</div>
+        }
+    </div>
+    }
+
     <form id="bulkForm" method="post" class="is-hidden">
         @Html.AntiForgeryToken()
         <input type="hidden" name="employeeId" value="@(Model?.Employee?.EmployeeId ?? 0)" />
         <div id="bulkInputsContainer"></div>
     </form>
-
 </div>
 
 @section Scripts {
@@ -619,18 +920,60 @@ var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
         unassignBulk: '@Url.Action("UnassignBulk", "Employees")',
         delegateRegion: '@Url.Action("DelegateRegion", "Employees")',
         endDelegation: '@Url.Action("EndDelegation", "Employees")',
+        cancelDelegation: '@Url.Action("CancelDelegation", "Employees")',
         autoAssignRegions: '@Url.Content("~/api/terminals/auto-assign-regions")'
     };
 
-    // ── State kept in memory for the simplified flow ──────
-    let currentAction = 'assign';       // 'assign' | 'unassign' | 'delegate' | 'endDelegation'
-    let currentStateFilter = 'all';     // 'all' | 'assigned' | 'unassigned'
-    let currentRegionFilter = 'all';    // 'all' | region name
+    const ACTIONS = {
+        attach: 'attach',
+        delegate: 'delegate',
+        endDelegation: 'end-delegation',
+        detach: 'detach'
+    };
+
+    const uiState = {
+        action: null,
+        region: 'all',
+        query: '',
+        deviceScope: 'all',
+        delegation: {
+            startDate: null,
+            endDate: null,
+            startDisplay: '',
+            endDisplay: '',
+            startCanonical: '',
+            endCanonical: '',
+            valid: false,
+            message: 'يرجى اختيار تاريخ بداية الندب وتاريخ نهايته.'
+        }
+    };
+
+    const ACTION_TEXT = {
+        [ACTIONS.attach]: {
+            help: 'اختر الأجهزة غير المرتبطة لتفعيل البصمة عليها للموظف.',
+            button: count => count === 1 ? 'تفعيل البصمة على جهاز واحد' : `تفعيل البصمة على ${count} أجهزة`,
+            title: 'تفعيل البصمة'
+        },
+        [ACTIONS.delegate]: {
+            help: 'اختر الأجهزة وحدد فترة الندب قبل تفعيل الندب عليها.',
+            button: count => count === 1 ? 'تفعيل الندب على جهاز واحد' : `تفعيل الندب على ${count} أجهزة`,
+            title: 'ندب مؤقت'
+        },
+        [ACTIONS.endDelegation]: {
+            help: 'اختر الأجهزة التي عليها ندب نشط أو مجدول لإلغائه.',
+            button: count => count === 1 ? 'إلغاء الندب عن جهاز واحد' : `إلغاء الندب عن ${count} أجهزة`,
+            title: 'إلغاء ندب'
+        },
+        [ACTIONS.detach]: {
+            help: 'اختر الأجهزة المرتبطة حاليًا لإلغاء البصمة عنها.',
+            button: count => count === 1 ? 'إلغاء البصمة عن جهاز واحد' : `إلغاء البصمة عن ${count} أجهزة`,
+            title: 'إلغاء البصمة'
+        }
+    };
+
     let fpStart = null;
     let fpEnd = null;
-    const deviceLiveSearch = document.querySelector('#deviceLiveSearch');
-
-    const OP_LABELS = { assign: 'ربط دائم', unassign: 'فك الربط', delegate: 'ندب', endDelegation: 'إنهاء الندب' };
+    let lastAppliedEndMinDate; // guards against the infinite-recursion bug below
 
     function getEmployeeText() {
         const page = document.querySelector('.employees-search-page');
@@ -641,432 +984,473 @@ var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
         return 'الموظف';
     }
 
+    function saveRecentEmployee(employeeId) {
+        try {
+            let recent = JSON.parse(localStorage.getItem('ba_recent_employees') || '[]');
+            recent = recent.filter(id => id !== String(employeeId));
+            recent.unshift(String(employeeId));
+            if (recent.length > 5) recent = recent.slice(0, 5);
+            localStorage.setItem('ba_recent_employees', JSON.stringify(recent));
+        } catch {}
+    }
+
+    function loadRecentEmployees() {
+        try {
+            const recent = JSON.parse(localStorage.getItem('ba_recent_employees') || '[]');
+            const container = document.getElementById('recentEmployees');
+            if (!container || recent.length === 0) return;
+            container.style.display = '';
+            container.innerHTML = '<span class="recent-chip-label">بحث سابق:</span>';
+            recent.forEach(id => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'recent-chip';
+                chip.textContent = id;
+                chip.addEventListener('click', () => fillAndSearch(id));
+                container.appendChild(chip);
+            });
+        } catch {}
+    }
+
+    function fillAndSearch(employeeId) {
+        const form = document.getElementById('employeeSearchForm');
+        if (!form) return;
+        const input = form.querySelector('input[name="employeeId"]');
+        if (input) input.value = employeeId;
+        form.submit();
+    }
+
     function getSelectedCards() {
         return Array.from(document.querySelectorAll('.device-chk:checked'))
             .map(cb => cb.closest('.device-card'))
-            .filter(card => card && !card.classList.contains('is-hidden'));
+            .filter(Boolean)
+            .filter(card => !card.classList.contains('is-hidden'));
     }
 
     function getSelectedTerminalIds() {
-        const allChecked = document.querySelectorAll('.device-chk:checked');
-        let ids = [];
-
-        allChecked.forEach(chk => {
-            const card = chk.closest('.device-card');
-            // شرط حماية: لا نأخذ الـ ID إلا إذا كان الكرت مرئياً للمستخدم
-            if (card && !card.classList.contains('is-hidden')) {
-                ids.push((chk.value || '').trim());
-            }
-        });
-        return ids.filter(Boolean);
-    }
-
-    function getSelectedStateKeys() {
         return getSelectedCards()
-            .map(c => (c.dataset.stateKey || '').trim())
+            .map(card => (card.dataset.terminalId || '').trim())
             .filter(Boolean);
     }
 
-    function getUnique(items) {
-        return Array.from(new Set(items.filter(Boolean)));
-    }
-
     function clearSelection() {
-        document.querySelectorAll('.device-chk:checked').forEach(cb => {
-            cb.checked = false;
-            const card = cb.closest('.device-card');
-            if (card) card.classList.remove('selected');
+        document.querySelectorAll('.device-chk').forEach(chk => {
+            chk.checked = false;
+            chk.closest('.device-card')?.classList.remove('is-selected');
         });
         updateBulkBar();
     }
 
-    function updateDatePresetSummary() {
-        const summary = document.getElementById('bulkDatesSummary');
-        if (!summary) return;
-
-        const start = (document.getElementById('bulkStartDate')?.value || '').trim();
-        const end = (document.getElementById('bulkEndDate')?.value || '').trim();
-
-        let text = 'لم يتم الاختيار بعد';
-        let selected = false;
-
-        if (start && end) {
-            text = `${start} ← ${end}`;
-            selected = true;
-        } else if (start || end) {
-            text = 'أكمل إدخال الفترة';
-        } else {
-            text = 'لم يتم الاختيار بعد';
-        }
-
-        summary.textContent = text;
-        summary.classList.toggle('is-selected', selected);
-    }
-
-    // ── Step 1: action cards ───────────────────────────────
-    function selectAction(action) {
-        currentAction = action;
-        document.querySelectorAll('.action-card').forEach(c => c.classList.toggle('active', c.dataset.action === action));
-
-        const dates = document.getElementById('bulkDates');
-        const showDates = action === 'delegate';
-        dates.classList.toggle('is-hidden', !showDates);
-        dates.setAttribute('aria-hidden', String(!showDates));
-        updateDatePresetSummary();
-
-        // Reveal the region/device picker only once an action has actually been chosen
-        const section = document.getElementById('deviceSelectionSection');
-        if (section) {
-            section.classList.remove('is-hidden');
-            section.setAttribute('aria-hidden', 'false');
-        }
-        document.getElementById('chooseActionHint')?.classList.add('is-hidden');
-
-        applyEligibilityHighlight();
-        updateBulkBar();
-    }
-
-    function isEligibleForAction(stateKey, action) {
-        if (action === 'assign')        return stateKey === 'unassigned';
-        if (action === 'unassign')      return stateKey === 'assigned' || stateKey === 'delegated_active';
-        if (action === 'delegate')      return stateKey === 'unassigned' || stateKey === 'assigned';
-        if (action === 'endDelegation') return stateKey === 'delegated_active';
-        return true;
-    }
-
-    function applyEligibilityHighlight() {
-        document.querySelectorAll('.device-card').forEach(card => {
-            const stateKey = (card.dataset.stateKey || '').trim();
-            const eligible = isEligibleForAction(stateKey, currentAction);
-            card.classList.toggle('action-mismatch', !eligible);
-        });
-    }
-
-    // ── Step 2: delegation duration picker ────────────────
-    function formatDate(d) {
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const yyyy = d.getFullYear();
+    function formatDisplayDate(date) {
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
         return `${dd}/${mm}/${yyyy}`;
     }
 
-    // ── Step 3: filtering (state pill + region chip + search) ──
-    function revealDeviceGrid() {
-        const grid = document.getElementById('deviceGridSection');
-        if (grid) {
-            grid.classList.remove('is-hidden');
-            grid.setAttribute('aria-hidden', 'false');
-        }
-        document.getElementById('chooseAreaHint')?.classList.add('is-hidden');
+    function formatCanonicalDate(date) {
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        return `${yyyy}-${mm}-${dd}`;
     }
 
-    function setRegionFilter(mode) {
-        currentStateFilter = mode;
-        const pills = document.querySelectorAll('.region-filters .filter-pill');
-        pills.forEach(p => p.classList.remove('active'));
-        document.querySelector(`.region-filters .filter-pill[data-filter="${mode}"]`)?.classList.add('active');
-
-        if (mode === 'unassigned') selectAction('assign');
-        else if (mode === 'assigned') selectAction('unassign');
-
-        revealDeviceGrid();
-        applyFilters();
+    function parseDisplayDate(value) {
+        if (!value) return null;
+        const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim());
+        if (!match) return null;
+        const [, dd, mm, yyyy] = match;
+        return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
     }
 
-    function setRegionChip(name) {
-        currentRegionFilter = name;
-        deviceLiveSearch.value = '';
+    function parseCanonicalDate(value) {
+        if (!value) return null;
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+        if (!match) return null;
+        const [, yyyy, mm, dd] = match;
+        return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    }
 
-        const select = document.getElementById('regionSelect');
-        if (select && select.value !== name) select.value = name;
+    function normalizeDate(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
 
-        if (name !== 'all') {
-            const region = Array.from(document.querySelectorAll('.region-card')).find(r => r.dataset.regionName === name);
-            const collapse = region?.querySelector('.rgn-collapse');
-            if (collapse && !collapse.classList.contains('show')) {
-                collapse.classList.add('show');
-                collapse.previousElementSibling?.classList.add('active');
-            }
+    function getPickerDate(inputId, pickerRef) {
+        const input = document.getElementById(inputId);
+        const picker = pickerRef || input?._flatpickr;
+
+        if (picker?.selectedDates?.length) {
+            const selected = normalizeDate(picker.selectedDates[0]);
+            if (selected) return selected;
         }
 
-        revealDeviceGrid();
-        applyFilters();
+        const rawValue = (input?.value || '').trim();
+        const canonical = parseCanonicalDate(rawValue);
+        if (canonical) return canonical;
+
+        const altValue = (picker?.altInput?.value || '').trim();
+        const display = parseDisplayDate(altValue);
+        if (display) return display;
+
+        return null;
     }
 
-    function performGlobalSearch(query) {
-        const normalizedQuery = (query || '').trim().toLowerCase();
-        let matchCount = 0;
+    function syncDelegationState() {
+        const startDate = getPickerDate('bulkStartDate', fpStart);
+        const endDate = getPickerDate('bulkEndDate', fpEnd);
+        const start = startDate ? formatDisplayDate(startDate) : '';
+        const end = endDate ? formatDisplayDate(endDate) : '';
+        const startCanonical = startDate ? formatCanonicalDate(startDate) : '';
+        const endCanonical = endDate ? formatCanonicalDate(endDate) : '';
 
-        document.querySelectorAll('.device-card').forEach(card => {
-            const deviceName = (card.querySelector('.device-name')?.textContent || '').toLowerCase();
-            const terminalId = (card.dataset.terminalId || '').toLowerCase();
-            const searchMatch = !normalizedQuery || deviceName.includes(normalizedQuery) || terminalId.includes(normalizedQuery);
+        let nextState = {
+            startDate,
+            endDate,
+            startDisplay: start,
+            endDisplay: end,
+            startCanonical,
+            endCanonical,
+            valid: false,
+            message: 'يرجى اختيار تاريخ بداية الندب وتاريخ نهايته.'
+        };
 
-            if (searchMatch) matchCount++;
-            card.dataset.searchMatch = searchMatch ? '1' : '0';
-        });
-
-        console.log('Search matches:', matchCount);
-        return matchCount;
-    }
-
-    function applyFilters() {
-        const query = (document.getElementById('deviceLiveSearch')?.value || '').toLowerCase();
-        const regionCards = document.querySelectorAll('.regions-container .region-card');
-
-        performGlobalSearch(query);
-
-        regionCards.forEach(region => {
-            const regionName = region.dataset.regionName || '';
-            const devCards = region.querySelectorAll('.device-card');
-            let hasVisibleCards = false;
-
-            devCards.forEach(dev => {
-                const isAssigned = dev.getAttribute('data-is-assigned') === '1';
-                const deviceName = (dev.querySelector('.device-name')?.textContent || '').toLowerCase();
-                const terminalId = (dev.dataset.terminalId || '').toLowerCase();
-                const matchesRegion = currentRegionFilter === 'all' || regionName === currentRegionFilter;
-                const matchesState =
-                    currentStateFilter === 'assigned' ? isAssigned :
-                    currentStateFilter === 'unassigned' ? !isAssigned :
-                    true;
-                const matchesSearchTerm = !query || deviceName.includes(query) || terminalId.includes(query);
-                const visibility = matchesRegion && matchesState && matchesSearchTerm;
-
-                dev.dataset.searchMatch = matchesSearchTerm ? '1' : '0';
-                dev.classList.toggle('is-hidden', !visibility);
-                if (visibility) hasVisibleCards = true;
-            });
-
-            region.classList.toggle('is-hidden', !hasVisibleCards);
-
-            const selectAll = region.querySelector('.select-all-region');
-            if (selectAll) selectAll.checked = false;
-        });
-
-        applyEligibilityHighlight();
-        updateBulkBar();
-    }
-
-    // ── Selection tray + bulk bar ──────────────────────────
-    function updateBulkBar() {
-        const selectedCards = getSelectedCards();
-        const selectedCount = selectedCards.length;
-        document.getElementById('selectedCount').textContent = String(selectedCount);
-        document.getElementById('selectedLabel').textContent = `تم تحديد ${selectedCount} جهاز`;
-
-        const bar = document.getElementById('bulkBar');
-        bar.classList.toggle('show', selectedCount > 0);
-        bar.classList.toggle('is-single', selectedCount === 1);
-
-        renderSelectionTray(selectedCards);
-        updateBulkControls();
-    }
-
-    function renderSelectionTray(selectedCards) {
-        const tray = document.getElementById('selectionTray');
-        if (!tray) return;
-        tray.innerHTML = '';
-        selectedCards.forEach(card => {
-            const label = card.dataset.deviceName || card.dataset.terminalId || 'جهاز';
-            const chip = document.createElement('span');
-            chip.className = 'selection-chip';
-            chip.textContent = label;
-
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-            btn.onclick = function () {
-                const chk = card.querySelector('.device-chk');
-                if (chk) { chk.checked = false; updateDeviceSelection(chk); }
-            };
-            chip.appendChild(btn);
-            tray.appendChild(chip);
-        });
-    }
-
-    function updateDeviceSelection(checkbox) {
-        const card = checkbox.closest('.device-card');
-        if (checkbox.checked) {
-            card.classList.add('selected');
-        } else {
-            card.classList.remove('selected');
+        if (!start && !end) {
+            uiState.delegation = nextState;
+            return nextState;
         }
-        updateBulkBar();
-    }
-
-    function toggleDeviceCheckbox(checkboxId) {
-        const checkbox = document.getElementById(checkboxId);
-        checkbox.checked = !checkbox.checked;
-        updateDeviceSelection(checkbox);
-    }
-
-    // Expand / collapse all region cards
-    function expandAllRegions() {
-        document.querySelectorAll('.rgn-collapse').forEach(function (el) {
-            el.classList.add('show');
-            var hdr = el.previousElementSibling;
-            if (hdr) hdr.classList.add('active');
-        });
-    }
-    function collapseAllRegions() {
-        document.querySelectorAll('.rgn-collapse').forEach(function (el) {
-            el.classList.remove('show');
-            var hdr = el.previousElementSibling;
-            if (hdr) hdr.classList.remove('active');
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        loadRecentEmployees();
-
-        // Auto-expand the first region so results are immediately visible
-        var firstCollapse = document.querySelector('.rgn-collapse');
-        if (firstCollapse) {
-            firstCollapse.classList.add('show');
-            var firstHdr = firstCollapse.previousElementSibling;
-            if (firstHdr) firstHdr.classList.add('active');
+        if (!start) {
+            nextState.message = 'يرجى اختيار تاريخ بداية الندب.';
+            uiState.delegation = nextState;
+            return nextState;
+        }
+        if (!end) {
+            nextState.message = 'يرجى اختيار تاريخ نهاية الندب.';
+            uiState.delegation = nextState;
+            return nextState;
+        }
+        if (!startDate || !endDate) {
+            nextState.message = 'صيغة التاريخ غير صحيحة.';
+            uiState.delegation = nextState;
+            return nextState;
+        }
+        if (endDate < startDate) {
+            nextState.message = 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية.';
+            uiState.delegation = nextState;
+            return nextState;
         }
 
-        // Loading state on employee search form
-        var searchForm = document.getElementById('employeeSearchForm');
-        if (searchForm) {
-            searchForm.addEventListener('submit', function () {
-                var input = searchForm.querySelector('input[name="employeeId"]');
-                var val = (input?.value || '').trim();
-                if (val && val !== '0') saveRecentEmployee(val);
-                var btn = searchForm.querySelector('button[type="submit"]');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>جاري البحث...</span>';
-                }
-            });
-        }
+        const diffDays = Math.floor((endDate - startDate) / 86400000) + 1;
+        let durationText = `${diffDays} أيام`;
+        if (diffDays === 1) durationText = 'يوم واحد';
+        else if (diffDays === 2) durationText = 'يومان';
 
-        const fpList = flatpickr('.datepicker', {
-            dateFormat: 'd/m/Y',
+        nextState = {
+            ...nextState,
+            valid: true,
+            message: `مدة الندب: ${durationText}`
+        };
+        uiState.delegation = nextState;
+        return nextState;
+    }
+
+    function getDelegationState() {
+        return syncDelegationState();
+    }
+
+    // Flatpickr must never be initialized while its container is display:none —
+    // flatpickr caches the input's layout at init time, and if that layout was
+    // 0x0 (because #delegateInlineFields was hidden), the calendar/altInput
+    // render broken from then on, even after the container becomes visible.
+    // So we show the container first (and force a reflow), then init once.
+    function showDelegationFieldsBeforeInit() {
+        const delegateFields = document.getElementById('delegateInlineFields');
+        if (!delegateFields) return;
+        delegateFields.classList.add('is-visible');
+        delegateFields.setAttribute('aria-hidden', 'false');
+        void delegateFields.offsetHeight; // force layout/reflow before flatpickr reads it
+    }
+
+    function initDelegationPickers() {
+        if (fpStart && fpEnd) return; // already initialized
+
+        fpStart = flatpickr('#bulkStartDate', {
+            dateFormat: 'Y-m-d',
             altInput: true,
             altFormat: 'd/m/Y',
             allowInput: true,
             clickOpens: true,
-            disableMobile: true
+            disableMobile: true,
+            minDate: 'today',
+            onChange: function (selectedDates, dateStr) {
+                handleDelegationDatesChange(true);
+            },
+            onValueUpdate: function (selectedDates, dateStr) {
+                handleDelegationDatesChange(true);
+            },
+            onClose: function () {
+                handleDelegationDatesChange(true);
+            }
         });
-        fpStart = document.getElementById('bulkStartDate')?._flatpickr || null;
-        fpEnd   = document.getElementById('bulkEndDate')?._flatpickr || null;
+        fpEnd = flatpickr('#bulkEndDate', {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: true,
+            clickOpens: true,
+            disableMobile: true,
+            minDate: 'today',
+            onChange: function () {
+                handleDelegationDatesChange(true);
+            },
+            onValueUpdate: function () {
+                handleDelegationDatesChange(true);
+            },
+            onClose: function () {
+                handleDelegationDatesChange(true);
+            }
+        });
 
-        document.getElementById('bulkStartDate')?.addEventListener('change', function () {
-            updateDatePresetSummary();
-            updateBulkControls();
-        });
-        document.getElementById('bulkEndDate')?.addEventListener('change', function () {
-            updateDatePresetSummary();
-            updateBulkControls();
-        });
-        document.getElementById('deviceLiveSearch')?.addEventListener('input', function () {
-            revealDeviceGrid();
-            applyFilters();
-        });
-
-        // Keep the page focused: don't auto-pick an action or reveal the device picker.
-        // Just quietly prime the underlying filter state so it's correct the moment the user does choose.
-        if (document.querySelector('.action-card')) {
-            applyFilters();
-        }
-        updateDatePresetSummary();
-        updateBulkBar();
-    });
-
-    function convertDateFormat(dateStr) {
-        if (!dateStr) return '';
-        const parts = dateStr.split('/');
-        if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        return dateStr;
+        fpStart?.altInput?.addEventListener('blur', function () { handleDelegationDatesChange(true); });
+        fpEnd?.altInput?.addEventListener('blur', function () { handleDelegationDatesChange(true); });
     }
 
-    function toggleRegionCollapse(collapseId) {
-        const element = document.getElementById(collapseId);
-        const header = element.previousElementSibling;
+    function handleDelegationDatesChange(resetSelection = true) {
+        const delegation = syncDelegationState();
 
-        if (element.classList.contains('show')) {
-            element.classList.remove('show');
-            header.classList.remove('active');
-        } else {
-            element.classList.add('show');
-            header.classList.add('active');
-        }
-    }
-
-    function updateBulkControls() {
-        const op = currentAction;
-        const btn = document.getElementById('bulkExecuteBtn');
-        const summaryEl = document.getElementById('bulkSummary');
-        const selectedCards = getSelectedCards();
-        const count = getSelectedTerminalIds().length;
-        updateDatePresetSummary();
-
-        let canRun = count > 0;
-        const stateKeys = getSelectedStateKeys();
-        const uniqueStates = getUnique(stateKeys);
-        let message = '';
-
-        if (count === 0) {
-            message = 'حدد جهازًا واحدًا على الأقل من القائمة أدناه';
-            canRun = false;
-        } else if (uniqueStates.length > 1) {
-            message = 'الأجهزة المحددة بحالات مختلفة، يرجى اختيار أجهزة بنفس الحالة';
-            canRun = false;
-        } else {
-            const s = uniqueStates[0];
-            if (op === 'assign' && s !== 'unassigned') {
-                message = 'الربط الدائم متاح فقط للأجهزة غير المرتبطة';
-                canRun = false;
-            } else if (op === 'unassign' && !(s === 'assigned' || s === 'delegated_active')) {
-                message = 'فك الربط متاح فقط للأجهزة المرتبطة';
-                canRun = false;
-            } else if (op === 'delegate' && !(s === 'unassigned' || s === 'assigned')) {
-                message = 'إنشاء الندب متاح فقط للأجهزة غير المرتبطة أو المرتبطة فعليًا';
-                canRun = false;
-            } else if (op === 'endDelegation' && s !== 'delegated_active') {
-                message = 'إنهاء الندب متاح فقط للأجهزة المرتبطة عبر ندب نشط';
-                canRun = false;
+        // BUG FIX: fpEnd.set('minDate', ...) internally calls updateValue(true),
+        // which fires fpEnd's own onChange/onValueUpdate — and those handlers call
+        // this exact function again. Calling .set() unconditionally on every run
+        // (including runs triggered by fpEnd's own date changing) created an
+        // infinite loop: set() -> onValueUpdate -> handleDelegationDatesChange ->
+        // set() -> ... This is what silently broke device selection after typing
+        // both dates (the script hit "Maximum call stack size exceeded" mid-run).
+        // Only call .set() when the min date is actually changing.
+        if (fpEnd) {
+            const nextMinDate = delegation.startCanonical || null;
+            if (nextMinDate !== lastAppliedEndMinDate) {
+                lastAppliedEndMinDate = nextMinDate;
+                fpEnd.set('minDate', nextMinDate);
             }
         }
 
-        const sd = (document.getElementById('bulkStartDate')?.value || '').trim();
-        const ed = (document.getElementById('bulkEndDate')?.value || '').trim();
-        if (op === 'delegate' && canRun && (!sd || !ed)) {
-            message = 'يرجى اختيار مدة الندب (أسبوع / أسبوعين / شهر / تاريخ مخصص)';
-            canRun = false;
+        if (resetSelection) {
+            clearSelection();
         }
 
-        if (canRun) {
-            const opLabel = OP_LABELS[op] || 'العملية';
-            const regionNames = getUnique(selectedCards.map(c =>
-                (c.closest('.region-card')?.dataset?.regionName || '').trim()
-            )).filter(Boolean);
-            const regionText = regionNames.length === 1 ? `في منطقة ${regionNames[0]}`
-                : (regionNames.length > 1 ? `في ${regionNames.length} مناطق` : '');
-            const dateText = (op === 'delegate' && sd && ed) ? `، من ${sd} إلى ${ed}` : '';
-            message = `سيتم تنفيذ "${opLabel}" لـ ${count} جهاز ${regionText}${dateText}`.trim();
+        renderPageState();
+        return delegation;
+    }
+
+    function getEligibility(card) {
+        const stateKey = (card.dataset.stateKey || '').trim();
+        const delegation = getDelegationState();
+
+        if (!uiState.action) {
+            return { eligible: false, reason: '' };
         }
 
-        btn.disabled = !canRun;
-        btn.classList.toggle('is-disabled', !canRun);
-        if (summaryEl) {
-            summaryEl.textContent = message;
-            summaryEl.classList.toggle('ok', canRun);
-            summaryEl.classList.toggle('warn', !canRun);
+        if (uiState.action === ACTIONS.attach) {
+            if (stateKey === 'unassigned') return { eligible: true, reason: '' };
+            if (stateKey === 'assigned') return { eligible: false, reason: 'مرتبط مسبقًا' };
+            return { eligible: false, reason: 'غير متاح لهذه العملية' };
         }
 
-        const label = btn.querySelector('span');
-        if (label) {
-            label.textContent = op === 'endDelegation' ? `إنهاء الندب لـ (${count}) جهاز` : 'تنفيذ';
+        if (uiState.action === ACTIONS.delegate) {
+            if (!delegation.valid) return { eligible: false, reason: 'حدد فترة الندب أولًا' };
+            if (stateKey === 'unassigned' || stateKey === 'assigned') return { eligible: true, reason: '' };
+            if (stateKey === 'delegated_active') return { eligible: false, reason: 'يوجد ندب نشط' };
+            if (stateKey === 'delegated_scheduled') return { eligible: false, reason: 'ندب مجدول' };
         }
+
+        if (uiState.action === ACTIONS.endDelegation) {
+            if (stateKey === 'delegated_active') return { eligible: true, reason: '' };
+            if (stateKey === 'delegated_scheduled') return { eligible: true, reason: '' };
+            return { eligible: false, reason: 'لا يوجد ندب لإلغائه' };
+        }
+
+        if (uiState.action === ACTIONS.detach) {
+            if (stateKey === 'assigned') return { eligible: true, reason: '' };
+            if (stateKey === 'delegated_active' || stateKey === 'delegated_scheduled') return { eligible: false, reason: 'مرتبط عبر ندب' };
+            return { eligible: false, reason: 'غير مرتبط' };
+        }
+
+        return { eligible: false, reason: 'غير متاح لهذه العملية' };
+    }
+
+    function getWorkspaceMessage() {
+        if (!uiState.action) return 'اختر العملية المطلوبة لتحديد الأجهزة.';
+        if (uiState.action === ACTIONS.delegate) {
+            const delegation = getDelegationState();
+            if (!delegation.valid) return 'حدد تاريخ بداية ونهاية صحيحين لتتمكن من اختيار الأجهزة.';
+        }
+        return ACTION_TEXT[uiState.action]?.help || '';
+    }
+
+    function renderPageState() {
+        const helpEl = document.getElementById('actionHelpText');
+        const noteEl = document.getElementById('workspaceNote');
+        const delegateFields = document.getElementById('delegateInlineFields');
+        const delegateValidation = document.getElementById('delegateValidation');
+        const pageEmpty = document.getElementById('pageEmptyState');
+        const delegation = getDelegationState();
+
+        if (helpEl) helpEl.textContent = getWorkspaceMessage();
+        if (noteEl) {
+            noteEl.textContent = getWorkspaceMessage();
+            noteEl.classList.toggle('is-warning', !uiState.action || (uiState.action === ACTIONS.delegate && !delegation.valid));
+        }
+
+        if (delegateFields) {
+            const visible = uiState.action === ACTIONS.delegate;
+            delegateFields.classList.toggle('is-visible', visible);
+            delegateFields.setAttribute('aria-hidden', String(!visible));
+        }
+        if (delegateValidation) {
+            delegateValidation.textContent = delegation.message;
+            delegateValidation.classList.toggle('is-valid', uiState.action === ACTIONS.delegate && delegation.valid);
+            delegateValidation.classList.toggle('is-hidden', uiState.action !== ACTIONS.delegate || delegation.valid);
+        }
+
+        let anyVisibleDevice = false;
+        document.querySelectorAll('.region-card').forEach(region => {
+            const regionName = (region.dataset.regionName || '').trim();
+            const matchesRegion = uiState.region === 'all' || uiState.region === regionName;
+            const cards = region.querySelectorAll('.device-card');
+            let visibleCount = 0;
+            let availableCount = 0;
+
+            cards.forEach(card => {
+                const deviceName = (card.dataset.deviceName || '').toLowerCase();
+                const terminalId = (card.dataset.terminalId || '').toLowerCase();
+                const stateKey = (card.dataset.stateKey || '').trim();
+                const matchesSearch = !uiState.query || deviceName.includes(uiState.query) || terminalId.includes(uiState.query);
+                const matchesScope = uiState.deviceScope !== 'linked' || stateKey !== 'unassigned';
+                const visible = matchesRegion && matchesSearch && matchesScope;
+                const eligibility = getEligibility(card);
+                const checkbox = card.querySelector('.device-chk');
+                const note = card.querySelector('[data-device-note]');
+                const interactive = !!uiState.action && eligibility.eligible;
+
+                card.classList.toggle('is-hidden', !visible);
+                card.classList.toggle('is-disabled', visible && !interactive);
+                card.classList.toggle('is-interactive', visible && interactive);
+
+                if (note) {
+                    const showReason = !!uiState.action && !eligibility.eligible && !!eligibility.reason;
+                    note.textContent = eligibility.reason || '';
+                    note.classList.toggle('is-hidden', !showReason);
+                }
+
+                if (checkbox) {
+                    checkbox.disabled = !visible || !interactive;
+                    if (checkbox.disabled && checkbox.checked) {
+                        checkbox.checked = false;
+                        card.classList.remove('is-selected');
+                    }
+                }
+
+                card.setAttribute('aria-disabled', String(!interactive));
+                card.tabIndex = visible && interactive ? 0 : -1;
+                if (visible) {
+                    visibleCount++;
+                    anyVisibleDevice = true;
+                    if (interactive) availableCount++;
+                }
+            });
+
+            region.classList.toggle('is-hidden', visibleCount === 0);
+            region.querySelector('[data-region-available]')?.replaceChildren(document.createTextNode(`${availableCount} متاح`));
+
+            const selectAll = region.querySelector('.select-all-region');
+            const label = region.querySelector('[data-select-all-label]');
+            const eligibleVisible = Array.from(region.querySelectorAll('.device-card:not(.is-hidden) .device-chk')).filter(chk => !chk.disabled);
+            const checkedVisible = eligibleVisible.filter(chk => chk.checked);
+
+            if (selectAll) {
+                selectAll.disabled = eligibleVisible.length === 0;
+                selectAll.checked = eligibleVisible.length > 0 && checkedVisible.length === eligibleVisible.length;
+                selectAll.indeterminate = checkedVisible.length > 0 && checkedVisible.length < eligibleVisible.length;
+            }
+            if (label) label.textContent = `تحديد جميع الأجهزة المتاحة (${availableCount})`;
+        });
+
+        if (pageEmpty) {
+            pageEmpty.classList.toggle('is-hidden', anyVisibleDevice);
+        }
+
+        updateBulkBar();
+    }
+
+    function updateBulkBar() {
+        const bar = document.getElementById('bulkBar');
+        const selectedCards = getSelectedCards();
+        const count = selectedCards.length;
+        const titleEl = document.getElementById('bulkTitle');
+        const labelEl = document.getElementById('bulkLabel');
+        const countEl = document.getElementById('selectedCount');
+        const executeBtn = document.getElementById('bulkExecuteBtn');
+        const delegation = getDelegationState();
+        const canShow = !!uiState.action && count > 0 && (uiState.action !== ACTIONS.delegate || delegation.valid);
+
+        if (countEl) countEl.textContent = String(count);
+
+        if (!canShow) {
+            bar?.classList.remove('show');
+        } else {
+            bar?.classList.add('show');
+        }
+
+        const title = ACTION_TEXT[uiState.action]?.title || 'العملية';
+        if (titleEl) {
+            titleEl.textContent = count > 0
+                ? (count === 1 ? 'تم تحديد جهاز واحد' : `تم تحديد ${count} أجهزة`)
+                : 'لا توجد أجهزة محددة';
+        }
+
+        if (labelEl) {
+            if (!uiState.action) labelEl.textContent = 'اختر العملية ثم حدّد الأجهزة المناسبة لها.';
+            else if (count === 0) labelEl.textContent = 'حدد الأجهزة التي تريد تنفيذ العملية عليها.';
+            else labelEl.textContent = title;
+        }
+
+        if (executeBtn) {
+            executeBtn.disabled = !canShow;
+            executeBtn.textContent = ACTION_TEXT[uiState.action]?.button(count) || 'تنفيذ العملية';
+        }
+    }
+
+    function updateCardSelection(checkbox) {
+        const card = checkbox.closest('.device-card');
+        if (!card) return;
+        card.classList.toggle('is-selected', checkbox.checked);
+        updateBulkBar();
+        renderPageState();
+    }
+
+    function toggleRegionCollapse(collapseId) {
+        const body = document.getElementById(collapseId);
+        const header = document.querySelector(`[data-collapse-target="${collapseId}"]`);
+        if (!body || !header) return;
+        const expanded = header.getAttribute('aria-expanded') === 'true';
+        header.setAttribute('aria-expanded', String(!expanded));
+        body.classList.toggle('show', !expanded);
+    }
+
+    function expandAllRegions() {
+        document.querySelectorAll('.region-body').forEach(body => body.classList.add('show'));
+        document.querySelectorAll('.region-header').forEach(header => header.setAttribute('aria-expanded', 'true'));
+    }
+
+    function collapseAllRegions() {
+        document.querySelectorAll('.region-body').forEach(body => body.classList.remove('show'));
+        document.querySelectorAll('.region-header').forEach(header => header.setAttribute('aria-expanded', 'false'));
     }
 
     function fillAndSubmitBulkForm(actionUrl, fields) {
         const form = document.getElementById('bulkForm');
         const container = document.getElementById('bulkInputsContainer');
+        if (!form || !container) return;
         form.action = actionUrl;
         container.innerHTML = '';
 
@@ -1082,106 +1466,112 @@ var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
     }
 
     async function bulkExecute() {
-        const op = currentAction;
         const selectedIds = getSelectedTerminalIds();
+        const selectedCards = getSelectedCards();
+        if (!uiState.action) {
+            await Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى اختيار العملية أولًا', confirmButtonColor: '#692f39', confirmButtonText: 'حسنًا' });
+            return;
+        }
         if (selectedIds.length === 0) {
-            await Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى تحديد جهاز واحد على الأقل', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
+            await Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى تحديد جهاز واحد على الأقل', confirmButtonColor: '#692f39', confirmButtonText: 'حسنًا' });
             return;
         }
 
-        const stateKeys = getSelectedStateKeys();
-        const uniqueStates = getUnique(stateKeys);
-        if (uniqueStates.length > 1) {
-            await Swal.fire({ icon: 'warning', title: 'لا يمكن التنفيذ', text: 'الأجهزة المحددة ليست بنفس الحالة ولا يمكن تنفيذ العملية عليها معًا.', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
-            return;
-        }
-
-        const selectionState = uniqueStates[0] || '';
         const employeeText = getEmployeeText();
         const count = selectedIds.length;
-        const startDisplay = (document.getElementById('bulkStartDate')?.value || '').trim();
-        const endDisplay   = (document.getElementById('bulkEndDate')?.value   || '').trim();
-
-        let title = 'مراجعة قبل التنفيذ';
-        let opText = '';
-        let iconHtml = '<i class="fa-solid fa-fingerprint text-maroon"></i>';
-        let extraMeta = '';
-        let note = '';
+        const delegation = getDelegationState();
         let actionUrl = '';
-        let fields = [];
+        let fields = selectedIds.map(x => ({ name: 'terminalIds', value: x }));
+        let title = '';
+        let text = '';
+        let confirmText = '';
+        let icon = 'question';
 
-        if (op === 'assign') {
-            if (selectionState !== 'unassigned') {
-                await Swal.fire({ icon: 'warning', title: 'لا يمكن التنفيذ', text: 'عملية الربط الدائم متاحة فقط للأجهزة غير المرتبطة.', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
-                return;
-            }
-            opText = 'ربط دائم';
+        if (uiState.action === ACTIONS.attach) {
+            title = 'تأكيد ربط الأجهزة';
+            text = `سيتم تفعيل بصمة ${employeeText} على ${count} جهاز.`;
+            confirmText = ACTION_TEXT[ACTIONS.attach].button(count);
             actionUrl = employeeRoutes.assignBulk;
-            fields = selectedIds.map(x => ({ name: 'terminalIds', value: x }));
-        } else if (op === 'unassign') {
-            if (!(selectionState === 'assigned' || selectionState === 'delegated_active')) {
-                await Swal.fire({ icon: 'warning', title: 'لا يمكن التنفيذ', text: 'عملية فك الربط متاحة فقط للأجهزة المرتبطة فعليًا أو المرتبطة عبر ندب.', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
+        } else if (uiState.action === ACTIONS.delegate) {
+            if (!delegation.valid) {
+                await Swal.fire({ icon: 'warning', title: 'تنبيه', text: delegation.message, confirmButtonColor: '#692f39', confirmButtonText: 'حسنًا' });
                 return;
             }
-            opText = 'فك الربط';
-            actionUrl = employeeRoutes.unassignBulk;
-            fields = selectedIds.map(x => ({ name: 'terminalIds', value: x }));
-            iconHtml = '<i class="fa-solid fa-link-slash text-red-500"></i>';
-        } else if (op === 'delegate') {
-            if (!(selectionState === 'unassigned' || selectionState === 'assigned')) {
-                await Swal.fire({ icon: 'warning', title: 'لا يمكن التنفيذ', text: 'إنشاء الندب متاح فقط للأجهزة غير المرتبطة أو المرتبطة فعليًا (بدون ندب).', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
-                return;
-            }
-            opText = 'إنشاء ندب';
+            title = 'تأكيد إنشاء الندب';
+            text = `سيتم تفعيل ندب ${employeeText} على ${count} جهاز من ${delegation.startDisplay} إلى ${delegation.endDisplay}.`;
+            confirmText = ACTION_TEXT[ACTIONS.delegate].button(count);
             actionUrl = employeeRoutes.delegateRegion;
-            if (!startDisplay || !endDisplay) {
-                await Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى اختيار مدة الندب أولًا', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
+            fields.push({ name: 'startDate', value: delegation.startCanonical });
+            fields.push({ name: 'endDate', value: delegation.endCanonical });
+        } else if (uiState.action === ACTIONS.endDelegation) {
+            const activeCards = selectedCards.filter(card => (card.dataset.stateKey || '').trim() === 'delegated_active');
+            const scheduledCards = selectedCards.filter(card => (card.dataset.stateKey || '').trim() === 'delegated_scheduled');
+
+            if (activeCards.length > 0 && scheduledCards.length > 0) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه',
+                    text: 'لا يمكن إلغاء ندب نشط ومجدول معًا في نفس العملية. اختر نوعًا واحدًا فقط في كل مرة.',
+                    confirmButtonColor: '#692f39',
+                    confirmButtonText: 'حسنًا'
+                });
                 return;
             }
-            const start = convertDateFormat(startDisplay);
-            const end   = convertDateFormat(endDisplay);
-            fields = selectedIds.map(x => ({ name: 'terminalIds', value: x }));
-            fields.push({ name: 'startDate', value: start });
-            fields.push({ name: 'endDate',   value: end });
-            extraMeta = `<div>الفترة: <strong>${startDisplay} → ${endDisplay}</strong></div>`;
-            iconHtml = '<i class="fa-solid fa-calendar-days text-sky"></i>';
-            note = 'ملاحظة: سيتم إنهاء الندب تلقائيًا في تاريخ النهاية.';
-        } else if (op === 'endDelegation') {
-            if (selectionState !== 'delegated_active') {
-                await Swal.fire({ icon: 'warning', title: 'لا يمكن التنفيذ', text: 'إنهاء الندب متاح فقط للأجهزة المرتبطة عبر ندب نشط.', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
-                return;
+
+            title = 'تأكيد إلغاء الندب';
+            confirmText = ACTION_TEXT[ACTIONS.endDelegation].button(count);
+            icon = 'warning';
+
+            if (scheduledCards.length > 0) {
+                const delegationIds = Array.from(new Set(
+                    scheduledCards
+                        .map(card => (card.dataset.delegationId || '').trim())
+                        .filter(Boolean)
+                ));
+
+                if (delegationIds.length !== 1) {
+                    await Swal.fire({
+                        icon: 'warning',
+                        title: 'تنبيه',
+                        text: 'يمكن إلغاء ندب مجدول واحد فقط في كل مرة. اختر أجهزة من نفس الندب المجدول فقط.',
+                        confirmButtonColor: '#692f39',
+                        confirmButtonText: 'حسنًا'
+                    });
+                    return;
+                }
+
+                actionUrl = employeeRoutes.cancelDelegation;
+                fields = [{ name: 'delegationId', value: delegationIds[0] }];
+                text = count === 1
+                    ? 'سيتم إلغاء الندب المجدول عن الجهاز المحدد.'
+                    : `سيتم إلغاء الندب المجدول المرتبط بـ ${count} أجهزة.`;
+            } else {
+                actionUrl = employeeRoutes.endDelegation;
+                fields = selectedIds.map(x => ({ name: 'terminalIds', value: x }));
+                text = `سيتم إنهاء الندب النشط عن ${count} جهاز فورًا.`;
             }
-            opText = 'إنهاء الندب';
-            actionUrl = employeeRoutes.endDelegation;
-            fields = selectedIds.map(x => ({ name: 'terminalIds', value: x }));
-            iconHtml = '<i class="fa-solid fa-ban text-red-500"></i>';
-            note = 'سيتم إنهاء الندب فقط للأجهزة المحددة.';
+        } else if (uiState.action === ACTIONS.detach) {
+            title = 'تأكيد إلغاء البصمة';
+            text = `سيتم إلغاء بصمة ${employeeText} عن ${count} جهاز.`;
+            confirmText = ACTION_TEXT[ACTIONS.detach].button(count);
+            actionUrl = employeeRoutes.unassignBulk;
+            icon = 'warning';
         } else {
-            await Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى اختيار العملية.', confirmButtonColor: '#692f39', confirmButtonText: 'حسناً' });
             return;
         }
 
-        const confirmResult = await Swal.fire({
+        const result = await Swal.fire({
             title,
-            html: `<div class="c-swal-body">
-                    <div class="c-swal-icon c-swal-icon--lg">${iconHtml}</div>
-                    <p class="c-swal-lead c-swal-lead--sm">${opText}</p>
-                    <p class="c-swal-title">${employeeText}</p>
-                    <div class="c-swal-meta">
-                        <div>عدد الأجهزة المحددة: <strong>${count}</strong></div>
-                        ${extraMeta}
-                    </div>
-                    ${note ? `<p class="c-swal-note">${note}</p>` : ''}
-                </div>`,
-            icon: 'warning',
+            text,
+            icon,
             showCancelButton: true,
             confirmButtonColor: '#692f39',
             cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-check"></i> تنفيذ',
-            cancelButtonText:  '<i class="fa-solid fa-xmark"></i> إلغاء'
+            confirmButtonText: confirmText,
+            cancelButtonText: 'إلغاء'
         });
 
-        if (!confirmResult.isConfirmed) return;
+        if (!result.isConfirmed) return;
         fillAndSubmitBulkForm(actionUrl, fields);
     }
 
@@ -1193,240 +1583,166 @@ var unassigned     = devices.Where(x => !x.IsEffectivelyAssigned).ToList();
         const terminalIds = Array.from(form.querySelectorAll('input[name="terminalIds"]'))
             .map(input => (input.value || '').trim())
             .filter(Boolean);
-        const card = button.closest('.device-card');
         const regionCard = button.closest('.region-card');
-        const deviceName  = (card?.dataset?.deviceName   || '').trim();
-        const terminalId  = (card?.dataset?.terminalId   || '').trim();
-        const start       = (card?.dataset?.delegationStart || '').trim();
-        const end         = (card?.dataset?.delegationEnd   || '').trim();
-        const regionName  = (regionCard?.dataset?.regionName || regionCard?.querySelector('.fw-bold')?.textContent || '').trim();
-        const datesText  = (start && end) ? `${start} → ${end}` : '';
-        const count = terminalIds.length;
+        const regionName = (regionCard?.dataset?.regionName || '').trim();
 
-        let metaHtml = '';
-        if (scope === 'device') {
-            metaHtml = `
-                <div>الجهاز: <strong>${deviceName || terminalId || '-'}</strong></div>
-                ${terminalId ? `<div>معرّف الجهاز: <strong>${terminalId}</strong></div>` : ''}
-                ${datesText  ? `<div>الفترة: <strong>${datesText}</strong></div>` : ''}
-            `;
-        } else {
-            metaHtml = `
-                <div>عدد الأجهزة: <strong>${count}</strong></div>
-                ${regionName ? `<div>المنطقة: <strong>${regionName}</strong></div>` : ''}
-            `;
-        }
-
-        const confirmResult = await Swal.fire({
-            title: 'تأكيد العملية',
-            html: `<div class="c-swal-body">
-                    <div class="c-swal-icon c-swal-icon--lg"><i class="fa-solid fa-triangle-exclamation text-maroon"></i></div>
-                    <p class="c-swal-lead c-swal-lead--sm">إنهاء الندب</p>
-                    <p class="c-swal-title">${employeeText}</p>
-                    <div class="c-swal-meta">${metaHtml}</div>
-                </div>`,
+        const result = await Swal.fire({
+            title: 'تأكيد إلغاء الندب',
+            text: scope === 'region'
+                ? `سيتم إنهاء الندب النشط عن ${terminalIds.length} جهاز في منطقة ${regionName || 'محددة'}.`
+                : 'سيتم إنهاء الندب النشط عن الجهاز المحدد.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#692f39',
             cancelButtonColor: '#6b7280',
-            confirmButtonText: 'نعم',
-            cancelButtonText:  'إلغاء'
+            confirmButtonText: 'إلغاء الندب',
+            cancelButtonText: 'إلغاء'
         });
 
-        if (confirmResult.isConfirmed) form.submit();
+        if (result.isConfirmed) form.submit();
     }
 
-    async function confirmDelegationCardAction(button, action) {
-        if (action !== 'cancel') {
-            await confirmDelegationScopeAction(button, 'device');
-            return;
-        }
+    document.addEventListener('DOMContentLoaded', function () {
+        loadRecentEmployees();
 
-        const form = button.closest('form');
-        if (!form) return;
-
-        const card = button.closest('.device-card');
-        const employeeText = getEmployeeText();
-        const deviceName  = (card?.dataset?.deviceName   || '').trim();
-        const terminalId  = (card?.dataset?.terminalId   || '').trim();
-        const start       = (card?.dataset?.delegationStart || '').trim();
-        const end         = (card?.dataset?.delegationEnd   || '').trim();
-        const datesText  = (start && end) ? `${start} → ${end}` : '';
-
-        const confirmResult = await Swal.fire({
-            title: 'تأكيد العملية',
-            html: `<div class="c-swal-body">
-                    <div class="c-swal-icon c-swal-icon--lg"><i class="fa-solid fa-triangle-exclamation text-maroon"></i></div>
-                    <p class="c-swal-lead c-swal-lead--sm">إلغاء الندب</p>
-                    <p class="c-swal-title">${employeeText}</p>
-                    <div class="c-swal-meta">
-                        <div>الجهاز: <strong>${deviceName || terminalId || '-'}</strong></div>
-                        ${terminalId ? `<div>معرّف الجهاز: <strong>${terminalId}</strong></div>` : ''}
-                        ${datesText  ? `<div>الفترة: <strong>${datesText}</strong></div>` : ''}
-                    </div>
-                </div>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#692f39',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'نعم',
-            cancelButtonText:  'إلغاء'
-        });
-
-        if (confirmResult.isConfirmed) form.submit();
-    }
-
-    function assignSingle(btn) {
-        var terminalId = (btn.dataset.terminalId || '').trim();
-        var deviceName = (btn.dataset.deviceName || '').trim();
-        if (!terminalId) return;
-        Swal.fire({
-            title: 'تأكيد الربط',
-            html: `<div class="c-swal-body">
-                    <div class="c-swal-icon c-swal-icon--lg"><i class="fa-solid fa-link text-maroon"></i></div>
-                    <p class="c-swal-lead c-swal-lead--sm">ربط دائم</p>
-                    <p class="c-swal-title">${getEmployeeText()}</p>
-                    <div class="c-swal-meta"><div>الجهاز: <strong>${deviceName || terminalId}</strong></div></div>
-                </div>`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#692f39',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-check"></i> ربط',
-            cancelButtonText: '<i class="fa-solid fa-xmark"></i> إلغاء'
-        }).then(function(result) {
-            if (result.isConfirmed) {
-                fillAndSubmitBulkForm(employeeRoutes.assignBulk, [{ name: 'terminalIds', value: terminalId }]);
-            }
-        });
-    }
-
-    function unassignSingle(btn) {
-        var terminalId = (btn.dataset.terminalId || '').trim();
-        var deviceName = (btn.dataset.deviceName || '').trim();
-        if (!terminalId) return;
-        Swal.fire({
-            title: 'تأكيد فك الربط',
-            html: `<div class="c-swal-body">
-                    <div class="c-swal-icon c-swal-icon--lg"><i class="fa-solid fa-link-slash text-maroon"></i></div>
-                    <p class="c-swal-lead c-swal-lead--sm">فك الربط</p>
-                    <p class="c-swal-title">${getEmployeeText()}</p>
-                    <div class="c-swal-meta"><div>الجهاز: <strong>${deviceName || terminalId}</strong></div></div>
-                </div>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#692f39',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-check"></i> فك الربط',
-            cancelButtonText: '<i class="fa-solid fa-xmark"></i> إلغاء'
-        }).then(function(result) {
-            if (result.isConfirmed) {
-                fillAndSubmitBulkForm(employeeRoutes.unassignBulk, [{ name: 'terminalIds', value: terminalId }]);
-            }
-        });
-    }
-
-    function fillAndSearch(employeeId) {
-        var form = document.getElementById('employeeSearchForm');
-        if (!form) return;
-        var input = form.querySelector('input[name="employeeId"]');
-        if (input) input.value = employeeId;
-        form.submit();
-    }
-
-    function saveRecentEmployee(employeeId) {
-        try {
-            var recent = JSON.parse(localStorage.getItem('ba_recent_employees') || '[]');
-            recent = recent.filter(function(id) { return id !== String(employeeId); });
-            recent.unshift(String(employeeId));
-            if (recent.length > 5) recent = recent.slice(0, 5);
-            localStorage.setItem('ba_recent_employees', JSON.stringify(recent));
-        } catch (e) {}
-    }
-
-    function loadRecentEmployees() {
-        try {
-            var recent = JSON.parse(localStorage.getItem('ba_recent_employees') || '[]');
-            var container = document.getElementById('recentEmployees');
-            if (!container || recent.length === 0) return;
-            container.style.display = '';
-            container.innerHTML = '<span class="recent-chip-label">بحث سابق:</span>';
-            recent.forEach(function(id) {
-                var chip = document.createElement('button');
-                chip.type = 'button';
-                chip.className = 'recent-chip';
-                chip.textContent = id;
-                chip.onclick = function() { fillAndSearch(id); };
-                container.appendChild(chip);
+        const searchForm = document.getElementById('employeeSearchForm');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function () {
+                const input = searchForm.querySelector('input[name="employeeId"]');
+                const val = (input?.value || '').trim();
+                if (val && val !== '0') saveRecentEmployee(val);
+                const btn = searchForm.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>جاري البحث...</span>';
+                }
             });
-        } catch (e) {}
-    }
-
-    document.addEventListener('change', function (e) {
-        if (!e.target.classList.contains('select-all-region')) return;
-        const selectAll  = e.target;
-        const regionCard = selectAll.closest('.region-card');
-        if (!regionCard) return;
-        const deviceCheckboxes = regionCard.querySelectorAll('.device-card:not(.is-hidden) .device-chk');
-        deviceCheckboxes.forEach(chk => {
-            const card = chk.closest('.device-card');
-            const stateKey = (card?.dataset.stateKey || '').trim();
-            const eligible = isEligibleForAction(stateKey, currentAction);
-            if (selectAll.checked && !eligible) return; // skip devices that don't fit the chosen action
-            chk.checked = selectAll.checked;
-            updateDeviceSelection(chk);
-        });
-        updateBulkBar();
-    });
-
-    document.getElementById("autoAssignBtn")?.addEventListener("click", async () => {
-        const confirmResult = await Swal.fire({
-            title: 'تأكيد إجراء إداري',
-            html: `<div class="c-swal-body">
-                    <div class="c-swal-icon c-swal-icon--lg"><i class="fa-solid fa-triangle-exclamation text-maroon"></i></div>
-                    <p class="c-swal-title">إعادة توزيع الأجهزة تلقائيًا</p>
-                    <p class="c-swal-lead c-swal-lead--sm">هذا الإجراء عام وقد يغيّر توزيع أجهزة كثيرة على المناطق.</p>
-                    <p class="c-swal-note">استخدمه فقط عند فقدان أو تلف بيانات التوزيع.</p>
-                </div>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#692f39',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'تشغيل',
-            cancelButtonText:  'إلغاء'
-        });
-
-        if (!confirmResult.isConfirmed) return;
-
-        const res = await fetch(employeeRoutes.autoAssignRegions, { method: "POST" });
-
-        if (res.status === 403) {
-            await Swal.fire({ icon: 'error', title: 'غير مصرح', text: 'غير مصرح لك (مدير فقط).' });
-            return;
         }
 
-        const data = await res.json();
-        await Swal.fire({
-            icon: 'success',
-            title: 'تم التنفيذ',
-            html: `<div class="c-swal-body">
-                    <p class="c-swal-title">تمت إعادة بناء توزيع الأجهزة</p>
-                    <div class="c-swal-meta">
+        document.querySelectorAll('input[name="pageAction"]').forEach(input => {
+            input.addEventListener('change', function () {
+                uiState.action = this.value || null;
+                clearSelection();
+                if (uiState.action === ACTIONS.delegate) {
+                    showDelegationFieldsBeforeInit();
+                    initDelegationPickers();
+                    handleDelegationDatesChange(false);
+                } else {
+                    renderPageState();
+                }
+            });
+        });
+
+        document.getElementById('regionSelect')?.addEventListener('change', function () {
+            uiState.region = this.value || 'all';
+            if (uiState.region !== 'all') {
+                const region = Array.from(document.querySelectorAll('.region-card')).find(card => card.dataset.regionName === uiState.region);
+                const body = region?.querySelector('.region-body');
+                const header = region?.querySelector('.region-header');
+                if (body && header) {
+                    body.classList.add('show');
+                    header.setAttribute('aria-expanded', 'true');
+                }
+            }
+            renderPageState();
+        });
+
+        document.getElementById('deviceLiveSearch')?.addEventListener('input', function () {
+            uiState.query = (this.value || '').trim().toLowerCase();
+            renderPageState();
+        });
+        document.getElementById('deviceScopeSelect')?.addEventListener('change', function () {
+            uiState.deviceScope = this.value || 'all';
+            clearSelection();
+            renderPageState();
+        });
+
+        document.getElementById('bulkClearSelectionBtn')?.addEventListener('click', clearSelection);
+        document.getElementById('bulkExecuteBtn')?.addEventListener('click', bulkExecute);
+        document.getElementById('expandRegionsBtn')?.addEventListener('click', expandAllRegions);
+        document.getElementById('collapseRegionsBtn')?.addEventListener('click', collapseAllRegions);
+
+        document.querySelectorAll('.region-header').forEach(header => {
+            header.addEventListener('click', function () {
+                toggleRegionCollapse(this.dataset.collapseTarget);
+            });
+        });
+
+        document.querySelectorAll('.device-card').forEach(card => {
+            const checkbox = card.querySelector('.device-chk');
+            checkbox?.addEventListener('change', function () {
+                updateCardSelection(this);
+            });
+            card.addEventListener('click', function (e) {
+                if (!checkbox || checkbox.disabled) return;
+                if (e.target === checkbox) return;
+                checkbox.checked = !checkbox.checked;
+                updateCardSelection(checkbox);
+            });
+            card.addEventListener('keydown', function (e) {
+                if (!checkbox || checkbox.disabled) return;
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                checkbox.checked = !checkbox.checked;
+                updateCardSelection(checkbox);
+            });
+        });
+
+        document.addEventListener('change', function (e) {
+            if (!e.target.classList.contains('select-all-region')) return;
+            const selectAll = e.target;
+            const regionCard = selectAll.closest('.region-card');
+            if (!regionCard) return;
+            const checkboxes = Array.from(regionCard.querySelectorAll('.device-card:not(.is-hidden) .device-chk')).filter(chk => !chk.disabled);
+            checkboxes.forEach(chk => {
+                chk.checked = selectAll.checked;
+                chk.closest('.device-card')?.classList.toggle('is-selected', chk.checked);
+            });
+            updateBulkBar();
+            renderPageState();
+        });
+
+        document.querySelectorAll('[data-delegation-scope="region"]').forEach(button => {
+            button.addEventListener('click', function () {
+                confirmDelegationScopeAction(this, 'region');
+            });
+        });
+
+        document.getElementById('autoAssignBtn')?.addEventListener('click', async () => {
+            const confirmResult = await Swal.fire({
+                title: 'تأكيد إجراء إداري',
+                text: 'سيتم إعادة بناء توزيع الأجهزة تلقائيًا على المناطق.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#692f39',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'تشغيل',
+                cancelButtonText: 'إلغاء'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            const res = await fetch(employeeRoutes.autoAssignRegions, { method: 'POST' });
+            if (res.status === 403) {
+                await Swal.fire({ icon: 'error', title: 'غير مصرح', text: 'غير مصرح لك (مدير فقط).' });
+                return;
+            }
+
+            const data = await res.json();
+            await Swal.fire({
+                icon: 'success',
+                title: 'تم التنفيذ',
+                html: `<div class="c-swal-meta">
                         <div>عدد الأجهزة: <strong>${data.totalDevices ?? '-'}</strong></div>
                         <div>جديد: <strong>${data.inserted ?? data.newlyAssigned ?? '-'}</strong></div>
                         <div>تم تعديلها: <strong>${data.updated ?? data.updatedRegions ?? '-'}</strong></div>
-                    </div>
-                </div>`,
-            confirmButtonColor: '#692f39'
+                    </div>`,
+                confirmButtonColor: '#692f39'
+            });
         });
-    });
 
-    function toggleAdminTools() {
-        const panel = document.getElementById('adminToolsPanel');
-        if (!panel) return;
-        const isHidden = panel.classList.contains('is-hidden');
-        panel.classList.toggle('is-hidden', !isHidden);
-        panel.setAttribute('aria-hidden', String(!isHidden));
-    }
+        syncDelegationState();
+        renderPageState();
+    });
 </script>
 }
