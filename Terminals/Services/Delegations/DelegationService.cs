@@ -255,21 +255,49 @@ public class DelegationService : IDelegationService
         return true;
     }
 
-    public async Task<bool> CancelScheduledDelegationAsync(int delegationId, CancellationToken ct = default)
+    public async Task<bool> CancelScheduledDelegationAsync(int employeeId, int delegationId, List<string>? terminalIds = null, CancellationToken ct = default)
     {
         // Only future delegations can be canceled here.
-        if (delegationId <= 0) return false;
+        if (employeeId <= 0 || delegationId <= 0) return false;
+
+        var selectedTerminalIds = (terminalIds ?? new())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Select(t => t.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
         var delegation = await _db.Delegations
             .Include(x => x.Terminals)
             .FirstOrDefaultAsync(x => x.Id == delegationId, ct);
 
         if (delegation is null) return false;
+        if (delegation.EmployeeId != employeeId) return false;
         if (delegation.Status != "Scheduled") return false;
 
         var now = DateTime.Now;
-        delegation.Status = "Cancelled";
-        delegation.ExpiredAt = now;
+        var existingTerminals = delegation.Terminals ?? new();
+        var terminalsToCancel = selectedTerminalIds.Count == 0
+            ? existingTerminals.ToList()
+            : existingTerminals
+                .Where(t => selectedTerminalIds.Contains((t.TerminalId ?? "").Trim()))
+                .ToList();
+
+        if (terminalsToCancel.Count == 0) return false;
+
+        var cancellingWholeDelegation = terminalsToCancel.Count == existingTerminals.Count;
+        if (cancellingWholeDelegation)
+        {
+            delegation.Status = "Cancelled";
+            delegation.ExpiredAt = now;
+        }
+        else
+        {
+            foreach (var terminal in terminalsToCancel)
+            {
+                existingTerminals.Remove(terminal);
+                _db.DelegationTerminals.Remove(terminal);
+            }
+        }
 
         await _db.SaveChangesAsync(ct);
 
@@ -286,8 +314,16 @@ public class DelegationService : IDelegationService
             action: "Delegation.Cancelled",
             entityType: "Delegation",
             entityId: delegation.Id.ToString(),
-            summary: $"تم إنهاء انتداب الموظف {employeeText}\nبواسطة: {actorText}",
-            details: new { delegationId = delegation.Id, employeeId = delegation.EmployeeId, employeeName },
+            summary: $"تم إنهاء انتداب الموظف {employeeText} لعدد ({terminalsToCancel.Count}) أجهزة\nبواسطة: {actorText}",
+            details: new
+            {
+                delegationId = delegation.Id,
+                employeeId = delegation.EmployeeId,
+                employeeName,
+                terminalCount = terminalsToCancel.Count,
+                terminalIds = terminalsToCancel.Select(t => t.TerminalId).ToList(),
+                cancelledWholeDelegation = cancellingWholeDelegation
+            },
             ct: ct
         );
 

@@ -861,6 +861,8 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
                                  data-device-name="@d.DeviceName"
                                  data-region-name="@g.RegionName"
                                  data-delegation-id="@(d.DelegationId?.ToString() ?? "")"
+                                 data-is-restricted="@(d.IsRestricted ? "true" : "false")"
+                                 data-restriction-reason="@(d.RestrictionReason ?? "غير متاح لهذا الموظف")"
                                  data-delegation-start="@(d.DelegationStartDate?.ToString("dd/MM/yyyy") ?? "")"
                                  data-delegation-end="@(d.DelegationEndDate?.ToString("dd/MM/yyyy") ?? "")">
                             <div class="device-card-layout">
@@ -1060,7 +1062,12 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
         const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim());
         if (!match) return null;
         const [, dd, mm, yyyy] = match;
-        return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        return date.getFullYear() === Number(yyyy) &&
+            date.getMonth() === Number(mm) - 1 &&
+            date.getDate() === Number(dd)
+            ? date
+            : null;
     }
 
     function parseCanonicalDate(value) {
@@ -1068,7 +1075,12 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
         const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
         if (!match) return null;
         const [, yyyy, mm, dd] = match;
-        return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+        return date.getFullYear() === Number(yyyy) &&
+            date.getMonth() === Number(mm) - 1 &&
+            date.getDate() === Number(dd)
+            ? date
+            : null;
     }
 
     function normalizeDate(date) {
@@ -1245,9 +1257,15 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
     function getEligibility(card) {
         const stateKey = (card.dataset.stateKey || '').trim();
         const delegation = getDelegationState();
+        const isRestricted = (card.dataset.isRestricted || '').toLowerCase() === 'true';
+        const restrictionReason = (card.dataset.restrictionReason || 'غير متاح لهذا الموظف').trim();
 
         if (!uiState.action) {
             return { eligible: false, reason: '' };
+        }
+
+        if (isRestricted && uiState.action !== ACTIONS.endDelegation) {
+            return { eligible: false, reason: restrictionReason };
         }
 
         if (uiState.action === ACTIONS.attach) {
@@ -1565,7 +1583,10 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
                 }
 
                 actionUrl = employeeRoutes.cancelDelegation;
-                fields = [{ name: 'delegationId', value: delegationIds[0] }];
+                fields = [
+                    { name: 'delegationId', value: delegationIds[0] },
+                    ...selectedIds.map(x => ({ name: 'terminalIds', value: x }))
+                ];
                 text = count === 1
                     ? 'سيتم إلغاء الندب المجدول عن الجهاز المحدد.'
                     : `سيتم إلغاء الندب المجدول المرتبط بـ ${count} أجهزة.`;

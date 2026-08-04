@@ -272,10 +272,10 @@ public sealed class EmployeesController : Controller
 
     [HttpPost("cancel-delegation")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CancelDelegation(int employeeId, int delegationId, CancellationToken ct)
+    public async Task<IActionResult> CancelDelegation(int employeeId, int delegationId, List<string>? terminalIds, CancellationToken ct)
     {
         // Cancel a delegation that has not started yet.
-        var ok = await _delegations.CancelScheduledDelegationAsync(delegationId, ct);
+        var ok = await _delegations.CancelScheduledDelegationAsync(employeeId, delegationId, terminalIds, ct);
         TempData["ToastType"] = ok ? "success" : "danger";
         TempData["ToastMsg"] = ok ? "✅ تم إلغاء الندب بنجاح" : "❌ تعذر إلغاء الندب";
 
