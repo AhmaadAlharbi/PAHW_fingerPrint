@@ -282,9 +282,14 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
         }
     }
 
-    public Task<OperationResult> AssignOneAsync(int employeeId, string terminalId, CancellationToken ct = default)
-        // Permanent assignment goes straight to Alpeta.
-       => _alpeta.AssignUserToTerminalAsync(terminalId, employeeId, ct);
+    public async Task<OperationResult> AssignOneAsync(int employeeId, string terminalId, CancellationToken ct = default)
+    {
+        if (await IsTerminalRestrictedForEmployeeAsync(employeeId, terminalId, ct))
+            return OperationResult.Fail("الجهاز غير متاح لهذا الموظف");
+
+        // Permanent assignment goes straight to Alpeta after server-side eligibility validation.
+        return await _alpeta.AssignUserToTerminalAsync(terminalId, employeeId, ct);
+    }
 
     public async Task<OperationResult> UnassignOneAsync(int employeeId, string terminalId, CancellationToken ct = default)
     {
@@ -376,6 +381,37 @@ public class EmployeeDevicesApi : IEmployeeDevicesApi
             device.IsRestricted = analyzed.IsRestricted;
             device.RestrictionReason = analyzed.RestrictionReason;
             device.RestrictionSource = analyzed.RestrictionSource;
+        }
+    }
+
+    private async Task<bool> IsTerminalRestrictedForEmployeeAsync(int employeeId, string terminalId, CancellationToken ct)
+    {
+        if (employeeId <= 0 || string.IsNullOrWhiteSpace(terminalId))
+            return true;
+
+        if (!int.TryParse(terminalId.Trim(), out var parsedTerminalId))
+            return true;
+
+        try
+        {
+            var context = await BuildAlpetaRequestContextAsync(employeeId, ct);
+            _restrictionService.PrimeEmployeeAssignments(
+                employeeId,
+                context.EmployeeDevices
+                    .Where(x => !string.IsNullOrWhiteSpace(x.DeviceId))
+                    .Select(x => x.DeviceId!));
+
+            var analysis = await _restrictionService.AnalyzeAsync(employeeId, parsedTerminalId, context, ct);
+            return analysis.IsRestricted;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "ASSIGN_RESTRICTION_VALIDATION_FAILED employeeId={EmployeeId} terminalId={TerminalId}",
+                employeeId,
+                terminalId);
+            return true;
         }
     }
 
