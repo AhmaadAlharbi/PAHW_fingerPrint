@@ -1428,6 +1428,30 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
         renderPageState();
     }
 
+    function handleRegionSelectAll(selectAll) {
+        const regionCard = selectAll?.closest('.region-card');
+        if (!regionCard) return;
+
+        const eligibleVisible = Array
+            .from(regionCard.querySelectorAll('.device-card:not(.is-hidden) .device-chk'))
+            .filter(chk => !chk.disabled);
+
+        if (eligibleVisible.length === 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+            renderPageState();
+            return;
+        }
+
+        eligibleVisible.forEach(chk => {
+            chk.checked = selectAll.checked;
+            chk.closest('.device-card')?.classList.toggle('is-selected', chk.checked);
+        });
+
+        updateBulkBar();
+        renderPageState();
+    }
+
     function toggleRegionCollapse(collapseId) {
         const body = document.getElementById(collapseId);
         const header = document.querySelector(`[data-collapse-target="${collapseId}"]`);
@@ -1688,18 +1712,13 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
             });
         });
 
-        document.addEventListener('change', function (e) {
-            if (!e.target.classList.contains('select-all-region')) return;
-            const selectAll = e.target;
-            const regionCard = selectAll.closest('.region-card');
-            if (!regionCard) return;
-            const checkboxes = Array.from(regionCard.querySelectorAll('.device-card:not(.is-hidden) .device-chk')).filter(chk => !chk.disabled);
-            checkboxes.forEach(chk => {
-                chk.checked = selectAll.checked;
-                chk.closest('.device-card')?.classList.toggle('is-selected', chk.checked);
+        document.querySelectorAll('.select-all-region').forEach(selectAll => {
+            selectAll.addEventListener('click', function (e) {
+                e.stopPropagation();
             });
-            updateBulkBar();
-            renderPageState();
+            selectAll.addEventListener('change', function () {
+                handleRegionSelectAll(this);
+            });
         });
 
         document.querySelectorAll('[data-delegation-scope="region"]').forEach(button => {
