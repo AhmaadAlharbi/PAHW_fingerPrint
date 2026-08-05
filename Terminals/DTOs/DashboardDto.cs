@@ -5,6 +5,10 @@ public sealed class DashboardDto
     public int RegionsCount { get; set; }
     public int MappingsCount { get; set; }
     public int ActiveDelegationsCount { get; set; }
+    public int TodayActivityCount { get; set; }
+    public int ActivityPage { get; set; } = 1;
+    public int ActivityPageSize { get; set; } = 10;
+    public int ActivityTotalCount { get; set; }
     public List<ActivityLogDto> RecentActivities { get; set; } = new();
     public List<DelegationDto> LatestDelegations { get; set; } = new();
     public string DelegationsFilter { get; set; } = "Active";

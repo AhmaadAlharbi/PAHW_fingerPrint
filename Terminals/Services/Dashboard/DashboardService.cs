@@ -14,18 +14,38 @@ public sealed class DashboardService
         _db = db;
     }
 
-    public async Task<DashboardDto> GetDashboardData(string? delegationsFilter = null, CancellationToken ct = default)
+    public async Task<DashboardDto> GetDashboardData(
+        string? delegationsFilter = null,
+        int activityPage = 1,
+        int activityPageSize = 10,
+        CancellationToken ct = default)
     {
         // Normalize the filter first so the rest of the query logic stays simple.
         var filter = NormalizeFilter(delegationsFilter);
         var now = DateTime.Now;
+        activityPage = Math.Max(1, activityPage);
+        activityPageSize = Math.Clamp(activityPageSize, 5, 50);
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
 
-        // Latest activity is shown as a simple dashboard feed.
+        var activityTotalCount = await _db.ActivityLogs
+            .AsNoTracking()
+            .CountAsync(ct);
+        var activityTotalPages = Math.Max(1, (int)Math.Ceiling(activityTotalCount / (double)activityPageSize));
+        activityPage = Math.Min(activityPage, activityTotalPages);
+        var activitySkip = (activityPage - 1) * activityPageSize;
+
+        var todayActivityCount = await _db.ActivityLogs
+            .AsNoTracking()
+            .CountAsync(x => x.CreatedAt >= today && x.CreatedAt < tomorrow, ct);
+
+        // Activity is paged so the dashboard can browse the full log without loading it all at once.
         var recentActivities = await _db.ActivityLogs
             .AsNoTracking()
             .OrderByDescending(x => x.CreatedAt)
             .ThenByDescending(x => x.Id)
-            .Take(10)
+            .Skip(activitySkip)
+            .Take(activityPageSize)
             .Select(x => new ActivityLogDto
             {
                 ActionType = x.Action,
@@ -34,7 +54,7 @@ public sealed class DashboardService
                     ? (string.IsNullOrWhiteSpace(x.ActorName) ? "النظام" : $"النظام ({x.ActorName})")
                     : (!string.IsNullOrWhiteSpace(x.ActorName) && x.ActorEmployeeId.HasValue
                         ? $"{x.ActorName} ({x.ActorEmployeeId.Value})"
-                        : (x.ActorName ?? (x.ActorEmployeeId.HasValue ? $"الموظف رقم {x.ActorEmployeeId.Value}" : "مستخدم"))),
+                    : (x.ActorName ?? (x.ActorEmployeeId.HasValue ? $"الموظف رقم {x.ActorEmployeeId.Value}" : "عضو"))),
                 CreatedAt = x.CreatedAt
             })
             .ToListAsync(ct);
@@ -116,6 +136,10 @@ public sealed class DashboardService
             RegionsCount = await _db.Regions.AsNoTracking().CountAsync(ct),
             MappingsCount = await _db.TerminalRegionMaps.AsNoTracking().CountAsync(ct),
             ActiveDelegationsCount = rawDelegations.Count(d => GetComputedStatus(d, now) == "Active"),
+            TodayActivityCount = todayActivityCount,
+            ActivityPage = activityPage,
+            ActivityPageSize = activityPageSize,
+            ActivityTotalCount = activityTotalCount,
             RecentActivities = recentActivities,
             LatestDelegations = delegations,
             DelegationsFilter = filter

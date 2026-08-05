@@ -1,6 +1,6 @@
 @model Terminals.Web.DTOs.AllowedUserDto?
 @{
-    ViewData["Title"] = "إضافة مستخدم";
+    ViewData["Title"] = "إضافة عضو";
     var currentEmpId = Context.Session.GetString("EmpId") ?? "";
 }
 
@@ -20,14 +20,23 @@
 }
 
 @* ── Step 1: Fetch employee data ─────────────────────── *@
+<div class="allowed-users-page fade-in">
 <div class="content-card mb-3">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h2 class="c-section-title">الخطوة 1 — جلب بيانات المستخدم</h2>
+    <div class="allowed-users-header mb-3">
+        <div class="allowed-users-title">
+            <span class="allowed-users-title-icon"><i class="fa-solid fa-user-plus"></i></span>
+            <div>
+                <h2>إضافة عضو</h2>
+                <p>ابدأ بالرقم الوظيفي ثم راجع بيانات العضو وصلاحياته.</p>
+            </div>
+        </div>
         <a asp-controller="AllowedUsers" asp-action="Index" class="btn btn-outline btn-sm">
-            <span>↩</span> العودة للقائمة
+            <i class="fa-solid fa-arrow-right"></i>
+            <span>العودة للقائمة</span>
         </a>
     </div>
-    <p class="text-muted small mb-3">أدخل الرقم الوظيفي لجلب بيانات المستخدم من النظام.</p>
+    <h2 class="c-section-title">الخطوة 1 — جلب بيانات العضو</h2>
+    <p class="text-muted small mb-3">أدخل الرقم الوظيفي لجلب بيانات العضو من النظام.</p>
 
     <form id="fetchUserForm" method="post" asp-action="Fetch">
         <div class="d-flex gap-2 align-items-end">
@@ -47,7 +56,7 @@
     <div class="content-card">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h2 class="c-section-title">الخطوة 2 — مراجعة وحفظ البيانات</h2>
-            <span class="badge badge-success">✓ تم جلب البيانات</span>
+            <span class="badge badge-success"><i class="fa-solid fa-check"></i> <span>تم جلب البيانات</span></span>
         </div>
 
         <form id="saveUserForm" method="post" asp-action="Save">
@@ -78,19 +87,26 @@
             </div>
 
             <div class="mb-3">
-                <div class="form-check">
+                <label class="permission-toggle" for="isAdmin">
                     <input type="checkbox" name="isAdmin" id="isAdmin"
-                           value="true" class="form-check-input" />
-                    <label for="isAdmin" class="form-check-label fw-bold">
-                        ⭐ منح صلاحية مدير
-                    </label>
-                </div>
-                <small class="text-muted">المدير لديه صلاحيات كاملة لإدارة النظام والمستخدمين.</small>
+                           value="true" class="permission-toggle-input" />
+                    <span class="permission-toggle-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </span>
+                    <span class="permission-toggle-text">
+                        <span class="permission-toggle-title">منح صلاحية مشرف</span>
+                        <span class="permission-toggle-description">المشرف يستطيع إدارة الأعضاء والمناطق والأجهزة وتنفيذ العمليات الإدارية.</span>
+                    </span>
+                    <span class="permission-toggle-control" aria-hidden="true"></span>
+                </label>
             </div>
 
             <div class="d-flex gap-2 justify-content-end">
                 <a asp-controller="AllowedUsers" asp-action="Index" class="btn btn-outline">إلغاء</a>
-                <button type="submit" class="btn btn-primary">✓ حفظ المستخدم</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-check"></i>
+                    <span>حفظ العضو</span>
+                </button>
             </div>
         </form>
     </div>
@@ -100,10 +116,11 @@ else
     <div class="content-card">
         <div class="empty-state">
             <div class="empty-state-icon">📋</div>
-            <div class="empty-state-text">أدخل الرقم الوظيفي في الخطوة الأولى أعلاه لجلب بيانات المستخدم</div>
+            <div class="empty-state-text">أدخل الرقم الوظيفي في الخطوة الأولى أعلاه لجلب بيانات العضو</div>
         </div>
     </div>
 }
+</div>
 
 
 @section Scripts {

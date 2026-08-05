@@ -1,10 +1,11 @@
 @model List<Terminals.Web.DTOs.AllowedUserListItemDto>
 @{
-    ViewData["Title"] = "إدارة المستخدمين";
+    ViewData["Title"] = "إدارة الأعضاء";
     var currentEmpId = Context.Session.GetString("EmpId") ?? "";
 }
 
-<div class="content-card fade-in">
+<div class="allowed-users-page fade-in">
+<div class="content-card">
 
     @if (TempData["ErrorMsg"] != null)
     {
@@ -21,14 +22,17 @@
         </div>
     }
 
-    <div class="page-header">
-        <h1 class="page-title">
-            <span class="page-title-icon">👥</span>
-            <span>إدارة المستخدمين</span>
-        </h1>
+    <div class="allowed-users-header">
+        <div class="allowed-users-title">
+            <span class="allowed-users-title-icon"><i class="fa-solid fa-user-shield"></i></span>
+            <div>
+                <h1>إدارة الأعضاء</h1>
+                <p>مراجعة الأعضاء المصرح لهم وحالة الحسابات وصلاحيات الإشراف.</p>
+            </div>
+        </div>
         <a asp-action="Create" class="btn btn-primary">
-            <span>➕</span>
-            <span>إضافة مستخدم</span>
+            <i class="fa-solid fa-plus"></i>
+            <span>إضافة عضو</span>
         </a>
     </div>
 
@@ -37,7 +41,7 @@
     <div class="c-stats-grid">
         <div class="stat-card">
             <div class="stat-value">@Model.Count</div>
-            <div class="stat-label">إجمالي المستخدمين</div>
+            <div class="stat-label">إجمالي الأعضاء</div>
         </div>
         <div class="stat-card">
             <div class="stat-value text-emerald">@Model.Count(u => u.IsActive)</div>
@@ -49,21 +53,19 @@
         </div>
         <div class="stat-card">
             <div class="stat-value text-blue">@Model.Count(u => u.IsAdmin)</div>
-            <div class="stat-label">المدراء</div>
+            <div class="stat-label">المشرفون</div>
         </div>
     </div>
 
     @if (Model.Any())
     {
-        <div class="table-container">
+        <div class="table-container allowed-users-table">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>اسم المستخدم</th>
-                        <th>الاسم الكامل</th>
+                        <th>العضو</th>
                         <th>البريد الإلكتروني</th>
                         <th>القسم</th>
-                        <th>صلاحية مدير</th>
                         <th>الحالة</th>
                         <th>صالح حتى</th>
                         <th class="u-text-center">الإجراءات</th>
@@ -73,28 +75,27 @@
                     @foreach (var u in Model)
                     {
                         <tr>
-                            <td><strong class="text-maroon">@u.EmployeeId</strong></td>
-                            <td><strong>@u.FullName</strong></td>
+                            <td>
+                                <div class="allowed-user-cell">
+                                    <span class="allowed-user-avatar">
+                                        <i class="fa-solid fa-user"></i>
+                                    </span>
+                                    <span>
+                                        <span class="allowed-user-name">@u.FullName</span>
+                                        <span class="allowed-user-id">@u.EmployeeId</span>
+                                    </span>
+                                </div>
+                            </td>
                             <td><span class="text-muted">@u.Email</span></td>
                             <td>@u.Department</td>
                             <td>
-                                @if (u.IsAdmin)
-                                {
-                                    <span class="badge badge-info"><span>⭐</span> <span>مدير</span></span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-muted"><span>👤</span> <span>مستخدم</span></span>
-                                }
-                            </td>
-                            <td>
                                 @if (u.IsActive)
                                 {
-                                    <span class="badge badge-success"><span>✓</span> <span>فعال</span></span>
+                                    <span class="badge badge-success"><i class="fa-solid fa-check"></i> <span>فعال</span></span>
                                 }
                                 else
                                 {
-                                    <span class="badge badge-danger"><span>✕</span> <span>معطل</span></span>
+                                    <span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> <span>معطل</span></span>
                                 }
                             </td>
                             <td>
@@ -109,28 +110,65 @@
                             </td>
                             <td>
                                 <div class="c-actions-row">
-                                    @if (u.EmployeeId.ToString() != currentEmpId)
+                                    @if (u.IsAdmin)
                                     {
-                                        <form method="post" asp-action="Toggle" class="u-inline">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="employeeId" value="@u.EmployeeId" />
-                                            <input type="hidden" name="makeActive" value="@(u.IsActive ? "false" : "true")" />
-                                            <button type="submit" class="btn btn-sm @(u.IsActive ? "btn-secondary" : "btn-success")">
-                                                @if (u.IsActive) { <span>⏸️ تعطيل</span> } else { <span>▶️ تفعيل</span> }
-                                            </button>
-                                        </form>
-                                        <form method="post" asp-action="Delete" class="u-inline js-delete-user-form">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="employeeId" value="@u.EmployeeId" />
-                                            <button type="button" class="btn btn-sm btn-danger js-delete-user-btn"
-                                                    data-fullname="@u.FullName">
-                                                🗑️ حذف
-                                            </button>
-                                        </form>
+                                        <span class="badge badge-info"><i class="fa-solid fa-shield-halved"></i> <span>مشرف</span></span>
                                     }
                                     else
                                     {
-                                        <span class="badge badge-copper">🔒 حسابك</span>
+                                        <span class="badge badge-muted"><i class="fa-regular fa-user"></i> <span>عضو</span></span>
+                                    }
+
+                                    @if (u.EmployeeId.ToString() != currentEmpId)
+                                    {
+                                        <div class="allowed-row-menu">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline allowed-row-menu-toggle"
+                                                    aria-label="فتح إجراءات العضو"
+                                                    aria-expanded="false">
+                                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                            <div class="allowed-row-menu-panel is-hidden">
+                                                <form method="post" asp-action="ToggleAdmin">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="employeeId" value="@u.EmployeeId" />
+                                                    <input type="hidden" name="makeAdmin" value="@(u.IsAdmin ? "false" : "true")" />
+                                                    <button type="submit" class="allowed-row-menu-item">
+                                                        @if (u.IsAdmin)
+                                                        {
+                                                            <i class="fa-solid fa-user"></i>
+                                                            <span>تحويل لعضو</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fa-solid fa-shield-halved"></i>
+                                                            <span>ترقية لمشرف</span>
+                                                        }
+                                                    </button>
+                                                </form>
+                                                <form method="post" asp-action="Toggle">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="employeeId" value="@u.EmployeeId" />
+                                                    <input type="hidden" name="makeActive" value="@(u.IsActive ? "false" : "true")" />
+                                                    <button type="submit" class="allowed-row-menu-item">
+                                                        @if (u.IsActive) { <i class="fa-solid fa-pause"></i> <span>تعطيل العضو</span> } else { <i class="fa-solid fa-play"></i> <span>تفعيل العضو</span> }
+                                                    </button>
+                                                </form>
+                                                @* <form method="post" asp-action="Delete" class="js-delete-user-form"> *@
+                                                @*     @Html.AntiForgeryToken() *@
+                                                @*     <input type="hidden" name="employeeId" value="@u.EmployeeId" /> *@
+                                                @*     <button type="button" class="allowed-row-menu-item is-danger js-delete-user-btn" *@
+                                                @*             data-fullname="@u.FullName"> *@
+                                                @*         <i class="fa-solid fa-trash"></i> *@
+                                                @*         <span>حذف العضو</span> *@
+                                                @*     </button> *@
+                                                @* </form> *@
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-copper"><i class="fa-solid fa-lock"></i> <span>حسابك</span></span>
                                     }
                                 </div>
                             </td>
@@ -144,24 +182,54 @@
     {
         <div class="empty-state">
             <div class="empty-state-icon">📭</div>
-            <div class="empty-state-text">لا يوجد مستخدمون في القائمة حالياً</div>
+            <div class="empty-state-text">لا يوجد أعضاء في القائمة حالياً</div>
             <div class="u-mt-24">
-                <a asp-action="Create" class="btn btn-primary"><span>➕</span> <span>إضافة مستخدم</span></a>
+                <a asp-action="Create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> <span>إضافة عضو</span></a>
             </div>
         </div>
     }
 
 </div>
+</div>
 
 @section Scripts {
 <script>
+    function closeAllowedRowMenus(exceptPanel) {
+        document.querySelectorAll('.allowed-row-menu-panel').forEach(function (panel) {
+            if (panel === exceptPanel) return;
+            panel.classList.add('is-hidden');
+            panel.closest('.allowed-row-menu')?.querySelector('.allowed-row-menu-toggle')?.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    document.querySelectorAll('.allowed-row-menu-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var panel = this.closest('.allowed-row-menu')?.querySelector('.allowed-row-menu-panel');
+            if (!panel) return;
+            var willOpen = panel.classList.contains('is-hidden');
+            closeAllowedRowMenus(panel);
+            panel.classList.toggle('is-hidden', !willOpen);
+            this.setAttribute('aria-expanded', String(willOpen));
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.allowed-row-menu')) return;
+        closeAllowedRowMenus();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAllowedRowMenus();
+    });
+
     document.querySelectorAll('.js-delete-user-btn').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-            var fullName = this.dataset.fullname || 'هذا المستخدم';
+            var fullName = this.dataset.fullname || 'هذا العضو';
             var form = this.closest('form');
             var result = await Swal.fire({
                 title: 'تأكيد الحذف',
-                text: 'هل أنت متأكد من الحذف النهائي للمستخدم "' + fullName + '"؟ لا يمكن التراجع عن هذا الإجراء.',
+                text: 'هل أنت متأكد من الحذف النهائي للعضو "' + fullName + '"؟ لا يمكن التراجع عن هذا الإجراء.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#692f39',

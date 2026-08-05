@@ -109,6 +109,15 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
         font-weight: 700;
         white-space: nowrap;
     }
+    button.employee-summary-pill {
+        cursor: pointer;
+    }
+    button.employee-summary-pill:hover,
+    button.employee-summary-pill.is-active {
+        border-color: #692f39;
+        background: #f8eef0;
+        color: #692f39;
+    }
 
     .action-panel {
         display: grid;
@@ -658,6 +667,7 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
     else
     {
     var assignedRegionCount = regionGroups?.Count(g => g.Devices.Any(x => x.IsEffectivelyAssigned)) ?? 0;
+    var unassignedRegionCount = regionGroups?.Count(g => !g.Devices.Any(x => x.IsEffectivelyAssigned)) ?? 0;
     var hasActiveDelegation = devices.Any(x => x.IsDelegatedActive);
     <div class="search-workspace-card content-card fade-in mt-3">
         <div class="employee-strip">
@@ -678,11 +688,12 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
                 </div>
             </div>
             <div class="employee-strip-summary">
-                <span class="employee-summary-pill">@assigned.Count جهاز مرتبط</span>
-                <span class="employee-summary-pill">@assignedRegionCount منطقة مرتبطة</span>
+                <button type="button" class="employee-summary-pill" data-summary-filter="linked">@assigned.Count جهاز مرتبط</button>
+                <button type="button" class="employee-summary-pill" data-region-filter="linked">@assignedRegionCount منطقة مرتبطة</button>
+                <button type="button" class="employee-summary-pill" data-region-filter="unlinked">@unassignedRegionCount منطقة غير مرتبطة</button>
                 @if (hasActiveDelegation)
                 {
-                <span class="employee-summary-pill">يوجد ندب نشط</span>
+                <button type="button" class="employee-summary-pill" data-summary-filter="delegated_active">يوجد ندب نشط</button>
                 }
             </div>
         </div>
@@ -756,6 +767,7 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
                 <select id="deviceScopeSelect" class="region-select" aria-label="فلترة حسب ارتباط الموظف">
                     <option value="all">كل الأجهزة</option>
                     <option value="linked">الأجهزة المرتبطة بالموظف</option>
+                    <option value="delegated_active">الأجهزة ذات الندب النشط</option>
                 </select>
                 <i class="fa-solid fa-chevron-down text-muted"></i>
             </div>
@@ -786,12 +798,15 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
             var g = regionGroups[i];
             var collapseId = $"regionCollapse_{i}";
             var regionKey = $"region_{i}";
+            var isRegionLinked = g.Devices.Any(x => x.IsEffectivelyAssigned);
             var activeDelegationTerminalIds = g.Devices
             .Where(x => x.IsDelegatedActive && !string.IsNullOrWhiteSpace(x.DeviceId))
             .Select(x => x.DeviceId!.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
-            <section class="region-card" data-region-name="@g.RegionName">
+            <section class="region-card"
+                     data-region-name="@g.RegionName"
+                     data-region-linked="@(isRegionLinked ? "true" : "false")">
                 <button type="button"
                         class="region-header"
                         data-collapse-target="@collapseId"
@@ -936,6 +951,7 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
     const uiState = {
         action: null,
         region: 'all',
+        regionScope: 'all',
         query: '',
         deviceScope: 'all',
         delegation: {
@@ -1041,6 +1057,44 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
             chk.closest('.device-card')?.classList.remove('is-selected');
         });
         updateBulkBar();
+    }
+
+    function applyDeviceScope(scope) {
+        const nextScope = scope || 'all';
+        const deviceSelect = document.getElementById('deviceScopeSelect');
+        const regionSelect = document.getElementById('regionSelect');
+        uiState.deviceScope = nextScope;
+        uiState.regionScope = 'all';
+        uiState.region = 'all';
+        if (deviceSelect) deviceSelect.value = nextScope;
+        if (regionSelect) regionSelect.value = 'all';
+        clearSelection();
+        renderPageState();
+    }
+
+    function applyRegionScope(scope) {
+        const deviceSelect = document.getElementById('deviceScopeSelect');
+        const regionSelect = document.getElementById('regionSelect');
+        uiState.regionScope = scope || 'all';
+        uiState.region = 'all';
+        uiState.deviceScope = 'all';
+        if (regionSelect) regionSelect.value = 'all';
+        if (deviceSelect) deviceSelect.value = 'all';
+        clearSelection();
+        renderPageState();
+    }
+
+    function matchesDeviceScope(stateKey) {
+        if (uiState.deviceScope === 'linked') return stateKey !== 'unassigned';
+        if (uiState.deviceScope === 'delegated_active') return stateKey === 'delegated_active';
+        return true;
+    }
+
+    function matchesRegionScope(region) {
+        const isLinked = (region.dataset.regionLinked || '').toLowerCase() === 'true';
+        if (uiState.regionScope === 'linked') return isLinked;
+        if (uiState.regionScope === 'unlinked') return !isLinked;
+        return true;
     }
 
     function formatDisplayDate(date) {
@@ -1334,6 +1388,7 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
         document.querySelectorAll('.region-card').forEach(region => {
             const regionName = (region.dataset.regionName || '').trim();
             const matchesRegion = uiState.region === 'all' || uiState.region === regionName;
+            const matchesRegionFilter = matchesRegionScope(region);
             const cards = region.querySelectorAll('.device-card');
             let visibleCount = 0;
             let availableCount = 0;
@@ -1343,8 +1398,8 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
                 const terminalId = (card.dataset.terminalId || '').toLowerCase();
                 const stateKey = (card.dataset.stateKey || '').trim();
                 const matchesSearch = !uiState.query || deviceName.includes(uiState.query) || terminalId.includes(uiState.query);
-                const matchesScope = uiState.deviceScope !== 'linked' || stateKey !== 'unassigned';
-                const visible = matchesRegion && matchesSearch && matchesScope;
+                const matchesScope = matchesDeviceScope(stateKey);
+                const visible = matchesRegion && matchesRegionFilter && matchesSearch && matchesScope;
                 const eligibility = getEligibility(card);
                 const checkbox = card.querySelector('.device-chk');
                 const note = card.querySelector('[data-device-note]');
@@ -1396,6 +1451,13 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
         if (pageEmpty) {
             pageEmpty.classList.toggle('is-hidden', anyVisibleDevice);
         }
+
+        document.querySelectorAll('[data-summary-filter]').forEach(button => {
+            button.classList.toggle('is-active', button.dataset.summaryFilter === uiState.deviceScope);
+        });
+        document.querySelectorAll('[data-region-filter]').forEach(button => {
+            button.classList.toggle('is-active', button.dataset.regionFilter === uiState.regionScope);
+        });
 
         updateBulkBar();
     }
@@ -1680,6 +1742,7 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
 
         document.getElementById('regionSelect')?.addEventListener('change', function () {
             uiState.region = this.value || 'all';
+            uiState.regionScope = 'all';
             if (uiState.region !== 'all') {
                 const region = Array.from(document.querySelectorAll('.region-card')).find(card => card.dataset.regionName === uiState.region);
                 const body = region?.querySelector('.region-body');
@@ -1697,9 +1760,19 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
             renderPageState();
         });
         document.getElementById('deviceScopeSelect')?.addEventListener('change', function () {
-            uiState.deviceScope = this.value || 'all';
-            clearSelection();
-            renderPageState();
+            applyDeviceScope(this.value || 'all');
+        });
+
+        document.querySelectorAll('[data-summary-filter]').forEach(button => {
+            button.addEventListener('click', function () {
+                applyDeviceScope(this.dataset.summaryFilter || 'all');
+            });
+        });
+
+        document.querySelectorAll('[data-region-filter]').forEach(button => {
+            button.addEventListener('click', function () {
+                applyRegionScope(this.dataset.regionFilter || 'all');
+            });
         });
 
         document.getElementById('bulkClearSelectionBtn')?.addEventListener('click', clearSelection);
@@ -1764,7 +1837,7 @@ var assigned       = devices.Where(x => x.IsEffectivelyAssigned).ToList();
 
             const res = await fetch(employeeRoutes.autoAssignRegions, { method: 'POST' });
             if (res.status === 403) {
-                await Swal.fire({ icon: 'error', title: 'غير مصرح', text: 'غير مصرح لك (مدير فقط).' });
+                await Swal.fire({ icon: 'error', title: 'غير مصرح', text: 'غير مصرح لك (مشرف فقط).' });
                 return;
             }
 

@@ -6,9 +6,6 @@
     var empId   = Context.Session.GetString("EmpId")   ?? "";
     var isAdmin = Context.Session.GetString("IsAdmin") == "1";
 
-    var todayKey           = DateTime.Today.ToString("yyyy-MM-dd");
-    var todayActivityCount = Model.LatestActivity.Count(a => a.TimeText.StartsWith(todayKey));
-
     var expiringSoonCount = Model.LatestDelegations.Count(d =>
     {
         if (!DateTime.TryParse(d.EndDateText, out var endDt)) return false;
@@ -26,6 +23,14 @@
         if (diff.TotalHours   < 24) return $"منذ {(int)diff.TotalHours} س";
         return dt.ToString("dd/MM/yyyy HH:mm");
     }
+
+    static IEnumerable<int> ActivityPages(int currentPage, int totalPages)
+    {
+        var start = Math.Max(1, currentPage - 2);
+        var end = Math.Min(totalPages, currentPage + 2);
+        for (var page = start; page <= end; page++)
+            yield return page;
+    }
 }
 
 
@@ -36,7 +41,7 @@
     <div class="d-flex align-items-center gap-2 small text-muted">
         <span class="fw-bold text-dark">@empName</span>
         <span class="badge @(isAdmin ? "badge-success" : "badge-muted")">
-            @(isAdmin ? "مدير" : "موظف")
+            @(isAdmin ? "مشرف" : "عضو")
         </span>
     </div>
 </div>
@@ -77,7 +82,7 @@
    ══════════════════════════════════════════════════════ *@
 <div class="c-stats-grid mb-4">
     <div class="stat-card">
-        <div class="stat-value">@todayActivityCount</div>
+        <div class="stat-value">@Model.TodayActivityCount</div>
         <div class="stat-label">عمليات اليوم</div>
     </div>
     <div class="stat-card" onclick="scrollToDelegations()" style="cursor:pointer" title="انقر لعرض الانتدابات">
@@ -100,7 +105,21 @@
     @* ── Activity Log ──────────────────────────────── *@
     <div class="col-lg-7">
         <div class="content-card h-100">
-            <h2 class="c-section-title mb-3">آخر العمليات</h2>
+            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h2 class="c-section-title mb-1">سجل العمليات</h2>
+                    <div class="text-muted small">
+                        @if (Model.ActivityTotalCount > 0)
+                        {
+                            <span>عرض @Model.ActivityFrom - @Model.ActivityTo من @Model.ActivityTotalCount عملية</span>
+                        }
+                        else
+                        {
+                            <span>لا توجد عمليات مسجلة</span>
+                        }
+                    </div>
+                </div>
+            </div>
 
             @if (Model.LatestActivity == null || Model.LatestActivity.Count == 0)
             {
@@ -120,7 +139,7 @@
                                     <span class="fw-bold d-block mb-1">@a.ActionText</span>
                                     @if (!string.IsNullOrWhiteSpace(a.ActorText))
                                     {
-                                        <span class="text-muted small">@a.ActorText</span>
+                                        <span class="text-muted small">بواسطة: @a.ActorText</span>
                                     }
                                 </div>
                                 <span class="text-muted small u-nowrap flex-shrink-0"
@@ -141,6 +160,42 @@
                         </div>
                     }
                 </div>
+
+                @if (Model.ActivityTotalPages > 1)
+                {
+                    <nav class="dashboard-pagination mt-3" aria-label="تصفح سجل العمليات">
+                        <a class="btn btn-sm @(Model.ActivityPage <= 1 ? "btn-muted disabled" : "btn-outline")"
+                           asp-controller="Dashboard"
+                           asp-action="Index"
+                           asp-route-delegations="@Model.DelegationsFilter.ToLowerInvariant()"
+                           asp-route-activityPage="@(Model.ActivityPage - 1)"
+                           aria-disabled="@(Model.ActivityPage <= 1 ? "true" : "false")">
+                            السابق
+                        </a>
+
+                        <div class="dashboard-page-links">
+                            @foreach (var activityPageNumber in ActivityPages(Model.ActivityPage, Model.ActivityTotalPages))
+                            {
+                                <a class="btn btn-sm @(activityPageNumber == Model.ActivityPage ? "btn-secondary" : "btn-muted")"
+                                   asp-controller="Dashboard"
+                                   asp-action="Index"
+                                   asp-route-delegations="@Model.DelegationsFilter.ToLowerInvariant()"
+                                   asp-route-activityPage="@activityPageNumber">
+                                    @activityPageNumber
+                                </a>
+                            }
+                        </div>
+
+                        <a class="btn btn-sm @(Model.ActivityPage >= Model.ActivityTotalPages ? "btn-muted disabled" : "btn-outline")"
+                           asp-controller="Dashboard"
+                           asp-action="Index"
+                           asp-route-delegations="@Model.DelegationsFilter.ToLowerInvariant()"
+                           asp-route-activityPage="@(Model.ActivityPage + 1)"
+                           aria-disabled="@(Model.ActivityPage >= Model.ActivityTotalPages ? "true" : "false")">
+                            التالي
+                        </a>
+                    </nav>
+                }
             }
         </div>
     </div>
@@ -153,13 +208,16 @@
                 <div class="d-flex gap-1">
                     <a class="btn btn-sm @(Model.DelegationsFilter == "Active"    ? "btn-secondary" : "btn-muted") u-nowrap"
                        asp-controller="Dashboard" asp-action="Index"
-                       asp-route-delegations="active">نشطة</a>
+                       asp-route-delegations="active"
+                       asp-route-activityPage="@Model.ActivityPage">نشطة</a>
                     <a class="btn btn-sm @(Model.DelegationsFilter == "Scheduled" ? "btn-secondary" : "btn-muted") u-nowrap"
                        asp-controller="Dashboard" asp-action="Index"
-                       asp-route-delegations="scheduled">مجدولة</a>
+                       asp-route-delegations="scheduled"
+                       asp-route-activityPage="@Model.ActivityPage">مجدولة</a>
                     <a class="btn btn-sm @(Model.DelegationsFilter == "All"       ? "btn-secondary" : "btn-muted") u-nowrap"
                        asp-controller="Dashboard" asp-action="Index"
-                       asp-route-delegations="all">الكل</a>
+                       asp-route-delegations="all"
+                       asp-route-activityPage="@Model.ActivityPage">الكل</a>
                 </div>
             </div>
 

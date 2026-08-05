@@ -67,7 +67,7 @@
                     </div>
                     <div class="sidebar-user-info">
                         <span class="sidebar-user-name">@currentEmpName</span>
-                        <span class="sidebar-user-role">@(isAdmin ? "⭐ مدير" : currentEmpId)</span>
+                        <span class="sidebar-user-role">@(isAdmin ? "مشرف" : "عضو")</span>
                     </div>
                 </div>
                 <form asp-controller="Home" asp-action="Logout" method="post" class="sidebar-logout-form">

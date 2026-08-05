@@ -63,7 +63,7 @@ public class AllowedUsersController : Controller
                 action: "AllowedUser.Added",
                 entityType: "AllowedUser",
                 entityId: employeeId.ToString(),
-                summary: $"تمت إضافة مستخدم إلى قائمة الصلاحيات: {employeeId} ({fullName}).",
+                summary: $"تمت إضافة العضو {FormatAllowedUserText(fullName, employeeId)} إلى قائمة الصلاحيات.",
                 details: new { employeeId, fullName, isAdmin, validUntil },
                 ct: ct
             );
@@ -95,6 +95,8 @@ public class AllowedUsersController : Controller
             return RedirectToAction("Index");
         }
 
+        var targetUser = await _admin.FindAsync(employeeId, ct);
+        var targetText = FormatAllowedUserText(targetUser?.FullName, employeeId);
         var ok = await _admin.SetActiveAsync(employeeId, makeActive, ct);
 
         if (!ok)
@@ -109,12 +111,53 @@ public class AllowedUsersController : Controller
                 entityType: "AllowedUser",
                 entityId: employeeId.ToString(),
                 summary: makeActive
-                    ? $"تم تفعيل المستخدم في قائمة الصلاحيات: {employeeId}."
-                    : $"تم تعطيل المستخدم في قائمة الصلاحيات: {employeeId}.",
-                details: new { employeeId, makeActive },
+                    ? $"تم تفعيل العضو {targetText} في قائمة الصلاحيات."
+                    : $"تم تعطيل العضو {targetText} في قائمة الصلاحيات.",
+                details: new { employeeId, fullName = targetUser?.FullName, makeActive },
                 ct: ct
             );
         }
+
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleAdmin(int employeeId, bool makeAdmin, CancellationToken ct)
+    {
+        if (!int.TryParse(HttpContext.Session.GetString("EmpId"), out var currentEmpId))
+        {
+            TempData["ErrorMsg"] = "حدث خطأ في الجلسة.";
+            return RedirectToAction("Index");
+        }
+
+        var targetUser = await _admin.FindAsync(employeeId, ct);
+        var targetText = FormatAllowedUserText(targetUser?.FullName, employeeId);
+        var ok = await _admin.SetAdminAsync(employeeId, makeAdmin, ct);
+
+        if (!ok)
+        {
+            TempData["ErrorMsg"] = "لا يمكن تنفيذ العملية (قد يكون آخر مشرف).";
+            return RedirectToAction("Index");
+        }
+
+        if (employeeId == currentEmpId)
+            HttpContext.Session.SetString("IsAdmin", makeAdmin ? "1" : "0");
+
+        TempData["SuccessMsg"] = makeAdmin
+            ? "تم منح صلاحية مشرف بنجاح."
+            : "تم تحويل الحساب إلى صلاحية عضو بنجاح.";
+
+        await _activity.LogAsync(
+            action: makeAdmin ? "AllowedUser.AdminGranted" : "AllowedUser.AdminRevoked",
+            entityType: "AllowedUser",
+            entityId: employeeId.ToString(),
+            summary: makeAdmin
+                ? $"تم منح صلاحية مشرف للعضو {targetText} في قائمة الصلاحيات."
+                : $"تم إلغاء صلاحية المشرف عن العضو {targetText} في قائمة الصلاحيات.",
+            details: new { employeeId, fullName = targetUser?.FullName, makeAdmin },
+            ct: ct
+        );
 
         return RedirectToAction("Index");
     }
@@ -137,11 +180,13 @@ public class AllowedUsersController : Controller
             return RedirectToAction("Index");
         }
 
+        var targetUser = await _admin.FindAsync(employeeId, ct);
+        var targetText = FormatAllowedUserText(targetUser?.FullName, employeeId);
         var ok = await _admin.DeleteAsync(employeeId, ct);
 
         TempData[ok ? "SuccessMsg" : "ErrorMsg"] = ok
-            ? "تم حذف المستخدم."
-            : "لا يمكن حذف هذا المستخدم (قد يكون آخر مشرف).";
+            ? "تم حذف العضو."
+            : "لا يمكن حذف هذا العضو (قد يكون آخر مشرف).";
 
         if (ok)
         {
@@ -149,8 +194,8 @@ public class AllowedUsersController : Controller
                 action: "AllowedUser.Deleted",
                 entityType: "AllowedUser",
                 entityId: employeeId.ToString(),
-                summary: $"تم حذف المستخدم من قائمة الصلاحيات: {employeeId}.",
-                details: new { employeeId },
+                summary: $"تم حذف العضو {targetText} من قائمة الصلاحيات.",
+                details: new { employeeId, fullName = targetUser?.FullName },
                 ct: ct
             );
         }
@@ -160,4 +205,8 @@ public class AllowedUsersController : Controller
 
 
 
+    private static string FormatAllowedUserText(string? fullName, int employeeId)
+        => string.IsNullOrWhiteSpace(fullName)
+            ? $"الموظف رقم {employeeId}"
+            : $"{fullName.Trim()} ({employeeId})";
 }

@@ -91,19 +91,36 @@ public class DelegationWorker : BackgroundService
             ? $"غير معروف ({employeeId})"
             : $"{employeeName.Trim()} ({employeeId})";
 
-    private static string FormatActorText(string? actorName, string? actorId)
-    {
-        var name = string.IsNullOrWhiteSpace(actorName) ? "غير معروف" : actorName.Trim();
-        var id = string.IsNullOrWhiteSpace(actorId) ? "غير معروف" : actorId.Trim();
-        return $"{name} ({id})";
-    }
-
     private static Task<string?> GetEmployeeNameAsync(LocalAppDbContext db, int employeeId, CancellationToken ct)
         => db.AllowedUsers
             .AsNoTracking()
             .Where(x => x.EmployeeId == employeeId)
             .Select(x => x.FullName)
             .FirstOrDefaultAsync(ct);
+
+    private static async Task<string> GetRegionsLineAsync(LocalAppDbContext db, IReadOnlyCollection<string> terminalIds, CancellationToken ct)
+    {
+        var normalizedTerminalIds = terminalIds
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (normalizedTerminalIds.Count == 0)
+            return "";
+
+        var regionNames = await db.TerminalRegionMaps
+            .AsNoTracking()
+            .Where(x => normalizedTerminalIds.Contains(x.TerminalId))
+            .Select(x => x.Region != null ? x.Region.Name : null)
+            .Where(x => !string.IsNullOrEmpty(x))
+            .Distinct()
+            .ToListAsync(ct);
+
+        return regionNames.Count > 0
+            ? "\nفي المناطق: " + string.Join("، ", regionNames)
+            : "";
+    }
 
     private static async Task EnsureActiveDelegationAsync(
         LocalAppDbContext db,
@@ -149,15 +166,17 @@ public class DelegationWorker : BackgroundService
 
         var employeeName = await GetEmployeeNameAsync(db, del.EmployeeId, ct);
         var employeeText = FormatEmployeeText(employeeName, del.EmployeeId);
-        var actorText = FormatActorText("DelegationWorker", null);
+        var terminalIds = terminals.Select(t => t.TerminalId.Trim()).ToList();
+        var regionsLine = await GetRegionsLineAsync(db, terminalIds, ct);
+        var displayEndDate = del.EndDate.Date.AddDays(-1);
 
         await activity.LogSystemAsync(
-            actorName: "DelegationWorker",
+            actorName: "معالج الانتدابات التلقائي",
             action: "Delegation.Activated",
             entityType: "Delegation",
             entityId: del.Id.ToString(),
-            summary: $"تم إنشاء انتداب للموظف {employeeText} لعدد ({terminals.Count}) أجهزة\nبواسطة: {actorText}",
-            details: new { delegationId = del.Id, employeeId = del.EmployeeId, terminalCount = terminals.Count },
+            summary: $"تم تفعيل انتداب مجدول للموظف {employeeText} لعدد ({terminals.Count}) أجهزة{regionsLine}\nالفترة: من {del.StartDate:yyyy-MM-dd} إلى {displayEndDate:yyyy-MM-dd}\nتم تلقائيًا بواسطة النظام عند حلول تاريخ البداية.",
+            details: new { delegationId = del.Id, employeeId = del.EmployeeId, employeeName, terminalCount = terminals.Count, terminalIds, startDate = del.StartDate, endDate = del.EndDate },
             ct: ct
         );
     }
@@ -202,15 +221,17 @@ public class DelegationWorker : BackgroundService
 
         var employeeName = await GetEmployeeNameAsync(db, del.EmployeeId, ct);
         var employeeText = FormatEmployeeText(employeeName, del.EmployeeId);
-        var actorText = FormatActorText("DelegationWorker", null);
+        var terminalIds = terminals.Select(t => t.TerminalId.Trim()).ToList();
+        var regionsLine = await GetRegionsLineAsync(db, terminalIds, ct);
+        var displayEndDate = del.EndDate.Date.AddDays(-1);
 
         await activity.LogSystemAsync(
-            actorName: "DelegationWorker",
+            actorName: "معالج الانتدابات التلقائي",
             action: "Delegation.Expired",
             entityType: "Delegation",
             entityId: del.Id.ToString(),
-            summary: $"تم إنهاء انتداب الموظف {employeeText}\nبواسطة: {actorText}",
-            details: new { delegationId = del.Id, employeeId = del.EmployeeId, terminalCount = terminals.Count },
+            summary: $"تم إنهاء انتداب الموظف {employeeText} تلقائيًا لعدد ({terminals.Count}) أجهزة{regionsLine}\nالفترة: من {del.StartDate:yyyy-MM-dd} إلى {displayEndDate:yyyy-MM-dd}\nالسبب: انتهاء مدة الانتداب.",
+            details: new { delegationId = del.Id, employeeId = del.EmployeeId, employeeName, terminalCount = terminals.Count, terminalIds, startDate = del.StartDate, endDate = del.EndDate },
             ct: ct
         );
     }

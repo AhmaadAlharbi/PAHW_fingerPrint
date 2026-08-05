@@ -35,6 +35,15 @@ public sealed class DashboardViewModel
     public int RegionsCount { get; set; }
     public int MappingsCount { get; set; }
     public int ActiveDelegationsCount { get; set; }
+    public int TodayActivityCount { get; set; }
+    public int ActivityPage { get; set; } = 1;
+    public int ActivityPageSize { get; set; } = 10;
+    public int ActivityTotalCount { get; set; }
+    public int ActivityTotalPages => ActivityPageSize <= 0
+        ? 1
+        : Math.Max(1, (int)Math.Ceiling(ActivityTotalCount / (double)ActivityPageSize));
+    public int ActivityFrom => ActivityTotalCount == 0 ? 0 : ((ActivityPage - 1) * ActivityPageSize) + 1;
+    public int ActivityTo => Math.Min(ActivityPage * ActivityPageSize, ActivityTotalCount);
 
     public List<ActivityLogRowViewModel> LatestActivity { get; set; } = new();
     public List<DelegationRowViewModel> LatestDelegations { get; set; } = new();
@@ -89,10 +98,12 @@ public sealed class DashboardViewModel
             "Region.Renamed" => "تعديل اسم منطقة",
             "Region.Deleted" => "حذف منطقة",
 
-            "AllowedUser.Added" => "إضافة مستخدم مسموح",
-            "AllowedUser.Activated" => "تفعيل مستخدم",
-            "AllowedUser.Deactivated" => "تعطيل مستخدم",
-            "AllowedUser.Deleted" => "حذف مستخدم",
+            "AllowedUser.Added" => "إضافة عضو مصرح",
+            "AllowedUser.Activated" => "تفعيل عضو",
+            "AllowedUser.Deactivated" => "تعطيل عضو",
+            "AllowedUser.AdminGranted" => "منح صلاحية مشرف",
+            "AllowedUser.AdminRevoked" => "إلغاء صلاحية مشرف",
+            "AllowedUser.Deleted" => "حذف عضو",
 
             _ => "عملية"
         };

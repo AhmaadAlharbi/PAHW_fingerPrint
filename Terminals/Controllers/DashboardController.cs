@@ -15,13 +15,13 @@ public sealed class DashboardController : Controller
     }
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(string? delegations, CancellationToken ct)
+    public async Task<IActionResult> Index(string? delegations, int activityPage = 1, CancellationToken ct = default)
     {
         var isAdmin = HttpContext.Session.GetString("IsAdmin") == "1";
         var empIdStr = HttpContext.Session.GetString("EmpId") ?? "";
         int.TryParse(empIdStr, out var currentUserEmpId);
 
-        var dto = await _dashboardService.GetDashboardData(delegations, ct);
+        var dto = await _dashboardService.GetDashboardData(delegations, activityPage, 10, ct);
 
         return View(new DashboardViewModel
         {
@@ -30,6 +30,10 @@ public sealed class DashboardController : Controller
             RegionsCount = dto.RegionsCount,
             MappingsCount = dto.MappingsCount,
             ActiveDelegationsCount = dto.ActiveDelegationsCount,
+            TodayActivityCount = dto.TodayActivityCount,
+            ActivityPage = dto.ActivityPage,
+            ActivityPageSize = dto.ActivityPageSize,
+            ActivityTotalCount = dto.ActivityTotalCount,
             DelegationsFilter = dto.DelegationsFilter,
             LatestDelegations = dto.LatestDelegations.Select(x => new DelegationRowViewModel
             {

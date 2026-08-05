@@ -86,6 +86,21 @@ public class AllowedUsersAdminService : IAllowedUsersAdmin
         return rows;
     }
 
+    public Task<AllowedUserListItemDto?> FindAsync(int employeeId, CancellationToken ct)
+        => _db.AllowedUsers
+            .AsNoTracking()
+            .Where(x => x.EmployeeId == employeeId)
+            .Select(x => new AllowedUserListItemDto(
+                x.EmployeeId,
+                x.FullName,
+                x.Email,
+                x.Department,
+                x.IsActive,
+                x.IsAdmin,
+                x.ValidUntil
+            ))
+            .FirstOrDefaultAsync(ct);
+
     public async Task<bool> SetActiveAsync(int employeeId, bool isActive, CancellationToken ct)
     {
         var user = await _db.AllowedUsers
@@ -104,6 +119,28 @@ public class AllowedUsersAdminService : IAllowedUsersAdmin
         }
 
         user.IsActive = isActive;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<bool> SetAdminAsync(int employeeId, bool isAdmin, CancellationToken ct)
+    {
+        var user = await _db.AllowedUsers
+            .FirstOrDefaultAsync(x => x.EmployeeId == employeeId, ct);
+
+        if (user == null)
+            return false;
+
+        if (!isAdmin && user.IsAdmin && user.IsActive)
+        {
+            var adminCount = await _db.AllowedUsers
+                .CountAsync(x => x.IsAdmin && x.IsActive, ct);
+
+            if (adminCount <= 1)
+                return false;
+        }
+
+        user.IsAdmin = isAdmin;
         await _db.SaveChangesAsync(ct);
         return true;
     }
